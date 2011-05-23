@@ -1,0 +1,89 @@
+#summary Brainstorming notes for the design of the A-Bus
+
+= Introduction =
+
+This page contains brainstorming notes for the design of the A-Bus.
+
+The A-Bus is expected to fulfill common IPC needs in embedded systems.
+
+It has to be light, efficient, modern. Although A-Bus borrows some concepts from D-Bus but in no ways is a Desktop bus.
+
+NB: page to be refactored as scope of work, specs, implementation guidelines,..
+
+= Details =
+
+ * Service/object paradigm
+  * rpc and events
+  * publish/subscribe model for events
+  * addressable by (string) name
+  * Like D-Bus, the A-Bus object's names are namespaced
+  * Objects shall register with their PID, proto bearer and location(url?) at the `abus-daemon`. Clients don't need to.
+ * Flexible RPC, marshaling based on [http://json-rpc.org/ JSON-RPC]
+ * Calls can be synchronous or asynchronous (thanks to JSON-RPC's "id")
+  * if async, response interpreted as an event
+  * callback based
+  * built-in timeout handling
+ * Shall work transparently:
+  * local to a multi-thread process
+  * local to a host (OS)
+  * across network
+ * Direct communication between programs, no use of broker but a name server `abus-daemon` (kind of portmapper) and a client-side cache
+ * Allow more than one protocol bearer
+  * inter-thread comm with a process (which IPC?)
+  * UNIX socket
+  * TCP socket
+  * HTTP?
+  * [http://tipc.sourceforge.net/ TIPC], ...
+ * Endian-agnostic thanks to [http://json.org/ JSON]
+ * Explicit method declaration server-side, semi-automatically connected to lang functions
+  * -> allow automated type-validation of "params"
+  * -> allow to browse service
+  * -> automatic documentation?
+  * Use swig for automatic attributes/method export?
+ * glib-friendly
+ * written in C for POSIX systems
+  * wrappers made available thanks to [http://swig.org swig]
+
+== libabus ==
+
+This is an end-user library.
+
+ * libabus provides client as well as server helpers
+ * embeds a tailored JSON parser
+ * handling call timeouts
+ * offer built-in timer support (as events) ?
+ * recommend to be hosted in its own thread, but not strong requirement
+ * `send/append message(obj_dest, args:"%d%d%s%10f", &a, &b, s, tab)` + extra format for blobs, ..
+ * blob friendly with transparent escaping with JSON format
+ * Properties
+  * simplify exposing(server-side) and getting/setting(client-side) of properties (aka attributes)
+   * ala sysfs ?
+   * offer subscribe "upon_change" of a property
+   * recommended convention: subdir in namespace for state & config
+   * a bit too far: for config, type self-declaration ala "struct confparams" ?
+    * would allow property browser/editor tool!
+
+== `abus-daemon` ==
+
+The `abus-daemon` is mainly a name server through UNIX proto.
+
+Rem: the publish is not done by `abus-daemon`, but server-side.
+
+Robustness: every server must keep a descriptor open with the `abus-daemon`. Should the descriptor close, they must attempt to reopen an re-register (resync).
+
+== Wishlist ==
+
+ * easy to connect to klish
+ * easy to connect to snmp
+ * easy to build distributed state machines
+ * service/objects compatible with json-rpc, callable from outside world (e.g. JavaScript, ..) through bearer proxy
+ * optional for local rpc (same process/host): transparent binary encoding (TLV)
+ * security: to be addressed when going multi host
+
+== Worth reading ==
+
+ * JSON-WSP  http://en.wikipedia.org/wiki/JSON-WSP
+ * http://en.wikipedia.org/wiki/D-bus
+
+== Inspiration ==
+http://gpsd.berlios.de/protocol-evolution.html
