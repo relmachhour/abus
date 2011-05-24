@@ -6,7 +6,9 @@ This page contains brainstorming notes for the design of the A-Bus.
 
 The A-Bus is expected to fulfill common IPC needs in embedded systems.
 
-It has to be light, efficient, modern. Although A-Bus borrows some concepts from D-Bus but in no ways is a Desktop bus.
+It has to be light, efficient, and comfortable. Although A-Bus borrows some concepts from D-Bus, in no ways it is a Desktop bus.
+
+The A-Bus also seeks to make re-use/access documention of existing services easier for the developer, following inspiration from plugin declaration in gstreamer.
 
 NB: page to be refactored as scope of work, specs, implementation guidelines,..
 
@@ -15,6 +17,7 @@ NB: page to be refactored as scope of work, specs, implementation guidelines,..
  * Service/object paradigm
   * rpc and events
   * publish/subscribe model for events
+  * expose properties
   * addressable by (string) name
   * Like D-Bus, the A-Bus object's names are namespaced
   * Objects shall register with their PID, proto bearer and location(url?) at the `abus-daemon`. Clients don't need to.
@@ -27,7 +30,7 @@ NB: page to be refactored as scope of work, specs, implementation guidelines,..
   * local to a multi-thread process
   * local to a host (OS)
   * across network
- * Direct communication between programs, no use of broker but a name server `abus-daemon` (kind of portmapper) and a client-side cache
+ * Direct communication between programs, no use of broker but a name server `abus-daemon` (kind of portmapper) or file system and a client-side cache
  * Allow more than one protocol bearer
   * inter-thread comm with a process (which IPC?)
   * UNIX socket
@@ -35,12 +38,12 @@ NB: page to be refactored as scope of work, specs, implementation guidelines,..
   * HTTP?
   * [http://tipc.sourceforge.net/ TIPC], ...
  * Endian-agnostic thanks to [http://json.org/ JSON]
- * Explicit method declaration server-side, semi-automatically connected to lang functions
-  * -> allow automated type-validation of "params"
+ * Explicit method declaration server-side, semi-automatically connected to language functions
+  * -> allow automated type-validation of `"params"`
   * -> allow to browse service
-  * -> automatic documentation?
+  * -> automatic documentation (extract doxy)?
   * Use swig for automatic attributes/method export?
- * glib-friendly
+ * glib-friendly (g_object & mainloop), but without depending on it -> `libgabus`
  * written in C for POSIX systems
   * wrappers made available thanks to [http://swig.org swig]
 
@@ -57,11 +60,11 @@ This is an end-user library.
  * blob friendly with transparent escaping with JSON format
  * Properties
   * simplify exposing(server-side) and getting/setting(client-side) of properties (aka attributes)
-   * ala sysfs ?
+   * ala sysfs or g_object, but requiring neither of them
    * offer subscribe "upon_change" of a property
-   * recommended convention: subdir in namespace for state & config
-   * a bit too far: for config, type self-declaration ala "struct confparams" ?
-    * would allow property browser/editor tool!
+   * recommended convention: subdir in namespace for state & config. Or simply use Read only & Read Write flags.
+   * type self-declaration ala g_param_spec_int() et al., but without requiring glib
+    * would allow property inspector tool
 
 == `abus-daemon` ==
 
@@ -73,12 +76,12 @@ Robustness: every server must keep a descriptor open with the `abus-daemon`. Sho
 
 == Wishlist ==
 
- * easy to connect to klish
- * easy to connect to snmp
- * easy to build distributed state machines
- * service/objects compatible with json-rpc, callable from outside world (e.g. JavaScript, ..) through bearer proxy
+ * easy to build (distributed) state machines
+ * service/objects compatible with json-rpc, callable from outside world (e.g. JavaScript, ..) through bearer proxy (HTTP or TCP)
  * optional for local rpc (same process/host): transparent binary encoding (TLV)
  * security: to be addressed when going multi host
+ * easy to connect to [http://code.google.com/p/klish/ klish]
+ * easy to connect to snmp
 
 == Worth reading ==
 
