@@ -1,4 +1,5 @@
 #summary Brainstorming notes for the design of the A-Bus
+#labels Featured,Phase-Requirements,Phase-Design
 
 = Introduction =
 
