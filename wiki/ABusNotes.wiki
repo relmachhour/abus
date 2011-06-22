@@ -102,7 +102,7 @@ Name resolution inter hosts, i.e. across a network, goes through an `abus-proxy`
 
  * easy to build (distributed) state machines
  * service/objects compatible with json-rpc, callable from outside world (e.g. JavaScript, ..) through bearer proxy (HTTP or TCP)
- * optional for local RPC (same process/host): transparent binary encoding (TLV)
+ * optional for local RPC (same process/host): [http://bsonspec.org/ BSON] _binary_ encoding
  * security: to be addressed when going multi host
  * availability: redundancy to be addressed later
  * intra-host: helper to create/tear down a shared memory between client and server, with optional ring buffer accessors for single producer/consumer
@@ -117,3 +117,5 @@ Name resolution inter hosts, i.e. across a network, goes through an `abus-proxy`
 
 == Inspiration ==
 http://gpsd.berlios.de/protocol-evolution.html
+
+== 
