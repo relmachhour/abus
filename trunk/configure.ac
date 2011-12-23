@@ -2,7 +2,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([abus],[0.1],[abus-discuss@googlegroups.com],[abus],[http://code.google.com/p/abus/])
+AC_INIT([abus],[0.2~svn],[abus-discuss@googlegroups.com],[abus],[http://code.google.com/p/abus/])
 AC_CONFIG_SRCDIR(abus/abus.c)
 AC_CONFIG_MACRO_DIR([m4])
 
