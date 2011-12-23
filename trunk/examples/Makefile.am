@@ -6,6 +6,8 @@ AM_CPPFLAGS = $(INC)
 EXTRA_PROGRAMS   = \
 		example-service \
 		example-client \
+		example-svc-array \
+		example-clnt-array \
 		example-svc-event \
 		example-clientpp \
  		example-servicepp \
@@ -34,6 +36,10 @@ example_clientpp_SOURCES = example-clientpp.cpp
 example_servicepp_SOURCES = example-servicepp.cpp
 
 example_servicexx_SOURCES = example-servicexx.cpp
+
+example_svc_array_SOURCES = example-svc-array.c
+
+example_clnt_array_SOURCES = example-clnt-array.c
 
 LDADD    = $(top_builddir)/abus/libabus.la
 
