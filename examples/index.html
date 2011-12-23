@@ -45,10 +45,10 @@
 				$.jsonRPC.request('sum', {
 					params: {"a":a, "b":b},
 					success: function(result) {
-						if (result.result == null || result.result.sum == null)
+						if (result.result == null || result.result.res_value == null)
 							alert("Invalid result from JSON-RPC: "+result);
 						else
-							$("#thirdBox").val(result.result.sum);
+							$("#thirdBox").val(result.result.res_value);
 					},
 					error: function(result) {
 						var msg = '';
