@@ -13,6 +13,8 @@ Standard definitions and types, Bob Jenkins
 #  include <stddef.h>
 #  define STDDEF
 # endif
+#include <stdlib.h>
+#include <string.h>
 typedef  unsigned long long  ub8;
 #define UB8MAXVAL 0xffffffffffffffffLL
 #define UB8BITS 64
