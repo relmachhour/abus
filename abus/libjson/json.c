@@ -796,38 +796,41 @@ int json_print_free(json_printer *printer)
  * XXX: it doesn't do unicode verification. yet?. */
 static int print_string(json_printer *printer, const char *data, uint32_t length)
 {
+	int ret = 0;
 	uint32_t i;
 
-	printer->callback(printer->userdata, "\"", 1);
+	ret += printer->callback(printer->userdata, "\"", 1);
 	for (i = 0; i < length; i++) {
 		unsigned char c = data[i];
 		if (c < 36) {
 			char *esc = character_escape[c];
-			printer->callback(printer->userdata, esc, strlen(esc));
+			ret += printer->callback(printer->userdata, esc, strlen(esc));
 		} else if (c == '\\') {
-			printer->callback(printer->userdata, "\\\\", 2);
+			ret += printer->callback(printer->userdata, "\\\\", 2);
 		} else
-			printer->callback(printer->userdata, data + i, 1);
+			ret += printer->callback(printer->userdata, data + i, 1);
 	}
-	printer->callback(printer->userdata, "\"", 1);
-	return 0;
+	ret += printer->callback(printer->userdata, "\"", 1);
+	return ret;
 }
 
 static int print_indent(json_printer *printer)
 {
+	int ret = 0;
 	int i;
-	printer->callback(printer->userdata, "\n", 1);
+	ret += printer->callback(printer->userdata, "\n", 1);
 	for (i = 0; i < printer->indentlevel; i++)
-		printer->callback(printer->userdata, printer->indentstr, strlen(printer->indentstr));
-	return 0;
+		ret += printer->callback(printer->userdata, printer->indentstr, strlen(printer->indentstr));
+	return ret;
 }
 
 static int json_print_mode(json_printer *printer, int type, const char *data, uint32_t length, int pretty)
 {
 	int enterobj = printer->enter_object;
+	int ret = 0;
 
 	if (!enterobj && !printer->afterkey && (type != JSON_ARRAY_END && type != JSON_OBJECT_END)) {
-		printer->callback(printer->userdata, ",", 1);
+		ret += printer->callback(printer->userdata, ",", 1);
 		if (pretty) print_indent(printer);
 	}
 
@@ -840,12 +843,12 @@ static int json_print_mode(json_printer *printer, int type, const char *data, ui
 	printer->afterkey = 0;
 	switch (type) {
 	case JSON_ARRAY_BEGIN:
-		printer->callback(printer->userdata, "[", 1);
+		ret += printer->callback(printer->userdata, "[", 1);
 		printer->indentlevel++;
 		printer->enter_object = 1;
 		break;
 	case JSON_OBJECT_BEGIN:
-		printer->callback(printer->userdata, "{", 1);
+		ret += printer->callback(printer->userdata, "{", 1);
 		printer->indentlevel++;
 		printer->enter_object = 1;
 		break;
@@ -853,26 +856,26 @@ static int json_print_mode(json_printer *printer, int type, const char *data, ui
 	case JSON_OBJECT_END:
 		printer->indentlevel--;
 		if (pretty && !enterobj) print_indent(printer);
-		printer->callback(printer->userdata, (type == JSON_OBJECT_END) ? "}" : "]", 1);
+		ret += printer->callback(printer->userdata, (type == JSON_OBJECT_END) ? "}" : "]", 1);
 		break;
-	case JSON_INT: printer->callback(printer->userdata, data, length); break;
-	case JSON_FLOAT: printer->callback(printer->userdata, data, length); break;
-	case JSON_NULL: printer->callback(printer->userdata, "null", 4); break;
-	case JSON_TRUE: printer->callback(printer->userdata, "true", 4); break;
-	case JSON_FALSE: printer->callback(printer->userdata, "false", 5); break;
+	case JSON_INT: ret += printer->callback(printer->userdata, data, length); break;
+	case JSON_FLOAT: ret += printer->callback(printer->userdata, data, length); break;
+	case JSON_NULL: ret += printer->callback(printer->userdata, "null", 4); break;
+	case JSON_TRUE: ret += printer->callback(printer->userdata, "true", 4); break;
+	case JSON_FALSE: ret += printer->callback(printer->userdata, "false", 5); break;
 	case JSON_KEY:
-		print_string(printer, data, length);
-		printer->callback(printer->userdata, ": ", (pretty) ? 2 : 1);
+		ret += print_string(printer, data, length);
+		ret += printer->callback(printer->userdata, ": ", (pretty) ? 2 : 1);
 		printer->afterkey = 1;
 		break;
 	case JSON_STRING:
-		print_string(printer, data, length);
+		ret += print_string(printer, data, length);
 		break;
 	default:
 		break;
 	}
 
-	return 0;
+	return ret;
 }
 
 /** json_print_pretty pretty print the passed argument (type/data/length). */
@@ -887,18 +890,17 @@ int json_print_raw(json_printer *printer, int type, const char *data, uint32_t l
 	return json_print_mode(printer, type, data, length, 0);
 }
 
-/** json_print_args takes multiple types and pass them to the printer function */
-int json_print_args(json_printer *printer,
-                    int (*f)(json_printer *, int, const char *, uint32_t),
-                    ...)
+/** json_vprint_args takes multiple types and pass them to the printer function */
+int json_vprint_args(json_printer *printer,
+					int (*f)(json_printer *, int, const char *, uint32_t),
+                    va_list ap)
 {
-	va_list ap;
 	char *data;
 	uint32_t length;
-	int type, ret;
+	int type, ret, total;
 
+	total = 0;
 	ret = 0;
-	va_start(ap, f);
 	while ((type = va_arg(ap, int)) != -1) {
 		switch (type) {
 		case JSON_ARRAY_BEGIN:
@@ -921,12 +923,28 @@ int json_print_args(json_printer *printer,
 			ret = (*f)(printer, type, data, length);
 			break;
 		}
-		if (ret)
+		if (ret < 0)
 			break;
+		total += ret;
 	}
+	return total == 0 ? ret : total;
+}
+
+/** json_print_args takes multiple types and pass them to the printer function */
+int json_print_args(json_printer *printer,
+					int (*f)(json_printer *, int, const char *, uint32_t),
+                    ...)
+{
+	int ret;
+	va_list ap;
+
+	va_start(ap, f);
+	ret = json_vprint_args(printer, f, ap);
 	va_end(ap);
+
 	return ret;
 }
+
 
 static int dom_push(struct json_parser_dom *ctx, void *val)
 {

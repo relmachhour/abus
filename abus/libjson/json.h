@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
+#include <stdarg.h>
 
 #if defined(_MSC_VER) && (_MSC_VER < 1600)
 // MSVC does not include stdint.h before version 10.0
@@ -175,6 +176,13 @@ int json_print_raw(json_printer *printer, int type, const char *data, uint32_t l
  * if the length argument is -1, then the strlen function will use on the string argument.
  * the function call should always be terminated by -1 */
 int json_print_args(json_printer *, int (*f)(json_printer *, int, const char *, uint32_t), ...);
+
+/** json_vprint_args is equivalent to the function json_print_args(),
+ * except that it is called with a va_list instead of a variable number of arguments.
+ * This function does not call the va_end macro. Because it invokes the va_arg macro,
+ * the value of ap is undefined after the call.
+ */
+int json_vprint_args(json_printer *, int (*f)(json_printer *, int, const char *, uint32_t), va_list ap);
 
 /** callback from the parser_dom callback to create object and array */
 typedef void * (*json_parser_dom_create_structure)(int, int);
