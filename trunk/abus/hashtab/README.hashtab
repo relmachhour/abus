@@ -1,0 +1,3 @@
+The hashtab library in this directory comes from the in-memory Hash Table
+code written by Bob Jenkins, 1996, released in the Public Domain.
+http://burtleburtle.net/bob/hash/hashtab.html
