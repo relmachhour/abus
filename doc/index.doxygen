@@ -64,7 +64,7 @@ of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * This example is a client written in C, performing a synchronous method invocation.
  *
  * For the example to work, the service "examplesvc" must be provided by running program
- * example-svc-event or example-servicepp.
+ * example-service or example-servicepp.
  *
  * This client is equivalent to the following call of abus-send:
 \code
@@ -107,7 +107,21 @@ tools/abus-send examplesvc.\*
  * except it is written using the wrapped C++ API.
  *
  * For the example to work, the service "examplesvc" must be provided by running program
- * example-svc-event or example-servicepp.
+ * example-service or example-servicepp.
+ */
+/*!
+ * \example example-clnt-array.c
+ * This example is a client written in C, dealing with arrays in argument and in response.
+ *
+ * For the example to work, the service "examplearraysvc" must be provided by running program
+ * example-svc-array.
+ */
+/*!
+ * \example example-svc-array.c
+ * This example is a service named "examplearraysvc" written in C,
+ * dealing with arrays in argument and in response.
+ *
+ * To be used with the client example-clnt-array.
  */
 /*!
  * \example example-svc-event.c
@@ -128,7 +142,7 @@ tools/abus-send examplesvc.subscribe "enter_pressed"
  * performing a synchronous method invocation through Ajax JSON-RPC.
  *
  * For the example to work, the service "examplesvc" must be provided by running program
- * example-svc-event or example-servicepp. An HTTP server must be running (e.g. lighttpd)
+ * example-service or example-servicepp. An HTTP server must be running (e.g. lighttpd)
  * and an abus-cgi gateway. \sa lighttpd.conf
  */
 /*!

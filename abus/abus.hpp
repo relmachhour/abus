@@ -58,6 +58,13 @@ public:
 	int get_str(const char *name, char *val, size_t n)
 		{ return json_rpc_get_str(m_json_rpc, name, val, n); }
 
+	/*! Get the count of element in a named array from a RPC */
+	int get_array_count(const char *name)
+		{ return json_rpc_get_array_count(m_json_rpc, name); }
+	/*! Aim the json_rpc_get_{int,bool,..} functions at an object within an array from a RPC */
+	int get_point_at(const char *name, int idx)
+		{ return json_rpc_get_point_at(m_json_rpc, name, idx); }
+
 	/*! Append to a RPC a new parameter and its value of type integer */
 	int append_int(const char *name, int val)
 		{ return json_rpc_append_int(m_json_rpc, name, val); }
