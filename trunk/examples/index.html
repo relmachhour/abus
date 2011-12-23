@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+ <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<style type="text/css">
+		<!--
+		* { font-family: Helvetica, Verdana, Arial ; font-size:12px ; color:#000000 }
+		-->
+	</style>
+    <title>A-Bus JSON-RPC example</title>
+    <!-- <link href="layout.css" rel="stylesheet" type="text/css"> -->
+    <script language="javascript" type="text/javascript" src="jquery.js"></script>
+    <script language="javascript" type="text/javascript" src="jquery.jsonrpc.js"></script>
+ </head>
+
+    <body>
+
+	<h2>Example of JSON-RPC request with A-Bus</h2>
+	<p>
+		The program example/example-service must be running on the web server for the requests to be serviced.
+	</p>
+	<div>
+		<form>
+			<input type=text id="firstBox" value=""><br>
+			+ <input type=text id="secondBox" value=""><br>
+			= <input type=text id="thirdBox">
+			<input id="sumUpdate" type="button" value="Sum">
+		</form>
+	</div>
+
+	<script type="text/javascript">
+	<!--
+		$(function () {
+
+			$.jsonRPC.setup({
+  				endPoint: '/rpc/fastrpc.sh',
+				namespace: 'examplesvc'
+			});
+
+			$("#sumUpdate").click(function () {
+
+				var a = parseInt($("#firstBox").val());
+				var b = parseInt($("#secondBox").val());
+
+				$.jsonRPC.request('sum', {
+					params: {"a":a, "b":b},
+					success: function(result) {
+						if (result.result == null || result.result.sum == null)
+							alert("Invalid result from JSON-RPC: "+result);
+						else
+							$("#thirdBox").val(result.result.sum);
+					},
+					error: function(result) {
+						var msg = '';
+						if (result.error.message != null)
+							msg += result.error.message;
+						else
+							msg += result.error;
+						alert('Error: unable to get sum: '+msg);
+					}
+				});
+			});
+
+		});
+	//-->
+	</script>
+
+ </body>
+</html>

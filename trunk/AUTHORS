@@ -1,0 +1,12 @@
+A-Bus:
+ Stephane Fillod <fillods@users.sf.net>
+
+hashtab:
+ The hashtab library comes from the in-memory Hash Table code written
+ by Bob Jenkins, 1996, released in the Public Domain.
+
+libjson:
+ libjson is a small C library that packs an efficient parser and a
+ configurable printer of JSON. libjson is covered by the LGPLv2 license, or at
+ your option the LGPLv3 license. libjson is Copyright (C) 2009-2011 Vincent Hanquez.
+

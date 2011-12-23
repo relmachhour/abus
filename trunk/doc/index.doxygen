@@ -1,0 +1,139 @@
+/*! \mainpage A-Bus API Reference
+
+\section auth Authors
+
+St&eacute;phane Fillod
+
+\section s1 Preface
+
+This document describes the A-Bus library Application Programming Interface
+(API), as seen by end-user application developers.  You may navigate the 
+documentation through the tabs at the top of this page.
+
+Please report any problems to the mailing list abus-discuss@googlegroups.com.
+
+\section txtfil Distributed information files
+
+These text files are distributed with the A-Bus package.
+
+Readme files: \subpage Rdme "General";
+
+Other files: \subpage AUTHORS;
+\subpage LICENSE;
+\subpage NEWS
+
+\section lnks Internet links
+
+\li http://code.google.com/p/abus/ -- project Wiki.
+\li http://code.google.com/p/abus/source/browse/ -- SVN repository via Web
+
+\section slic Documentation License
+
+\li \subpage doclicense 
+*/
+/*! \page doclicense License for Documentation
+This documentation is free; you can redistribute it without 
+any restrictions. The modification or derived work must retain
+copyright and list all authors.
+
+This documentation is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
+
+/*! \page Rdme  README (general)
+\verbinclude README
+*/
+/*! \page AUTHORS AUTHORS
+\verbinclude AUTHORS
+*/
+/*! \page LICENSE LICENSE
+\verbinclude LICENSE
+*/
+/*! \page NEWS NEWS
+\verbinclude NEWS
+*/
+
+/*! Define groups for Doxygen
+ *  \defgroup abus A-Bus API
+ *  \defgroup abusmm C++ wrapper for A-Bus
+ */
+
+/*!
+ * \example example-client.c
+ * This example is a client written in C, performing a synchronous method invocation.
+ *
+ * For the example to work, the service "examplesvc" must be provided by running program
+ * example-svc-event or example-servicepp.
+ *
+ * This client is equivalent to the following call of abus-send:
+\code
+tools/abus-send examplesvc.sum a:i:${my_a} b:i:${my_b}
+\endcode
+ *
+ */
+/*!
+ * \example example-service.c
+ * This example is a service named "examplesvc" written in C,
+ * offering two methods: "sum" and "mult".
+ *
+ * To be used with the clients example-client or example-clientpp.
+ *
+ * The service can be introspected using the abus-send program:
+\code
+tools/abus-send examplesvc.\*
+\endcode
+ *
+ */
+/*!
+ * \example example-servicexx.cpp
+ * This example is the same example of a service named "examplesvc",
+ * except it is written in C++.
+ *
+ * Although using the C-only API, it shows how to declare
+ * a class-based callback by using abus_decl_method_member().
+ * To be used with the clients example-client or example-clientpp.
+ */
+/*!
+ * \example example-servicepp.cpp
+ * This example is the same example of a service named "examplesvc",
+ * except it is written using the wrapped C++ API.
+ *
+ * To be used with the clients example-client or example-clientpp.
+ */
+/*!
+ * \example example-clientpp.cpp
+ * This example is the same example of a client example-client,
+ * except it is written using the wrapped C++ API.
+ *
+ * For the example to work, the service "examplesvc" must be provided by running program
+ * example-svc-event or example-servicepp.
+ */
+/*!
+ * \example example-svc-event.c
+ * This example is a service named "examplesvc" exposing an event
+ * called "enter_pressed". Any time the ENTER key is pressed on
+ * stdin, a notification will be sent to all subscribers
+ * of this event, with attached argument "typed_char" 
+ * containing the chars typed before the ENTER key.
+ * You may use the abus-send program to test it:
+\code
+tools/abus-send examplesvc.subscribe "enter_pressed"
+\endcode
+ *
+ */
+/*!
+ * \example index.html
+ * This example is a client written in HTML/JavaScript similar to example-client.c,
+ * performing a synchronous method invocation through Ajax JSON-RPC.
+ *
+ * For the example to work, the service "examplesvc" must be provided by running program
+ * example-svc-event or example-servicepp. An HTTP server must be running (e.g. lighttpd)
+ * and an abus-cgi gateway. \sa lighttpd.conf
+ */
+/*!
+ * \example lighttpd.conf
+ * This file is a lighttpd configuration file showing how to setup
+ * the abus-cgi FastCGI, performing an A-Bus gateway for www clients.
+ */
+
