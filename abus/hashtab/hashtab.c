@@ -42,6 +42,7 @@ This implements a hash table.
 #endif
 
 /* sanity check -- make sure ipos, apos, and count make sense */
+#ifdef HSANITY
 static void  hsanity(t)
 htab *t;
 {
@@ -70,6 +71,7 @@ htab *t;
   if (counter != t->count)
     printf("error: counter %ld  t->count %ld\n", counter, t->count);
 }
+#endif
 
 
 /*
@@ -138,7 +140,6 @@ word  logsize;    /* log base 2 of the size of the hash table */
 void hdestroy( t)
 htab  *t;    /* the table */
 {
-  hitem *h;
   refree(t->space);
   free((char *)t->table);
   free((char *)t);
