@@ -77,12 +77,45 @@ else
 fi 
 
 
+dnl --------------------------------------------
+dnl Brief           : enable or disable the unitary test
+dnl Mandatory       : no
+dnl Values          : none (just enable the tests if set)
+dnl Default's value : disable
+dnl --------------------------------------------
+AC_ARG_ENABLE(test,
+	AS_HELP_STRING([--enable-test], [Enable the test unitary support [default=no]]),
+			[case "${enableval}" in
+				yes) have_test=true  ;;
+				no) have_test=false ;;
+				*) AC_MSG_ERROR(bad value ${enableval} for --enable-test) ;;
+				esac],
+			[have_test=false])
+AM_CONDITIONAL(HAVE_TEST, $have_test)
+AC_MSG_CHECKING(whether to enable the test support)
+if test "$have_test" != "false" ; then
+	AC_MSG_RESULT([yes])
+	dnl --------------------------------------------
+	dnl Test if the libgtest is well available in the stagingdir
+	dnl If so get the cflags and ldflag from the .pc file
+	dnl --------------------------------------------
+	LIBGTEST_REQUIRED_VERSION=1.6.0
+	PKG_CHECK_MODULES([GTEST],[gtest >= $LIBGTEST_REQUIRED_VERSION],[have_libgtest=yes],[have_libgtest=no])
+	if test "$have_libgtest" = no ; then
+		AC_MSG_ERROR([Missing libgtest library $LIBGTEST_REQUIRED_VERSION (http://code.google.com/p/googletest/) !!])
+	fi
+else
+	AC_MSG_RESULT([no])
+fi
+
+
 AC_CONFIG_FILES([
 m4/Makefile
 abus/Makefile
 abus/libjson/Makefile
 abus/hashtab/Makefile
 examples/Makefile
+test/Makefile
 doc/Makefile
 doc/Doxyfile
 tools/Makefile
