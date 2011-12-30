@@ -535,6 +535,10 @@ int json_rpc_add_object_to_array(json_rpc_t *json_rpc)
 
 /*!
 	Get the JSON RPC type of a paramter
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" designating an integer value
+  \return a nul of positive number representing the JSON type (JSON_{INT,FLOAT,STRING,TRUE,FALSE,NULL}), a negative value in case of error
  */
 int json_rpc_get_type(json_rpc_t *json_rpc, const char *name)
 {
@@ -601,6 +605,11 @@ static int json_rpc_check_val_type(json_rpc_t *json_rpc, const char *name, json_
 
 /*!
 	Get the value of a parameter of type integer from a RPC
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" designating an integer value
+  \param[out] val pointer to location where to store the integer value
+  \return	0 if successful, non nul value otherwise
  */
 int json_rpc_get_int(json_rpc_t *json_rpc, const char *name, int *val)
 {
@@ -622,6 +631,11 @@ int json_rpc_get_int(json_rpc_t *json_rpc, const char *name, int *val)
 
 /*!
 	Get the value of a parameter of type boolean from a RPC
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" designating a boolean value
+  \param[out] val pointer to location where to store the boolean value
+  \return	0 if successful, non nul value otherwise
  */
 int json_rpc_get_bool(json_rpc_t *json_rpc, const char *name, bool *val)
 {
@@ -644,6 +658,11 @@ int json_rpc_get_bool(json_rpc_t *json_rpc, const char *name, bool *val)
 
 /*!
 	Get the value of a parameter of type double float from a RPC
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" designating a double float value
+  \param[out] val pointer to location where to store the double float value
+  \return	0 if successful, non nul value otherwise
  */
 int json_rpc_get_double(json_rpc_t *json_rpc, const char *name, double *val)
 {
@@ -665,6 +684,12 @@ int json_rpc_get_double(json_rpc_t *json_rpc, const char *name, double *val)
 
 /*!
 	Get the value of a parameter of type string from a RPC
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" designating a string value
+  \param[out] val pointer to location where to store the string value
+  \param[in] n maximum size of the localtion where to store the string
+  \return	0 if successful, non nul value otherwise
  */
 int json_rpc_get_str(json_rpc_t *json_rpc, const char *name, char *val, size_t n)
 {
@@ -796,6 +821,11 @@ int json_rpc_req_finalize(json_rpc_t *json_rpc)
 
 /*!
 	Set the error code and message in a RPC before response
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] error_code integer value of the error, as per JSON/XML convention
+  \param[in] message pointer to a string describing the error
+  \return	0 if successful, non nul value otherwise
  */
 void json_rpc_set_error(json_rpc_t *json_rpc, int error_code, const char *message)
 {
@@ -818,6 +848,11 @@ static int json_rpc_is_comma_needed(const json_rpc_t *json_rpc)
 
 /*!
 	Append to a RPC a new parameter and its value of type integer
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" that's going to designate the integer value
+  \param[in] val the integer value
+  \return	0 if successful, non nul value otherwise
  */
 int json_rpc_append_int(json_rpc_t *json_rpc, const char *name, int val)
 {
@@ -831,6 +866,11 @@ int json_rpc_append_int(json_rpc_t *json_rpc, const char *name, int val)
 
 /*!
 	Append to a RPC a new parameter and its value of type boolean
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" that's going to designate the boolean value
+  \param[in] val the boolean value
+  \return	0 if successful, non nul value otherwise
  */
 int json_rpc_append_bool(json_rpc_t *json_rpc, const char *name, bool val)
 {
@@ -844,6 +884,11 @@ int json_rpc_append_bool(json_rpc_t *json_rpc, const char *name, bool val)
 
 /*!
 	Append to a RPC a new parameter and its value of type double float
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" that's going to designate the double float value
+  \param[in] val the double float value
+  \return	0 if successful, non nul value otherwise
  */
 int json_rpc_append_double(json_rpc_t *json_rpc, const char *name, double val)
 {
@@ -857,6 +902,10 @@ int json_rpc_append_double(json_rpc_t *json_rpc, const char *name, double val)
 
 /*!
 	Append to a RPC a new parameter and its value of type null
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" that's going to designate the null value
+  \return	0 if successful, non nul value otherwise
  */
 int json_rpc_append_null(json_rpc_t *json_rpc, const char *name)
 {
@@ -870,6 +919,15 @@ int json_rpc_append_null(json_rpc_t *json_rpc, const char *name)
 
 /*!
 	Append to a RPC a new parameter and its value of type string
+
+  The string will be escaped appropriately regarding JSON and UTF-8 formats.
+  Binary content is allowed.
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" that's going to designate the string value
+  \param[in] val pointer to the string
+  \param[in] n length of the string to append
+  \return	0 if successful, non nul value otherwise
  */
 int json_rpc_append_strn(json_rpc_t *json_rpc, const char *name, const char *val, size_t n)
 {
@@ -891,7 +949,7 @@ int json_rpc_append_strn(json_rpc_t *json_rpc, const char *name, const char *val
 
 /*!
   \fn int json_rpc_append_str(json_rpc_t *json_rpc, const char *name, const char *s)
-  \brief Append to a RPC a new parameter and its value of type string
+  \brief Append to a RPC a new parameter and its value of type string (nul terminated)
 */
 
 /*!
@@ -904,6 +962,10 @@ int json_rpc_append_strn(json_rpc_t *json_rpc, const char *name, const char *val
  * The argument list should always be terminated by -1
  * NB: json_rpc_append_vargs() is a low-level JSON-RPC formating primitive, and does not guarantee
  * JSON-RPC syntax. Use at your own risk.
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] ap the variadic argument
+  \return	0 if successful, non nul value otherwise
  */
 int json_rpc_append_vargs(json_rpc_t *json_rpc, va_list ap)
 {
@@ -940,6 +1002,9 @@ int json_rpc_append_vargs(json_rpc_t *json_rpc, va_list ap)
 
 /*!
  * Variable arg wrapper for json_rpc_append_vargs()
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \return	0 if successful, non nul value otherwise
  */
 int json_rpc_append_args(json_rpc_t *json_rpc, ...)
 {

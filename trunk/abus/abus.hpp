@@ -41,53 +41,98 @@ public:
 	/*! Destructor */
 	virtual ~cABusRPC() { if (m_bSelfAlloc) { json_rpc_cleanup(m_json_rpc); delete m_json_rpc; } }
 
-	/*! Get the JSON type of a parameterfrom a RPC. */
+	/*! Get the JSON type of a parameter from a RPC.
+		\return a nul of positive number representing the JSON type (JSON_{INT,FLOAT,STRING,TRUE,FALSE,NULL}), a negative value in case of error
+		\sa json_rpc_get_type()
+	 */
 	int get_type(const char *name)
 		{ return json_rpc_get_type(m_json_rpc, name); }
 
-	/*! Get the value of a parameter of type integer from a RPC. */
+	/*! Get the value of a parameter of type integer from a RPC.
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_get_int()
+	 */
 	int get_int(const char *name, int *val)
 		{ return json_rpc_get_int(m_json_rpc, name, val); }
-	/*! Get the value of a parameter of type bool from a RPC. */
+	/*! Get the value of a parameter of type bool from a RPC.
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_get_bool()
+	 */
 	int get_bool(const char *name, bool *val)
 		{ return json_rpc_get_bool(m_json_rpc, name, val); }
-	/*! Get the value of a parameter of type double float from a RPC. */
+	/*! Get the value of a parameter of type double float from a RPC.
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_get_double()
+	 */
 	int get_double(const char *name, double *val)
 		{ return json_rpc_get_double(m_json_rpc, name, val); }
-	/*! Get the value of a parameter of type string from a RPC. */
+	/*! Get the value of a parameter of type string from a RPC.
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_get_str()
+	 */
 	int get_str(const char *name, char *val, size_t n)
 		{ return json_rpc_get_str(m_json_rpc, name, val, n); }
 
-	/*! Get the count of element in a named array from a RPC */
+	/*! Get the count of element in a named array from a RPC
+		\return a nul of positive number representing the count of objects in the array, a negative value in case of error
+		\sa json_rpc_get_array_count()
+	 */
 	int get_array_count(const char *name)
 		{ return json_rpc_get_array_count(m_json_rpc, name); }
-	/*! Aim the json_rpc_get_{int,bool,..} functions at an object within an array from a RPC */
+	/*! Aim the json_rpc_get_{int,bool,..} functions at an object within an array from a RPC
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_get_point_at()
+	 */
 	int get_point_at(const char *name, int idx)
 		{ return json_rpc_get_point_at(m_json_rpc, name, idx); }
 
-	/*! Append to a RPC a new parameter and its value of type integer */
+	/*! Append to a RPC a new parameter and its value of type integer
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_append_int()
+	 */
 	int append_int(const char *name, int val)
 		{ return json_rpc_append_int(m_json_rpc, name, val); }
-	/*! Append to a RPC a new parameter and its value of type boolean */
+	/*! Append to a RPC a new parameter and its value of type boolean
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_append_bool()
+	 */
 	int append_bool(const char *name, bool val)
 		{ return json_rpc_append_bool(m_json_rpc, name, val); }
-	/*! Append to a RPC a new parameter and its value of type double float */
+	/*! Append to a RPC a new parameter and its value of type double float
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_append_double()
+	 */
 	int append_double(const char *name, double val)
 		{ return json_rpc_append_double(m_json_rpc, name, val); }
-	/*! Append to a RPC a new parameter and its value of type null */
+	/*! Append to a RPC a new parameter and its value of type null
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_append_null()
+	 */
 	int append_null(const char *name)
 		{ return json_rpc_append_null(m_json_rpc, name); }
-	/*! Append to a RPC a new parameter and its value of type string */
+	/*! Append to a RPC a new parameter and its value of type string
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_append_strn()
+	 */
 	int append_strn(const char *name, const char *val, size_t n)
 		{ return json_rpc_append_strn(m_json_rpc, name, val, n); }
-	/*! Append to a RPC a new parameter and its value of type string */
+	/*! Append to a RPC a new parameter and its value of type string
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_append_str()
+	 */
 	int append_str(const char *name, const char *s)
 		{ return json_rpc_append_str(m_json_rpc, name, s); }
-	/*! Append to a RPC a list of JSON atoms */
+	/*! Append to a RPC a list of JSON atoms
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_append_args()
+	 */
 	int append_args(void *dummy, ...)
 		{ int ret; va_list ap; va_start(ap, dummy); ret = json_rpc_append_vargs(m_json_rpc, ap); va_end(ap); return ret; }
 
-	/*! Set the error code and message in a RPC before response. */
+	/*! Set the error code and message in a RPC before response.
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_set_error()
+	 */
 	void set_error(int error_code, const char *message = NULL)
 		{ json_rpc_set_error(m_json_rpc, error_code, message); }
 
