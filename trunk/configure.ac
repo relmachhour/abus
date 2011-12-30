@@ -47,7 +47,7 @@ AC_ARG_ENABLE(fcgi,
 		*)   AC_MSG_ERROR(bad value ${enableval} for --enable-fcgi) ;;
 	 esac],
 	[have_fcgi=false])
-AC_MSG_CHECKING([Checking the FastCGI support])
+AC_MSG_CHECKING([for FastCGI support])
 if test "$have_fcgi" = "true" ; then
 	AC_MSG_RESULT([yes])
 	save_LIBS="$LIBS"
@@ -59,6 +59,23 @@ else
 	ABUS_CGI=
 fi
 AC_SUBST(ABUS_CGI)
+
+AC_ARG_ENABLE(examples,
+		AS_HELP_STRING([--enable-examples], [Enable the examples [default=no]]),
+		[case "${enableval}" in
+			yes) have_examples=true  ;;
+			no) have_examples=false ;;
+			*) AC_MSG_ERROR(bad value ${enableval} for --enable-examples) ;;
+			esac],
+		[have_examples=false])
+AM_CONDITIONAL(HAVE_EXAMPLES, $have_examples)
+AC_MSG_CHECKING(whether to build the examples)
+if test "$have_examples" != "false" ; then
+	AC_MSG_RESULT([yes])
+else
+	AC_MSG_RESULT([no])
+fi 
+
 
 AC_CONFIG_FILES([
 m4/Makefile
