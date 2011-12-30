@@ -22,9 +22,12 @@ endif
 # ------------------------------------------------------------------
 #                             Assertion
 # ------------------------------------------------------------------
-abus_test_SOURCES  = abus-tor.cpp
+abus_test_SOURCES  = abus-tor.cpp abus-svc.cpp
 
-abus_test_CPPFLAGS = $(INC) $(GTEST_CFLAGS)
+abus_test_CPPFLAGS = $(INC) $(GTEST_CFLAGS) \
+					-g		\
+					-Wall	\
+					-Wextra
 
 abus_test_LDADD    = $(top_builddir)/abus/libabus.la \
 						$(GTEST_LIBS) -lgtest_main -lgtest
