@@ -6,7 +6,7 @@ AM_CPPFLAGS = $(INC)
 AM_CFLAGS = -Wall
 AM_CXXFLAGS = $(AM_CFLAGS)
 
-libabus_la_SOURCES = jsonrpc.c abus.c
+libabus_la_SOURCES = jsonrpc.c abus.c sock_un.c sock_un.h
 libabus_la_LDFLAGS = $(WINLDFLAGS) $(OSXLDFLAGS) -no-undefined -version-info 0:0:0
 libabus_la_CFLAGS = $(AM_CFLAGS)
 libabus_la_LIBADD = libjson/libjson.la hashtab/libhashtab.la -lrt
