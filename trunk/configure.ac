@@ -60,7 +60,7 @@ else
 fi
 AC_SUBST(ABUS_CGI)
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
 m4/Makefile
 abus/Makefile
 abus/libjson/Makefile
@@ -72,4 +72,6 @@ tools/Makefile
 Makefile
 abus.pc
 ])
+
+AC_OUTPUT
 
