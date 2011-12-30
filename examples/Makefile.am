@@ -13,6 +13,10 @@ EXTRA_PROGRAMS   = \
  		example-servicepp \
 		example-servicexx
 
+if HAVE_EXAMPLES
+bin_PROGRAMS = $(EXTRA_PROGRAMS)
+endif
+
 examples: $(EXTRA_PROGRAMS)
 DISTCLEANFILES = $(EXTRA_PROGRAMS)
 
