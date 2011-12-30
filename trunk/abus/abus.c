@@ -37,19 +37,15 @@
 #include "jsonrpc.h"
 #include "abus.h"
 
+#include "sock_un.h"
+
 #define LogError(...)    do { fprintf(stderr, ##__VA_ARGS__); fprintf(stderr, "\n"); } while (0)
 #define LogDebug(...)    do { fprintf(stderr, ##__VA_ARGS__); fprintf(stderr, "\n"); } while (0)
-
-#ifndef UNIX_PATH_MAX
-#define UNIX_PATH_MAX 108
-#endif
 
 #define ABUS_INTROSPECT_METHOD "*"
 #define ABUS_SUBSCRIBE_METHOD "subscribe"
 #define ABUS_UNSUBSCRIBE_METHOD "unsubscribe"
 #define ABUS_EVENT_METHOD "event"
-
-static const char *abus_prefix = "/tmp/abus";
 
 static void *abus_thread_routine(void *arg);
 
@@ -59,7 +55,7 @@ static void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg);
 static void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg);
 static void abus_req_unsubscribe_service_cb(json_rpc_t *json_rpc, void *arg);
 static int abus_unsubscribe_service(abus_t *abus, const char *service_name, const char *event_name);
-static int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json_rpc, struct sockaddr_un *sock_src_addr, socklen_t sock_addrlen);
+static int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json_rpc, const struct sockaddr *sock_src_addr, socklen_t sock_addrlen);
 
 /*!
   \def ABUS_RPC_FLAG_NONE
@@ -105,59 +101,6 @@ const char *abus_get_copyright()
 	return abus_copyright;
 }
 
-static int create_un_sock(void)
-{
-	struct sockaddr_un sockaddrun;
-	int sock;
-	int reuse_addr = 1;
-
-	sock = socket(AF_UNIX, SOCK_DGRAM, 0);
-	if (sock < 0) {
-		LogError("%s: failed to bind server socket: %s", __func__, strerror(errno));
-		return sock;
-	}
-
-	memset(&sockaddrun, 0, sizeof(sockaddrun));
-	sockaddrun.sun_family = AF_UNIX;
-
-	/* TODO: prefix from env variable */
-	snprintf(sockaddrun.sun_path, sizeof(sockaddrun.sun_path)-1,
-					"%s/_%d", abus_prefix, getpid());
-
-	if (bind(sock, (struct sockaddr *) &sockaddrun, SUN_LEN(&sockaddrun)) < 0)
-	{
-		LogError("%s: failed to bind server socket: %s", __func__, strerror(errno));
-		close(sock);
-		return -1;
-	}
-
-	/* So that we can re-bind to it without TIME_WAIT problems */
-	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse_addr, sizeof(reuse_addr)) < 0)
-	{
-		LogError("%s: failed to set SO_REUSEADDR option on server socket: %s", __func__, strerror(errno));
-		close(sock);
-		return -1;
-	}
-
-	return sock;
-}
-
-static int close_un_sock(abus_t *abus)
-{
-	char pid_path[UNIX_PATH_MAX];
-
-	if (abus->sock == -1)
-		return 0;
-
-	close(abus->sock);
-
-	/* TODO: prefix from env variable */
-	snprintf(pid_path, sizeof(pid_path)-1, "%s/_%d", abus_prefix, getpid());
-
-	unlink(pid_path);
-
-	return 0;
-}
 
 /*!
 	Initialize for A-Bus operation
@@ -203,7 +146,7 @@ static int abus_launch_thread_ondemand(abus_t *abus)
 	if (abus->sock != -1)
 		return 0;
 
-	abus->sock = create_un_sock();
+	abus->sock = un_sock_create();
 	if (abus->sock < 0)
 		return -1;
 
@@ -232,7 +175,7 @@ int abus_cleanup(abus_t *abus)
 	/* TODO: stop abus thread */
 	pthread_cancel(abus->srv_thread);
 
-	close_un_sock(abus);
+	un_sock_close(abus->sock);
 
 	/* delete service method_htab */
 	if (abus->service_htab) {
@@ -299,55 +242,17 @@ static int abus_resp_send(json_rpc_t *json_rpc)
 {
 	int len;
 
-	LogDebug("## sendto %s: %s %*s\n", __func__, json_rpc->sock_src_addr.sun_path+1,
+	LogDebug("## sendto %s: %s %*s\n", __func__,
+					un_sock_name((const struct sockaddr *)&json_rpc->sock_src_addr),
 					json_rpc->msglen, json_rpc->msgbuf);
 
-	len = sendto(json_rpc->sock, json_rpc->msgbuf, json_rpc->msglen, MSG_DONTWAIT|MSG_NOSIGNAL,
+	len = un_sock_sendto_sock(json_rpc->sock, json_rpc->msgbuf, json_rpc->msglen,
 					(struct sockaddr*)&json_rpc->sock_src_addr, json_rpc->sock_addrlen);
 	if (len == -1) {
 		perror("abus srv sendto: ");
 		return -1;
 	}
 	return 0;
-}
-
-/*
- * \param[in] timeout   receiving timeout in milliseconds
- * \result 1 if data available for receive, 0 if timeout or -1 in case of error
- */
-static int select_for_read(int sock, int timeout)
-{
-	fd_set setr, sete;
-	struct timeval tv;
-	int ret;
-
-	FD_ZERO(&setr);
-	FD_SET(sock, &setr);
-
-	memcpy(&sete, &setr, sizeof(fd_set));
-
-	tv.tv_sec = timeout / 1000;
-	tv.tv_usec = (timeout % 1000) * 1000;
-
-	do {
-		ret = select(sock + 1, &setr, NULL, &sete, &tv);
-	} while (ret == -1 && errno == EINTR);
-
-	if (ret < 0)
-	{
-		LogError("%s: select fails with error: %s", __func__, strerror(errno));
-		return -1;
-	}
-	if (ret == 0)
-	{
-		return 0;
-	}
-	if (FD_ISSET(sock, &sete))
-	{
-		LogError("%s: error detected on sock by select", __func__);
-		return -1;
-	}
-	return 1;
 }
 
 
@@ -381,11 +286,11 @@ void *abus_thread_routine(void *arg)
 			continue;
 		}
 
-		LogDebug("## Recv from %d %s: %*s\n", sock_addrlen, sock_src_addr.sun_path+1, len, buffer);
+		LogDebug("## Recv from %d %s: %*s\n", sock_addrlen, un_sock_name((const struct sockaddr *)&sock_src_addr), len, buffer);
 
 		json_rpc = calloc(1, sizeof(json_rpc_t));
 
-		abus_process_msg(abus, buffer, len, json_rpc, &sock_src_addr, sock_addrlen);
+		abus_process_msg(abus, buffer, len, json_rpc, (const struct sockaddr *)&sock_src_addr, sock_addrlen);
 
 		if (!abus_method_is_threaded((abus_method_t*)json_rpc->cb_context)) {
 			if (json_rpc->msglen) {
@@ -406,9 +311,6 @@ void *abus_thread_routine(void *arg)
  */
 int create_service_path(abus_t *abus, const char *service_name)
 {
-#ifndef UNIX_PATH_MAX
-#define UNIX_PATH_MAX 108
-#endif
 	char service_path[UNIX_PATH_MAX];
 	char pid_rel_path[UNIX_PATH_MAX];
 	int ret;
@@ -760,29 +662,6 @@ int abus_request_method_init(abus_t *abus, const char *service_name, const char 
 	return 0;
 }
 
-static int sendto_un_sock(int sock, const void *buf, size_t len, int flags, const char *service_name)
-{
-	struct sockaddr_un sockaddrun;
-	ssize_t ret;
-
-	memset(&sockaddrun, 0, sizeof(sockaddrun));
-	sockaddrun.sun_family = AF_UNIX;
-
-	/* TODO: prefix from env variable */
-	snprintf(sockaddrun.sun_path, sizeof(sockaddrun.sun_path)-1,
-					"%s/%s", abus_prefix, service_name);
-
-	ret = sendto(sock, buf, len, flags,
-					(const struct sockaddr *)&sockaddrun, SUN_LEN(&sockaddrun));
-	if (ret == -1) {
-		perror("sendto_un_sock(): sendto failed:");
-		return ret;
-	}
-
-	return 0;
-}
-
-
 /*
 	To be used by abus_request_method_invoke_async()
  */
@@ -895,7 +774,7 @@ int abus_request_method_invoke_async(abus_t *abus, json_rpc_t *json_rpc, int tim
 
 	/* send the request through serv socket, response coming from this sock */
 
-	ret = sendto_un_sock(abus->sock, json_rpc->msgbuf, json_rpc->msglen, MSG_NOSIGNAL, json_rpc->service_name);
+	ret = un_sock_sendto_svc(abus->sock, json_rpc->msgbuf, json_rpc->msglen, json_rpc->service_name);
 	if (ret != 0)
 		return ret;
 
@@ -912,63 +791,21 @@ int abus_request_method_invoke_async(abus_t *abus, json_rpc_t *json_rpc, int tim
  */
 int abus_request_method_invoke(abus_t *abus, json_rpc_t *json_rpc, int flags, int timeout)
 {
-	int sock, ret;
-	int passcred;
-	ssize_t len;
+	int ret;
 
 	ret = json_rpc_req_finalize(json_rpc);
 
-	if (json_rpc->sock == -1) {
-		/* Don't re-use abus->sock as a default,
-		 * so as to have faster response time (saves 2 thread switches)
-		 */
-		sock = socket(AF_UNIX, SOCK_DGRAM, 0);
-		if (sock < 0) {
-			LogError("%s: failed to create socket: %s", __func__, strerror(errno));
-			return sock;
-		}
-	
-		/* autobind */
-		passcred = 1;
-		ret = setsockopt(sock, SOL_SOCKET, SO_PASSCRED, &passcred, sizeof(passcred));
-		if (ret != 0) {
-			perror("abus clnt setsockopt(SO_PASSCRED): ");
-			close(sock);
-			return ret;
-		}
-	} else {
-		sock = json_rpc->sock;
-	}
-
-	ret = sendto_un_sock(sock, json_rpc->msgbuf, json_rpc->msglen, MSG_NOSIGNAL, json_rpc->service_name);
-	if (ret != 0) {
-		if (json_rpc->sock == -1)
-			close(sock);
+	/* Don't re-use abus->sock as a default,
+	 * so as to have faster response time (saves 2 thread switches)
+	 *
+	 * recycle req msgbuf
+	 */
+	ret = un_sock_transaction(json_rpc->sock, json_rpc->msgbuf, json_rpc->msglen, json_rpc->msgbufsz, json_rpc->service_name, timeout);
+	if (ret < 0) {
 		return ret;
 	}
 
-	ret = select_for_read(sock, timeout);
-	if (ret == -1) {
-		if (json_rpc->sock == -1)
-			close(sock);
-		return -1;
-	}
-	if (ret == 0) {
-		if (json_rpc->sock == -1)
-			close(sock);
-		return -2;	/* FIXME: timeout */
-	}
-
-	/* recycle req msgbuf */
-
-	len = recv(sock, json_rpc->msgbuf, json_rpc->msgbufsz, 0);
-	if (len == -1) {
-		perror("abus clnt recv: ");
-		if (json_rpc->sock == -1)
-			close(sock);
-		return 0;
-	}
-	json_rpc->msglen = len;
+	json_rpc->msglen = ret;
 
 	ret = json_rpc_parse_msg(json_rpc, json_rpc->msgbuf, json_rpc->msglen);
 	if (ret || json_rpc->parsing_status != PARSING_OK) {
@@ -981,9 +818,6 @@ int abus_request_method_invoke(abus_t *abus, json_rpc_t *json_rpc, int flags, in
 	free(json_rpc->msgbuf);
 	json_rpc->msgbuf = NULL;
 	json_rpc->msglen = 0;
-
-	if (json_rpc->sock == -1)
-		close(sock);
 
 	return ret;
 }
@@ -1004,7 +838,7 @@ int abus_request_method_cleanup(abus_t *abus, json_rpc_t *json_rpc)
 }
 
 
-int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json_rpc, struct sockaddr_un *sock_src_addr, socklen_t sock_addrlen)
+int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json_rpc, const struct sockaddr *sock_src_addr, socklen_t sock_addrlen)
 {
 	int ret;
 	abus_method_t *method;
@@ -1014,7 +848,7 @@ int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json
 		return ret;
 
 	if (sock_src_addr) {
-		memcpy(&json_rpc->sock_src_addr, sock_src_addr, sizeof(struct sockaddr_un));
+		memcpy(&json_rpc->sock_src_addr, sock_src_addr, sock_addrlen);
 		json_rpc->sock_addrlen = sock_addrlen;
 	}
 
@@ -1129,56 +963,22 @@ static int json_rpc_quickparse_service_name(const char *buffer, int buflen, char
  */
 int abus_forward_rpc(abus_t *abus, char *buffer, int *buflen, int flags, int timeout)
 {
-	int sock, ret;
-	int passcred;
+	int ret;
 	char service_name[JSONRPC_SVCNAME_SZ_MAX];
-	ssize_t len;
 
 	ret = json_rpc_quickparse_service_name(buffer, *buflen, service_name);
 	if (ret != 0)
 		return ret;
 
-	sock = socket(AF_UNIX, SOCK_DGRAM, 0);
-	if (sock < 0) {
-		LogError("%s: failed to create socket: %s", __func__, strerror(errno));
-		return sock;
-	}
-
-	/* autobind for response */
-	passcred = 1;
-	ret = setsockopt(sock, SOL_SOCKET, SO_PASSCRED, &passcred, sizeof(passcred));
-	if (ret != 0) {
-		perror("abus clnt setsockopt(SO_PASSCRED): ");
-		close(sock);
+	/*
+	 * rem: recycle req msgbuf
+	 */
+	ret = un_sock_transaction(-1, buffer, *buflen, JSONRPC_RESP_SZ_MAX, service_name, timeout);
+	if (ret < 0) {
 		return ret;
 	}
 
-	ret = sendto_un_sock(sock, buffer, *buflen, MSG_NOSIGNAL, service_name);
-	if (ret != 0) {
-		close(sock);
-		return ret;
-	}
-
-	ret = select_for_read(sock, timeout);
-	if (ret == -1) {
-		close(sock);
-		return -1;
-	}
-	if (ret == 0) {
-		close(sock);
-		return -2;	/* FIXME: timeout */
-	}
-
-	/* recycle req buffer */
-
-	len = recv(sock, buffer, JSONRPC_RESP_SZ_MAX, 0);
-	if (len == -1) {
-		perror("abus forword recv: ");
-		close(sock);
-		return 0;
-	}
-	close(sock);
-	*buflen = len;
+	*buflen = ret;
 
 	return 0;
 }
@@ -1382,14 +1182,14 @@ int abus_request_event_publish(abus_t *abus, json_rpc_t *json_rpc, int flags)
 
 	/* foreach subscribed A-Bus endpoints, deliver "id"-less rpc */
 	if (event->subscriber_htab && hfirst(event->subscriber_htab)) do {
-		struct sockaddr_un *sockaddrun;
+		struct sockaddr *sockaddrun;
 
 		sockaddrun = hstuff(event->subscriber_htab);
 
-		LogDebug("####%s: %*s %*s\n", __func__, SUN_LEN(sockaddrun)-3, sockaddrun->sun_path+1, json_rpc->msglen, json_rpc->msgbuf);
+		LogDebug("####%s: %*s %*s\n", __func__, un_sock_socklen(sockaddrun)-3, un_sock_name(sockaddrun), json_rpc->msglen, json_rpc->msgbuf);
 
-		ret = sendto(abus->sock, json_rpc->msgbuf, json_rpc->msglen, MSG_NOSIGNAL|MSG_DONTWAIT,
-					(const struct sockaddr *)sockaddrun, SUN_LEN(sockaddrun));
+		ret = un_sock_sendto_sock(abus->sock, json_rpc->msgbuf, json_rpc->msglen,
+					(const struct sockaddr *)sockaddrun, un_sock_socklen(sockaddrun));
 		if (ret == -1) {
 			const char *event_name;
 			/* remove that subscriber if delivery failed */
@@ -1535,7 +1335,8 @@ void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 	if (!event->subscriber_htab)
 		event->subscriber_htab = hcreate(1);
 
-	LogDebug("####%s %s %p %u %*s\n", json_rpc->service_name, event_name, event->subscriber_htab, event->uniq_subscriber_cnt, json_rpc->sock_addrlen-1, json_rpc->sock_src_addr.sun_path+1);
+	LogDebug("####%s %s %p %u %*s\n", json_rpc->service_name, event_name, event->subscriber_htab, event->uniq_subscriber_cnt,
+					json_rpc->sock_addrlen-1, un_sock_name((const struct sockaddr *)&json_rpc->sock_src_addr));
 
 	key = memdup(&event->uniq_subscriber_cnt, sizeof(event->uniq_subscriber_cnt));
 	event->uniq_subscriber_cnt++;
