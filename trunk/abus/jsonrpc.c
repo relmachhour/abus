@@ -688,10 +688,10 @@ int json_rpc_get_double(json_rpc_t *json_rpc, const char *name, double *val)
   \param json_rpc pointer to an opaque handle of a JSON RPC
   \param[in] name key name of a "params"/"result" designating a string value
   \param[out] val pointer to location where to store the string value
-  \param[in] n maximum size of the localtion where to store the string
+  \param[in,out] n pointer to maximum size of the location where to store the string, real size upon return
   \return	0 if successful, non nul value otherwise
  */
-int json_rpc_get_str(json_rpc_t *json_rpc, const char *name, char *val, size_t n)
+int json_rpc_get_strn(json_rpc_t *json_rpc, const char *name, char *val, size_t *n)
 {
 	json_val_t *json_val;
 	int ret, len;
@@ -700,10 +700,38 @@ int json_rpc_get_str(json_rpc_t *json_rpc, const char *name, char *val, size_t n
 	if (ret)
 		return ret;
 
-	n--;
-	len = n < json_val->length ? n : json_val->length;
+	len = *n < json_val->length ? *n : json_val->length;
 	memcpy(val, json_val->u.data, len);
-	val[len] = '\0';
+	*n = len;
+
+	return 0;
+}
+
+/*!
+	Get the value of a parameter of type string (nul terminated) from a RPC
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" designating a string value
+  \param[out] val pointer to location where to store the string value
+  \param[in] n maximum size of the location where to store the string
+  \return	0 if successful, non nul value otherwise
+ */
+int json_rpc_get_str(json_rpc_t *json_rpc, const char *name, char *val, size_t n)
+{
+	int ret;
+    size_t len;
+
+    if (n == 0)
+        return JSONRPC_INVALID_METHOD;
+
+    len = n-1;
+
+    ret = json_rpc_get_strn(json_rpc, name, val, &len);
+	if (ret < 0)
+		return ret;
+
+    if (len >= 0 && len < n)
+        val[len] = '\0';
 
 	return 0;
 }
