@@ -140,8 +140,8 @@ public:
 		\return	0	if successful, non nul value otherwise
 		\sa json_rpc_set_error()
 	 */
-	void set_error(int error_code, const char *message = NULL)
-		{ json_rpc_set_error(m_json_rpc, error_code, message); }
+	int set_error(int error_code, const char *message = NULL)
+		{ return json_rpc_set_error(m_json_rpc, error_code, message); }
 
 protected:
 	bool		m_bSelfAlloc;	/* m_json_rpc has been alloc'ed by constructor */

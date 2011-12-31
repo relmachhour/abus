@@ -546,7 +546,7 @@ int json_rpc_get_type(json_rpc_t *json_rpc, const char *name)
 	htab *p_htab;
 
 	if (json_rpc->parsing_status != PARSING_OK || !name)
-		return -1;
+		return JSONRPC_PARSE_ERROR;
 
 	if (json_rpc->pointed_htab)
 		p_htab = json_rpc->pointed_htab;
@@ -554,7 +554,7 @@ int json_rpc_get_type(json_rpc_t *json_rpc, const char *name)
 		p_htab = json_rpc->params_htab;
 
 	if (!hfind(p_htab, name, strlen(name)))
-		return -2;	/* not found */
+		return JSONRPC_INVALID_METHOD;	/* not found */
 
 	json_val = hstuff(p_htab);
 
@@ -567,7 +567,7 @@ static int json_rpc_check_val(json_rpc_t *json_rpc, const char *name, json_val_t
 	htab *p_htab;
 
 	if (json_rpc->parsing_status != PARSING_OK || !name || !json_valp)
-		return -1;
+		return JSONRPC_PARSE_ERROR;
 
 	if (json_rpc->pointed_htab)
 		p_htab = json_rpc->pointed_htab;
@@ -575,7 +575,7 @@ static int json_rpc_check_val(json_rpc_t *json_rpc, const char *name, json_val_t
 		p_htab = json_rpc->params_htab;
 
 	if (!hfind(p_htab, name, strlen(name)))
-		return -2;	/* not found */
+		return JSONRPC_INVALID_METHOD;	/* not found */
 
 	json_val = hstuff(p_htab);
 	*json_valp = json_val;
@@ -597,7 +597,8 @@ static int json_rpc_check_val_type(json_rpc_t *json_rpc, const char *name, json_
 
 	json_val = *json_valp;
 
-	if (json_val->type != type || json_val->length == 0 || !json_val->u.data)
+	if (json_val->type != type || !json_val->u.data ||
+            (type != JSON_STRING && json_val->length == 0))
 		return JSONRPC_PARSE_ERROR;	/* wrong type */
 
 	return 0;
@@ -852,14 +853,36 @@ int json_rpc_req_finalize(json_rpc_t *json_rpc)
 
   \param json_rpc pointer to an opaque handle of a JSON RPC
   \param[in] error_code integer value of the error, as per JSON/XML convention
-  \param[in] message pointer to a string describing the error
+  \param[in] message pointer to a string describing the error, may be NULL
   \return	0 if successful, non nul value otherwise
  */
-void json_rpc_set_error(json_rpc_t *json_rpc, int error_code, const char *message)
+int json_rpc_set_error(json_rpc_t *json_rpc, int error_code, const char *message)
 {
-	/* FIXME: make also use of message arg in response if non NULL */
+	struct json_val error_msg_val;
+	const char *error_msg;
+	int len;
 
 	json_rpc->error_code = error_code;
+
+	if (json_rpc->error_code == 0)
+		return 0;
+
+	/* Overwrite unfinished response with "error" tag */
+	json_rpc->msglen = 0;
+	json_rpc->msglen += snprintf(msg_p(json_rpc), msg_rem(json_rpc),
+					"{\"jsonrpc\":\"2.0\",\"error\":{\"code\":%d,\"message\":",
+					json_rpc->error_code);
+
+	error_msg = message ? message : json_rpc_strerror(json_rpc->error_code);
+	json_val_set_string(&error_msg_val, (char *)error_msg, strlen(error_msg));
+
+	len = json_print_val(msg_p(json_rpc), msg_rem(json_rpc), &error_msg_val);
+	if (len < 0)
+		return len;
+
+	json_rpc->msglen += len;
+
+	return 0;
 }
 
 static int json_rpc_is_comma_needed(const json_rpc_t *json_rpc)

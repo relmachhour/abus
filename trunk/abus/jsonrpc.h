@@ -134,7 +134,7 @@ int json_val_is_undef(const json_val_t *json_val);
 /* service side */
 int json_rpc_req_init(json_rpc_t *json_rpc, const char *service_name, const char *method_name, unsigned id);
 int json_rpc_req_finalize(json_rpc_t *json_rpc);
-void json_rpc_set_error(json_rpc_t *json_rpc, int error_code, const char *message);
+int json_rpc_set_error(json_rpc_t *json_rpc, int error_code, const char *message);
 
 /* both sides */
 int json_rpc_get_type(json_rpc_t *json_rpc, const char *name);
