@@ -24,6 +24,7 @@
 
 #include "abus.h"
 
+static int opt_timeout = 1000; /* ms */
 
 static void print_basic_type(const char *prefix, const char *name, const json_val_t *val)
 {
@@ -97,7 +98,7 @@ int forward_rpc_stdinout(abus_t *abus)
 		return len;
 	}
 
-	ret = abus_forward_rpc(abus, buffer, &len, 0, 1000);
+	ret = abus_forward_rpc(abus, buffer, &len, 0, opt_timeout);
 
 	/* TODO: forge JSON-RPC response in case of error */
 	/* 	'{"jsonrpc": "2.0", "error": {"code": XXX, "message": "XXX"}, "id":XXX}' */
@@ -121,6 +122,7 @@ int usage(const char *argv0)
 	printf("usage: %s [options] SERVICE.METHOD [key:[bdis]]=value]...\n", argv0);
     printf(
     "  -h, --help                 this help message\n"
+    "  -t, --timeout=TIMEOUT      timeout in milliseconds\n"
     "  -V, --version              version of A-Bus\n"
     "  -y, --async                asynchronous query\n"
     "  -w, --wait-async           wait for asynchronous query, without callback\n"
@@ -137,6 +139,7 @@ int main(int argc, char **argv)
 	int ret;
 	int opt_async = 0;
 	int opt_wait_async = 0;
+	char *endptr;
 
 	while (1) {
 		int option_index;
@@ -149,6 +152,11 @@ int main(int argc, char **argv)
 		switch (c) {
 		case 'h':
 			usage(argv[0]);
+			break;
+		case 't':
+			opt_timeout = strtol(optarg, &endptr, 10);
+			if (optarg == endptr)
+				usage(argv[0]);
 			break;
 		case 'y':
 			opt_async = 1;
@@ -187,9 +195,9 @@ int main(int argc, char **argv)
 		method_name = "";
 
 	if (!strcmp(method_name, "subscribe") && ++optind < argc) {
-		ret = abus_event_subscribe(&abus, service_name, argv[optind], &async_print_all_cb, 0, "evt cookie", 1000);
+		ret = abus_event_subscribe(&abus, service_name, argv[optind], &async_print_all_cb, 0, "evt cookie", opt_timeout);
 		sleep(10);
-		ret = abus_event_unsubscribe(&abus, service_name, argv[optind], &async_print_all_cb, "evt cookie", 1000);
+		ret = abus_event_unsubscribe(&abus, service_name, argv[optind], &async_print_all_cb, "evt cookie", opt_timeout);
 		exit(EXIT_SUCCESS);
 	}
 
@@ -248,13 +256,13 @@ int main(int argc, char **argv)
 		if (opt_wait_async) {
 			/* no timeout for abus_request_method_invoke_async() */
 			ret = abus_request_method_invoke_async(&abus, json_rpc, 0, &async_print_all_cb, 0, "async cookie");
-			ret = abus_request_method_wait_async(&abus, json_rpc, 1000);
+			ret = abus_request_method_wait_async(&abus, json_rpc, opt_timeout);
 		} else {
-			ret = abus_request_method_invoke_async(&abus, json_rpc, 1000, &async_print_all_cb, 0, "async cookie");
+			ret = abus_request_method_invoke_async(&abus, json_rpc, opt_timeout, &async_print_all_cb, 0, "async cookie");
 			sleep(2);
 		}
 	} else {
-		abus_request_method_invoke(&abus, json_rpc, 0, 1000);
+		abus_request_method_invoke(&abus, json_rpc, 0, opt_timeout);
 		async_print_all_cb(json_rpc, "printall cookie");
 		abus_request_method_cleanup(&abus, json_rpc);
 	}
@@ -263,7 +271,4 @@ int main(int argc, char **argv)
 
 	return EXIT_SUCCESS;
 }
-
-
-
 
