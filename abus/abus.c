@@ -668,6 +668,7 @@ int abus_undecl_method(abus_t *abus, const char *service_name, const char *metho
 
   \param[in] service_name	name of service where the method belongs to
   \param[in] method_name	name of method to be later invoked
+  \param json_rpc pointer to an opaque handle of a JSON RPC
   \param abus	pointer to A-Bus handle
   \return 0 if successful, non nul value otherwise
  */
@@ -740,6 +741,7 @@ static json_rpc_t *abus_req_untrack(abus_t *abus, const json_val_t *id_val)
 	Wait for an asynchronous method request
 
   \param abus	pointer to A-Bus handle
+  \param json_rpc pointer to an opaque handle of a JSON RPC
   \param[in] timeout waiting timeout in milliseconds
   \return   0 if successful, non nul value otherwise
   \sa abus_request_method_invoke_async()
@@ -776,8 +778,10 @@ int abus_request_method_wait_async(abus_t *abus, json_rpc_t *json_rpc, int timeo
   Asynchronous invocation of a RPC
 
   \param abus	pointer to A-Bus handle
+  \param json_rpc pointer to an opaque handle of a JSON RPC
   \param[in] timeout	receiving timeout in milliseconds
   \param[in] callback	function to be called upon response or timeout. may be NULL.
+  \param[in] flags		ABUS_RPC flags
   \param[in] arg			opaque pointer value to be passed to callback. may be NULL.
   \return   0 if successful, non nul value otherwise
 
@@ -816,11 +820,14 @@ int abus_request_method_invoke_async(abus_t *abus, json_rpc_t *json_rpc, int tim
 
 
 /*!
- * synchronous invocation
+ * Synchronous invocation of a method
 
   \param abus	pointer to A-Bus handle
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] flags		ABUS_RPC flags
   \param[in] timeout   receiving timeout in milliseconds
   \return   0 if successful, non nul value otherwise
+  \sa abus_request_method_init(), abus_request_method_cleanup()
  */
 int abus_request_method_invoke(abus_t *abus, json_rpc_t *json_rpc, int flags, int timeout)
 {
@@ -859,7 +866,9 @@ int abus_request_method_invoke(abus_t *abus, json_rpc_t *json_rpc, int flags, in
   Release ressources associated with a RPC
 
   \param abus	pointer to A-Bus handle
+  \param json_rpc pointer to an opaque handle of a JSON RPC
   \return   0 if successful, non nul value otherwise
+  \sa abus_request_method_init()
  */
 int abus_request_method_cleanup(abus_t *abus, json_rpc_t *json_rpc)
 {
@@ -987,12 +996,10 @@ static int json_rpc_quickparse_service_name(const char *buffer, int buflen, char
 
  * \param abus		pointer to A-Bus context
  * \param[in,out] buffer	pointer to buffer (size at least JSONRPC_RESP_SZ_MAX) containing JSON-RPC request, and later the response
- * \param[in,out] buffer	pointer to length of buffer of JSON-RPC request/response
+ * \param[in,out] buflen	pointer to length of buffer of JSON-RPC request/response
  * \param[in] flags		ABUS_RPC flags
  * \param[in] timeout	receiving timeout in milliseconds
   \return   0 if successful, non nul value otherwise
- *
- * \todo ABUS_RPC_THREADED
  */
 int abus_forward_rpc(abus_t *abus, char *buffer, int *buflen, int flags, int timeout)
 {
@@ -1170,6 +1177,9 @@ int abus_decl_event(abus_t *abus, const char *service_name, const char *event_na
 	Initialize a new RPC to be published by a service
 
   \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the event belongs to
+  \param[in] event_name	name of event that's about to be published
+  \param json_rpc pointer to an opaque handle of a JSON RPC
   \return   0 if successful, non nul value otherwise
   \sa abus_request_event_cleanup()
  */
@@ -1216,6 +1226,7 @@ int abus_request_event_init(abus_t *abus, const char *service_name, const char *
 	If notification delivery fails, the troublesome end-point get unsubscribed.
 
   \param abus	pointer to A-Bus handle
+  \param json_rpc pointer to an opaque handle of a JSON RPC
   \param[in] flags   unused so far
   \return   0 if successful, non nul value otherwise
   \sa abus_request_event_init()
@@ -1257,6 +1268,7 @@ int abus_request_event_publish(abus_t *abus, json_rpc_t *json_rpc, int flags)
 	Release ressources associated with a past event RPC
 
   \param abus	pointer to A-Bus handle
+  \param json_rpc pointer to an opaque handle of a JSON RPC
   \return   0 if successful, non nul value otherwise
   \sa abus_request_event_init()
  */
@@ -1271,6 +1283,11 @@ int abus_request_event_cleanup(abus_t *abus, json_rpc_t *json_rpc)
  * Register callback for event notification and send subscription to service.
 
   \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the event belongs to
+  \param[in] event_name	name of event to subscribe to
+  \param[in] callback	function to be called upon event publication or subscribe timeout.
+  \param[in] flags		ABUS_RPC flags
+  \param[in] arg		opaque pointer value to be passed to \a callback. may be NULL.
   \param[in] timeout	receive timeout of subscribe request in milliseconds
   \return   0 if successful, non nul value otherwise
  */
@@ -1313,6 +1330,10 @@ int abus_event_subscribe(abus_t *abus, const char *service_name, const char *eve
  * Unregister callback for event notification and send unsubscription to service.
 
   \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the event belongs to
+  \param[in] event_name	name of event to unsubscribe from
+  \param[in] callback	function to be called upon event publication or subscribe timeout.
+  \param[in] arg		opaque pointer value to be passed to \a callback. may be NULL.
   \param[in] timeout	receive timeout of unsubscribe request in milliseconds
   \return   0 if successful, non nul value otherwise
  */
