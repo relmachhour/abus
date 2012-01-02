@@ -38,6 +38,7 @@ int main(int argc, char **argv)
 #define MYSVCNAME "examplesvc"
 #define MYEVTNAME "enter_pressed"
 	abus_decl_event(&abus, MYSVCNAME, MYEVTNAME,
+					"Event sent each time the ENTER key is press. Serves as publish/subscribe example.",
 					"typed_char:s:keys pressed before the ENTER key");
 
 	/* cheap event generator: press ENTER key on stdin

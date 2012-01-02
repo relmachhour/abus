@@ -28,19 +28,22 @@ class AbusTest : public testing::Test {
 
 	        EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "sum", this, svc_sum_cb,
 					ABUS_RPC_FLAG_NONE,
+					"Compute summation of two integers",
 					"a:i:first operand,b:i:second operand",
 					"res_value:i:summation"));
 
 	        EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "jtypes", this, svc_jtypes_cb,
-					ABUS_RPC_FLAG_NONE, NULL, NULL));
+					ABUS_RPC_FLAG_NONE, NULL, NULL, NULL));
 
 	        EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "sqr", this, svc_array_sqr_cb,
 					ABUS_RPC_FLAG_NONE,
+					"Compute multiplication of two integers",
 					"k:i:some contant,my_array:(a:i:value to be squared,arg_index:i:index of arg for demo):array of stuff",
 					"res_k:i:same contant,res_array:(res_a:i:squared value):array of squared stuff"));
 
 	        EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "echo", this, svc_echo_cb,
 					ABUS_RPC_FLAG_NONE,
+					"echo of message",
 					"msg:s:message",
 					"msg:s:echoed message,msg_len:i:message length"));
         }
@@ -293,6 +296,7 @@ TEST_F(AbusReqTest, PlentyOfMethods) {
 
         EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, method_name, this, svc_sum_cb,
                     ABUS_RPC_FLAG_NONE,
+					"Compute summation of two integers, plenty of methods",
                     "a:i:first operand,b:i:second operand",
                     "res_value:i:summation"));
     }
