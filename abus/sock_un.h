@@ -26,13 +26,15 @@
 #define UNIX_PATH_MAX 108
 #endif
 
-const char *abus_prefix;
+extern const char *abus_prefix;
+extern int abus_msg_verbose;
 
 int un_sock_create(void);
 int un_sock_close(int sock);
 int un_sock_sendto_svc(int sock, const void *buf, size_t len, const char *service_name);
 int un_sock_sendto_sock(int sock, const void *buf, size_t len, const struct sockaddr *dest_addr, int addrlen);
 int un_sock_transaction(const int sockarg, void *buf, size_t len, size_t bufsz, const char *service_name, int timeout);
+ssize_t un_sock_recvfrom(int sockfd, void *buf, size_t len, struct sockaddr *src_addr, socklen_t *addrlen);
 
 static inline int un_sock_socklen(const struct sockaddr *sockaddr)
 {

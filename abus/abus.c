@@ -105,7 +105,10 @@ const char *abus_get_copyright()
 /*!
 	Initialize for A-Bus operation
 
-	The A-Bus thread may not be created if only using synchronous abus_request_method_invoke().
+  The A-Bus thread may not be created if only using synchronous abus_request_method_invoke().
+
+  When the external environement variable ABUS_MSG_VERBOSE is set to a non zero value,
+  content of JSON-RPC messages will be displayed on the terminal.
 
   \param abus pointer to an opaque handle for A-Bus operation
   \return   0 if successful, non nul value otherwise
@@ -113,8 +116,13 @@ const char *abus_get_copyright()
 int abus_init(abus_t *abus)
 {
 	int ret;
+	char *p;
 
 	memset(abus, 0, sizeof(abus_t));
+
+	p = getenv("ABUS_MSG_VERBOSE");
+	if (p)
+		abus_msg_verbose = atoi(p);
 
 	pthread_mutex_init(&abus->mutex, NULL);
 
@@ -242,10 +250,6 @@ static int abus_resp_send(json_rpc_t *json_rpc)
 {
 	int len;
 
-	LogDebug("## sendto %s: %s %*s\n", __func__,
-					un_sock_name((const struct sockaddr *)&json_rpc->sock_src_addr),
-					json_rpc->msglen, json_rpc->msgbuf);
-
 	len = un_sock_sendto_sock(json_rpc->sock, json_rpc->msgbuf, json_rpc->msglen,
 					(struct sockaddr*)&json_rpc->sock_src_addr, json_rpc->sock_addrlen);
 	if (len == -1) {
@@ -278,15 +282,13 @@ void *abus_thread_routine(void *arg)
 		struct sockaddr_un sock_src_addr;
 		socklen_t sock_addrlen = sizeof(sock_src_addr);
 
-		len = recvfrom(abus->sock, buffer, JSONRPC_REQ_SZ_MAX, 0,
+		len = un_sock_recvfrom(abus->sock, buffer, JSONRPC_REQ_SZ_MAX,
 						(struct sockaddr*)&sock_src_addr,
 						&sock_addrlen);
 		if (len == -1) {
 			perror("abus srv recv: ");
 			continue;
 		}
-
-		LogDebug("## Recv from %d %s: %*s\n", sock_addrlen, un_sock_name((const struct sockaddr *)&sock_src_addr), len, buffer);
 
 		json_rpc = calloc(1, sizeof(json_rpc_t));
 
@@ -1186,8 +1188,6 @@ int abus_request_event_publish(abus_t *abus, json_rpc_t *json_rpc, int flags)
 
 		sockaddrun = hstuff(event->subscriber_htab);
 
-		LogDebug("####%s: %*s %*s\n", __func__, un_sock_socklen(sockaddrun)-3, un_sock_name(sockaddrun), json_rpc->msglen, json_rpc->msgbuf);
-
 		ret = un_sock_sendto_sock(abus->sock, json_rpc->msgbuf, json_rpc->msglen,
 					(const struct sockaddr *)sockaddrun, un_sock_socklen(sockaddrun));
 		if (ret == -1) {
@@ -1355,8 +1355,6 @@ int abus_unsubscribe_service(abus_t *abus, const char *service_name, const char 
 	if (!event || !event->subscriber_htab) {
 		return JSONRPC_NO_METHOD;
 	}
-
-	LogDebug("####%s %s\n", service_name, event_name);
 
 	free(hkey(event->subscriber_htab));
 	free(hstuff(event->subscriber_htab));

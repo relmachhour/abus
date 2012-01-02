@@ -32,11 +32,19 @@
 #define LogError(...)    do { fprintf(stderr, ##__VA_ARGS__); fprintf(stderr, "\n"); } while (0)
 #define LogDebug(...)    do { fprintf(stderr, ##__VA_ARGS__); fprintf(stderr, "\n"); } while (0)
 
-#ifndef UNIX_PATH_MAX
-#define UNIX_PATH_MAX 108
-#endif
 
 const char *abus_prefix = "/tmp/abus";
+int abus_msg_verbose;
+
+static void un_sock_print_message(int out, const struct sockaddr *sockaddr, const char *msg, int msglen)
+{
+	LogDebug("## %5d %s %s:%d %*s",
+					getpid(),
+					out ? "->" : "<-", 
+					sockaddr ? un_sock_name(sockaddr) : "",
+					msglen, 
+					msglen, msg);
+}
 
 int un_sock_create(void)
 {
@@ -145,6 +153,9 @@ int un_sock_sendto_svc(int sock, const void *buf, size_t len, const char *servic
 	snprintf(sockaddrun.sun_path, sizeof(sockaddrun.sun_path)-1,
 					"%s/%s", abus_prefix, service_name);
 
+	if (abus_msg_verbose)
+		un_sock_print_message(true, (const struct sockaddr *)&sockaddrun, buf, len);
+
 	ret = sendto(sock, buf, len, MSG_NOSIGNAL,
 					(const struct sockaddr *)&sockaddrun, SUN_LEN(&sockaddrun));
 	if (ret == -1) {
@@ -157,6 +168,9 @@ int un_sock_sendto_svc(int sock, const void *buf, size_t len, const char *servic
 
 int un_sock_sendto_sock(int sock, const void *buf, size_t len, const struct sockaddr *dest_addr, int addrlen)
 {
+	if (abus_msg_verbose)
+		un_sock_print_message(true, dest_addr, buf, len);
+
 	return sendto(sock, buf, len, MSG_NOSIGNAL|MSG_DONTWAIT, dest_addr, addrlen);
 }
 
@@ -213,9 +227,30 @@ int un_sock_transaction(const int sockarg, void *buf, size_t len, size_t bufsz, 
 		return 0;
 	}
 	ret = len;
+	if (len < bufsz)
+		((char*)buf)[len] = '\0';
+
+	if (abus_msg_verbose)
+		un_sock_print_message(false, NULL, buf, len);
 
 	if (sockarg == -1)
 		close(sock);
+
+	return ret;
+}
+
+ssize_t un_sock_recvfrom(int sockfd, void *buf, size_t len,
+                        struct sockaddr *src_addr, socklen_t *addrlen)
+{
+	ssize_t ret;
+
+	ret = recvfrom(sockfd, buf, len, 0, src_addr, addrlen);
+
+	if (*addrlen < sizeof(struct sockaddr_un))
+		((char *)src_addr)[*addrlen] = '\0';
+
+	if (abus_msg_verbose)
+		un_sock_print_message(false, src_addr, buf, ret);
 
 	return ret;
 }
