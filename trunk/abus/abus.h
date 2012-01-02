@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Stephane Fillod
+ * Copyright (C) 2011-2012 Stephane Fillod
  *
  *   This library is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Library General Public License as
@@ -39,6 +39,7 @@ typedef struct abus_method {
 	abus_callback_t callback;
 	void *arg;
 	int flags;
+	char *descr;
 	char *fmt;
 	char *result_fmt;
 	pthread_mutex_t excl_mutex;	/* for ABUS_RPC_EXCL */
@@ -48,6 +49,7 @@ typedef struct abus_event {
 	/* event name from htab key */
 	htab *subscriber_htab;	// uniq_subscriber_cnt->subscriber's sockaddr_un
 	unsigned uniq_subscriber_cnt;
+	char *descr;
 	char *fmt;
 } abus_event_t;
 
@@ -82,7 +84,7 @@ const char *abus_get_copyright();
 int abus_init(abus_t *abus);
 int abus_cleanup(abus_t *abus);
 
-int abus_decl_method(abus_t *abus, const char *service_name, const char *method_name, abus_callback_t method_callback, int flags, void *arg, const char *fmt, const char *result_fmt);
+int abus_decl_method(abus_t *abus, const char *service_name, const char *method_name, abus_callback_t method_callback, int flags, void *arg, const char *descr, const char *fmt, const char *result_fmt);
 int abus_undecl_method(abus_t *abus, const char *service_name, const char *method_name);
 
 /* synchronous call */
@@ -99,7 +101,7 @@ int abus_request_method_wait_async(abus_t *abus, json_rpc_t *json_rpc, int timeo
 /* TODO: abus_request_method_cancel_async() ? */
 
 /* publish/subscribe */
-int abus_decl_event(abus_t *abus, const char *service_name, const char *event_name, const char *fmt);
+int abus_decl_event(abus_t *abus, const char *service_name, const char *event_name, const char *descr, const char *fmt);
 /* TODO: int abus_undecl_event(abus_t *abus, const char *service_name, const char *event_name); */
 int abus_request_event_init(abus_t *abus, const char *service_name, const char *event_name, json_rpc_t *json_rpc);
 int abus_request_event_publish(abus_t *abus, json_rpc_t *json_rpc, int flags);
@@ -125,8 +127,8 @@ int abus_forward_rpc(abus_t *abus, char *buffer, int *buflen, int flags, int tim
 	void _method(json_rpc_t *json_rpc)
 
 /* To be used instead of abus_decl_method() */
-#define abus_decl_method_cxx(_abus, _service_name, _method_name, _obj, _method, _flags, fmt, res_fmt) \
-		abus_decl_method((_abus), (_service_name), (_method_name), &(_obj)->_method##Wrapper, (_flags), (void *)(_obj), fmt, res_fmt)
+#define abus_decl_method_cxx(_abus, _service_name, _method_name, _obj, _method, _flags, descr, fmt, res_fmt) \
+		abus_decl_method((_abus), (_service_name), (_method_name), &(_obj)->_method##Wrapper, (_flags), (void *)(_obj), descr, fmt, res_fmt)
 
 #endif	/* __cplusplus */
 

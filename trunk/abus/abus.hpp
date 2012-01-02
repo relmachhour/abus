@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Stephane Fillod
+ * Copyright (C) 2011-2012 Stephane Fillod
  *
  *   This library is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Library General Public License as
@@ -224,7 +224,7 @@ private:
 
 
 /*! C++ friendly callback declaration helper.
-  To be used in public class declaration, along with declpp_method/event_subscribepp
+  To be used in public class declaration, along with declpp_method()/event_subscribepp()
  */
 #define abus_declpp_method_member(_cl, _method) \
 	static void _method##Wrapper(json_rpc_t *json_rpc, void *arg) \
@@ -244,17 +244,23 @@ public:
 	/*! Destructor */
 	virtual ~cABus() { abus_cleanup(&m_abus); }
 
-	/*! Declare a new method in a service */
+	/*! Declare a new method in a service
+		\return	0	if successful, non nul value otherwise
+		\sa declpp_method(), undecl_method()
+	 */
 	int decl_method(const char *service_name, const char *method_name,
 					abus_callback_t method_callback, int flags = 0, void *arg = NULL,
-					const char *fmt = NULL, const char *result_fmt = NULL)
-		{ return abus_decl_method(&m_abus, service_name, method_name, method_callback, flags, arg, fmt, result_fmt); }
+					const char *descr = NULL, const char *fmt = NULL, const char *result_fmt = NULL)
+		{ return abus_decl_method(&m_abus, service_name, method_name, method_callback, flags, arg, descr, fmt, result_fmt); }
 
 	/*! Helper macro to be used with abus_declpp_method_member() */
-#define declpp_method(_service_name, _method_name, _obj, _method, _flags, fmt, res_fmt) \
-        decl_method((_service_name), (_method_name), &(_obj)->_method##Wrapper, (_flags), (void *)(_obj), fmt, res_fmt)
+#define declpp_method(_service_name, _method_name, _obj, _method, _flags, descr, fmt, res_fmt) \
+        decl_method((_service_name), (_method_name), &(_obj)->_method##Wrapper, (_flags), (void *)(_obj), descr, fmt, res_fmt)
 
-	/*! Undeclare a method from a service */
+	/*! Undeclare a method from a service
+		\return	0	if successful, non nul value otherwise
+		\sa decl_method()
+	 */
 	int undecl_method(const char *service_name, const char *method_name)
 		{ return abus_undecl_method(&m_abus, service_name, method_name); }
 
@@ -266,8 +272,8 @@ public:
 	}
 
 	/*! Declare a new event in a service */
-	int decl_event(const char *service_name, const char *event_name, const char *fmt = NULL)
-		{ return abus_decl_event(&m_abus, service_name, event_name, fmt); }
+	int decl_event(const char *service_name, const char *event_name, const char *descr = NULL, const char *fmt = NULL)
+		{ return abus_decl_event(&m_abus, service_name, event_name, descr, fmt); }
 
 	/*! Instantiate a new event for publishing */
 	cABusRequestEvent *RequestEvent(const char *service_name, const char *event_name) {
@@ -276,11 +282,17 @@ public:
 		return p;
 	}
 
-	/*! Subscribe to an event from a service */
+	/*! Subscribe to an event from a service
+		\return	0	if successful, non nul value otherwise
+		\sa event_subscribepp(), event_unsubscribe()
+	 */
 	int event_subscribe(const char *service_name, const char *event_name, abus_callback_t callback, int flags = ABUS_RPC_FLAG_NONE, void *arg = NULL, int timeout = -1)
 		{ return abus_event_subscribe(&m_abus, service_name, event_name, callback, flags, arg, timeout); }
 
-	/*! Unsubscribe from an event */
+	/*! Unsubscribe from an event
+		\return	0	if successful, non nul value otherwise
+		\sa event_subscribe()
+	 */
 	int event_unsubscribe(const char *service_name, const char *event_name, abus_callback_t callback, void *arg = NULL, int timeout = -1)
 		{ return abus_event_unsubscribe(&m_abus, service_name, event_name, callback, arg, timeout); }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Stephane Fillod
+ * Copyright (C) 2011-2012 Stephane Fillod
  *
  *   This library is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Library General Public License as
@@ -39,14 +39,15 @@ void CExamplesvc::svc_sum_cb(cABusRPC *svc_rpc)
 	int ret;
 
 	ret  = svc_rpc->get_int("a", &a);
-	ret |= svc_rpc->get_int("b", &b);
+	if (ret == 0)
+		ret = svc_rpc->get_int("b", &b);
 
 
 	std::cout << "## " << __func__ << ": arg=" << m_foo << ", ret=" << ret 
 			<< ", a=" << a << ", b=" << b << ", => result=" << a+b << std::endl;
 
 	if (ret)
-		svc_rpc->set_error(JSONRPC_INVALID_METHOD);
+		svc_rpc->set_error(ret);
 	else
 		svc_rpc->append_int("res_value", a+b);
 }
@@ -57,14 +58,15 @@ void CExamplesvc::svc_mult_cb(cABusRPC *svc_rpc)
 	int ret;
 
 	ret  = svc_rpc->get_int("a", &a);
-	ret |= svc_rpc->get_int("b", &b);
+	if (ret == 0)
+		ret = svc_rpc->get_int("b", &b);
 
 
 	std::cout << "## " << __func__ << ": arg=" << m_foo << ", ret=" << ret 
 			<< ", a=" << a << ", b=" << b << ", => result=" << a*b << std::endl;
 
 	if (ret)
-		svc_rpc->set_error(JSONRPC_INVALID_METHOD);
+		svc_rpc->set_error(ret);
 	else
 		svc_rpc->append_int("res_value", a*b);
 }
@@ -78,11 +80,13 @@ int main(int argc, char **argv)
 
 	abus->declpp_method("examplesvc", "sum", examplesvc, svc_sum_cb,
 					ABUS_RPC_FLAG_NONE,
+					"Compute summation of two integers",
 					"a:i:first operand,b:i:second operand",
 					"res_value:i:summation");
 
 	abus->declpp_method("examplesvc", "mult", examplesvc, svc_mult_cb,
 					ABUS_RPC_FLAG_NONE,
+					"Compute multiplication of two integers",
 					"a:i:first operand,b:i:second operand",
 					"res_value:i:multiplication");
 

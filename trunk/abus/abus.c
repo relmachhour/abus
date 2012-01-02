@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Stephane Fillod
+ * Copyright (C) 2011-2012 Stephane Fillod
  *
  *   This library is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Library General Public License as
@@ -94,7 +94,7 @@ const char *abus_get_version()
 const char *abus_get_copyright()
 {
 	static const char abus_copyright[] =
-  "Copyright (C) 2011 Stephane Fillod\n"
+  "Copyright (C) 2011-2012 Stephane Fillod\n"
   "Copyright (C) 1996 Bob Jenkins (hashtab)\n"
   "Copyright (C) 2009-2011 Vincent Hanquez (libjson)\n"
   "This is free software; see the source for copying conditions.  There is NO\n"
@@ -202,6 +202,8 @@ int abus_cleanup(abus_t *abus)
 					abus_method_t *method;
 					free(hkey(service->method_htab));
 					method = hstuff(service->method_htab);
+					if (method->descr)
+						free(method->descr);
 					if (method->fmt)
 						free(method->fmt);
 					if (method->result_fmt)
@@ -220,7 +222,7 @@ int abus_cleanup(abus_t *abus)
 					/* delete event_htab */
 					if (hfirst(event->subscriber_htab)) do
 					{
-						/* TODO: unsubscribe from services ? */
+						/* TODO: unsubscribe from remote services ? */
 						free(hkey(event->subscriber_htab));
 						free(hstuff(event->subscriber_htab));
 					}
@@ -228,7 +230,11 @@ int abus_cleanup(abus_t *abus)
 
 					hdestroy(event->subscriber_htab);
 					free(hkey(service->event_htab));
-					free(hstuff(service->event_htab));
+					if (event->fmt)
+						free(event->fmt);
+					if (event->descr)
+						free(event->descr);
+					free(event);
 				}
 				while (hnext(service->event_htab));
 				hdestroy(service->event_htab);
@@ -392,6 +398,7 @@ static int service_lookup(abus_t *abus, const char *service_name, bool create, a
 		new_method->callback = &abus_req_get_version_service_cb;
 		new_method->flags = 0;
 		new_method->arg = abus;
+		new_method->descr = strdup("Get the version of A-Bus library, and tell the service is still alive");
 		new_method->fmt = strdup("");
 		new_method->result_fmt = strdup("abus_version:s:Version of the A-Bus library for this service");
 		hadd(service->method_htab, strdup(ABUS_GET_VERSION_METHOD), strlen(ABUS_GET_VERSION_METHOD), new_method);
@@ -567,6 +574,7 @@ static int abus_service_rpc(abus_t *abus, json_rpc_t *json_rpc, abus_method_t *m
   \param[in] method_callback	pointer to call-back function
   \param[in] flags	flags specifying method callback
   \param[in] arg	cookie to be passed back to method_callback
+  \param[in] descr	string describing the method to be declared, may be NULL
   \param[in] fmt	abus_format describing the argument of method, may be NULL
   \param[in] result_fmt	abus_format describing the result of method, may be NULL
 
@@ -576,7 +584,7 @@ static int abus_service_rpc(abus_t *abus, json_rpc_t *json_rpc, abus_method_t *m
  */
 int abus_decl_method(abus_t *abus, const char *service_name, const char *method_name,
 				abus_callback_t method_callback, int flags, void *arg,
-				const char *fmt, const char *result_fmt)
+				const char *descr, const char *fmt, const char *result_fmt)
 {
 	abus_method_t *method;
 	int ret;
@@ -588,6 +596,7 @@ int abus_decl_method(abus_t *abus, const char *service_name, const char *method_
 	method->callback = method_callback;
 	method->flags = flags;
 	method->arg = arg;
+	method->descr = descr ? strdup(descr) : NULL;
 	method->fmt = fmt ? strdup(fmt) : NULL;
 	method->result_fmt = result_fmt ? strdup(result_fmt) : NULL;
 
@@ -600,6 +609,8 @@ int abus_decl_method(abus_t *abus, const char *service_name, const char *method_
 /*!
 	Undeclare an A-Bus method
 
+  \param[in] service_name	name of service where the method belongs to
+  \param[in] method_name	name of method to be unexposed
   \param abus	pointer to A-Bus handle
   \return 0 if successful, non nul value otherwise
   \sa abus_decl_method()
@@ -617,16 +628,19 @@ int abus_undecl_method(abus_t *abus, const char *service_name, const char *metho
 	if (!service || !method)
 		return JSONRPC_NO_METHOD;
 
+	pthread_mutex_lock(&abus->mutex);
+
 	if (abus_method_is_excl(method))
 		pthread_mutex_destroy(&method->excl_mutex);
+
+	if (method->descr)
+		free(method->descr);
 
 	if (method->fmt)
 		free(method->fmt);
 
 	if (method->result_fmt)
 		free(method->result_fmt);
-
-	pthread_mutex_lock(&abus->mutex);
 
 	/* FIXME: assumes the hashtab still pointing at element found */
 	free(hkey(service->method_htab));
@@ -651,6 +665,9 @@ int abus_undecl_method(abus_t *abus, const char *service_name, const char *metho
 	Initialize for request method, client side
 
   Implicit: expects a response, otherwise use notification/event
+
+  \param[in] service_name	name of service where the method belongs to
+  \param[in] method_name	name of method to be later invoked
   \param abus	pointer to A-Bus handle
   \return 0 if successful, non nul value otherwise
  */
@@ -857,7 +874,7 @@ int abus_request_method_cleanup(abus_t *abus, json_rpc_t *json_rpc)
 int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json_rpc, const struct sockaddr *sock_src_addr, socklen_t sock_addrlen)
 {
 	int ret;
-	abus_method_t *method;
+	abus_method_t *method = NULL;
 
 	ret = json_rpc_init(json_rpc);
 	if (ret)
@@ -873,7 +890,7 @@ int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json
 	ret = json_rpc_parse_msg(json_rpc, buffer, len);
 	if (ret || json_rpc->parsing_status != PARSING_OK) {
 		/* TODO send "error" JSON-RPC */
-		json_rpc_set_error(json_rpc, JSONRPC_PARSE_ERROR, NULL);
+		json_rpc->error_code = JSONRPC_PARSE_ERROR;
 	}
 
 	if (!json_rpc->error_code && json_rpc->service_name && json_rpc->method_name)
@@ -884,7 +901,7 @@ int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json
 		method_lookup(abus, json_rpc->service_name, json_rpc->method_name, false, NULL, &method);
 	
 		if (!method)
-			json_rpc_set_error(json_rpc, JSONRPC_NO_METHOD, NULL);
+			json_rpc->error_code = JSONRPC_NO_METHOD;
 	
 		json_rpc_resp_init(json_rpc);
 	
@@ -1056,7 +1073,9 @@ void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
 	
 			json_rpc_append_strn(json_rpc, "name", method_name, hkeyl(service->method_htab));
 			json_rpc_append_int(json_rpc, "flags", method->flags);
-			/* TODO: interpret the param list in an array */
+			/* TODO: interpret the param list in an array, or use the JSON-RPC SMD notation? */
+			if (method->descr)
+				json_rpc_append_str(json_rpc, "descr", method->descr);
 			if (method->fmt)
 				json_rpc_append_str(json_rpc, "fmt", method->fmt);
 			if (method->result_fmt)
@@ -1085,7 +1104,9 @@ void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
 			json_rpc_append_args(json_rpc, JSON_OBJECT_BEGIN, -1);
 
 			json_rpc_append_strn(json_rpc, "name", event_name, hkeyl(service->event_htab));
-			/* TODO: interpret the param list in an array */
+			/* TODO: interpret the param list in an array, or use the JSON-RPC SMD notation? */
+			if (event->descr)
+				json_rpc_append_str(json_rpc, "descr", event->descr);
 			if (event->fmt)
 				json_rpc_append_str(json_rpc, "fmt", event->fmt);
 
@@ -1123,13 +1144,14 @@ static const char* event_name_from_method(const char *str)
   \param abus	pointer to A-Bus handle
   \param[in] service_name	name of service where the event belongs to
   \param[in] event_name	name of event that may be subscribed to
+  \param[in] descr	string describing the event to be declared, may be NULL
   \param[in] fmt	abus_format describing the arguments of the event, may be NULL
 
   \return 0 if successful, non nul value otherwise
   \todo Allow redeclaration?
   \todo abus_undecl_event()
  */
-int abus_decl_event(abus_t *abus, const char *service_name, const char *event_name, const char *fmt)
+int abus_decl_event(abus_t *abus, const char *service_name, const char *event_name, const char *descr, const char *fmt)
 {
 	abus_event_t *event;
 	int ret;
@@ -1138,6 +1160,7 @@ int abus_decl_event(abus_t *abus, const char *service_name, const char *event_na
 	if (ret)
 		return ret;
 
+	event->descr = descr ? strdup(descr) : NULL;
 	event->fmt = fmt ? strdup(fmt) : NULL;
 
 	return 0;
@@ -1260,7 +1283,7 @@ int abus_event_subscribe(abus_t *abus, const char *service_name, const char *eve
 	snprint_event_method(event_method_name, JSONRPC_METHNAME_SZ_MAX, event_name);
 
 	ret = abus_decl_method(abus, "", event_method_name,
-					callback, flags, arg, NULL, NULL);
+					callback, flags, arg, NULL, NULL, NULL);
 	if (ret != 0)
 		return ret;
 
@@ -1345,13 +1368,13 @@ void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 
 	ret = json_rpc_get_str(json_rpc, "event", event_name, sizeof(event_name));
 	if (ret != 0) {
-		json_rpc_set_error(json_rpc, JSONRPC_INVALID_METHOD, NULL);
+		json_rpc_set_error(json_rpc, ret, NULL);
 		return;
 	}
 
 	event_lookup(abus, json_rpc->service_name, event_name, false, NULL, &event);
 	if (!event) {
-		json_rpc_set_error(json_rpc, JSONRPC_NO_METHOD, NULL);
+		json_rpc_set_error(json_rpc, ret, NULL);
 		return;
 	}
 
@@ -1399,7 +1422,7 @@ void abus_req_unsubscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 
 	ret = json_rpc_get_str(json_rpc, "event", event_name, sizeof(event_name));
 	if (ret != 0) {
-		json_rpc_set_error(json_rpc, JSONRPC_INVALID_METHOD, NULL);
+		json_rpc_set_error(json_rpc, ret, NULL);
 		return;
 	}
 
