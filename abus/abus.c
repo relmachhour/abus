@@ -45,12 +45,14 @@
 #define ABUS_INTROSPECT_METHOD "*"
 #define ABUS_SUBSCRIBE_METHOD "subscribe"
 #define ABUS_UNSUBSCRIBE_METHOD "unsubscribe"
+#define ABUS_GET_VERSION_METHOD "abus_get_version"
 #define ABUS_EVENT_METHOD "event"
 
 static void *abus_thread_routine(void *arg);
 
 static int create_service_path(abus_t *abus, const char *service_name);
 static int remove_service_path(abus_t *abus, const char *service_name);
+static void abus_req_get_version_service_cb(json_rpc_t *json_rpc, void *arg);
 static void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg);
 static void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg);
 static void abus_req_unsubscribe_service_cb(json_rpc_t *json_rpc, void *arg);
@@ -173,7 +175,9 @@ static int abus_launch_thread_ondemand(abus_t *abus)
 /*!
 	Cleanup of A-Bus operation, releases any allocated memory.
 
-	Note: subscribed events are not unsubscribed from the services.
+  Note: subscribed events are not unsubscribed from remote services.
+
+  Rem: there's no need to call abus_undecl_method() before calling abus_cleanup().
 
   \param abus pointer to an opaque handle for A-Bus operation
   \return   0 if successful, non nul value otherwise
@@ -385,6 +389,14 @@ static int service_lookup(abus_t *abus, const char *service_name, bool create, a
 		hadd(abus->service_htab, strdup(service_name), srv_len, service);
 
 		new_method = calloc(1, sizeof(abus_method_t));
+		new_method->callback = &abus_req_get_version_service_cb;
+		new_method->flags = 0;
+		new_method->arg = abus;
+		new_method->fmt = strdup("");
+		new_method->result_fmt = strdup("abus_version:s:Version of the A-Bus library for this service");
+		hadd(service->method_htab, strdup(ABUS_GET_VERSION_METHOD), strlen(ABUS_GET_VERSION_METHOD), new_method);
+
+		new_method = calloc(1, sizeof(abus_method_t));
 		new_method->callback = &abus_req_introspect_service_cb;
 		new_method->flags = 0;
 		new_method->arg = abus;
@@ -546,6 +558,8 @@ static int abus_service_rpc(abus_t *abus, json_rpc_t *json_rpc, abus_method_t *m
 
 /*!
 	Decalare an A-Bus method
+
+  Rem: there's no need to call abus_undecl_method() before calling abus_cleanup().
 
   \param abus	pointer to A-Bus handle
   \param[in] service_name	name of service where the method belongs to
@@ -859,7 +873,7 @@ int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json
 	ret = json_rpc_parse_msg(json_rpc, buffer, len);
 	if (ret || json_rpc->parsing_status != PARSING_OK) {
 		/* TODO send "error" JSON-RPC */
-		json_rpc->error_code = JSONRPC_PARSE_ERROR;
+		json_rpc_set_error(json_rpc, JSONRPC_PARSE_ERROR, NULL);
 	}
 
 	if (!json_rpc->error_code && json_rpc->service_name && json_rpc->method_name)
@@ -870,7 +884,7 @@ int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json
 		method_lookup(abus, json_rpc->service_name, json_rpc->method_name, false, NULL, &method);
 	
 		if (!method)
-			json_rpc->error_code = JSONRPC_NO_METHOD;
+			json_rpc_set_error(json_rpc, JSONRPC_NO_METHOD, NULL);
 	
 		json_rpc_resp_init(json_rpc);
 	
@@ -986,6 +1000,16 @@ int abus_forward_rpc(abus_t *abus, char *buffer, int *buflen, int flags, int tim
 }
 
 /*
+  callback for internal use, to offer get version of a service
+ */
+void abus_req_get_version_service_cb(json_rpc_t *json_rpc, void *arg)
+{
+	json_rpc_append_str(json_rpc, "abus_version", abus_get_version());
+
+	return;
+}
+
+/*
   callback for internal use, to offer introspection of a service
  */
 void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
@@ -996,7 +1020,7 @@ void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
 	abus_event_t *event;
 
 	if (!abus->service_htab || !json_rpc->service_name) {
-		json_rpc->error_code = JSONRPC_INTERNAL_ERROR;
+		json_rpc_set_error(json_rpc, JSONRPC_INTERNAL_ERROR, NULL);
 		return;
 	}
 
@@ -1004,7 +1028,7 @@ void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
 
 	if (!hfind(abus->service_htab, json_rpc->service_name, strlen(json_rpc->service_name))) {
 		pthread_mutex_unlock(&abus->mutex);
-		json_rpc->error_code = JSONRPC_NO_METHOD;
+		json_rpc_set_error(json_rpc, JSONRPC_NO_METHOD, NULL);
 		return;
 	}
 
@@ -1321,13 +1345,13 @@ void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 
 	ret = json_rpc_get_str(json_rpc, "event", event_name, sizeof(event_name));
 	if (ret != 0) {
-		json_rpc->error_code = JSONRPC_INVALID_METHOD;
+		json_rpc_set_error(json_rpc, JSONRPC_INVALID_METHOD, NULL);
 		return;
 	}
 
 	event_lookup(abus, json_rpc->service_name, event_name, false, NULL, &event);
 	if (!event) {
-		json_rpc->error_code = JSONRPC_NO_METHOD;
+		json_rpc_set_error(json_rpc, JSONRPC_NO_METHOD, NULL);
 		return;
 	}
 
@@ -1375,13 +1399,13 @@ void abus_req_unsubscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 
 	ret = json_rpc_get_str(json_rpc, "event", event_name, sizeof(event_name));
 	if (ret != 0) {
-		json_rpc->error_code = JSONRPC_INVALID_METHOD;
+		json_rpc_set_error(json_rpc, JSONRPC_INVALID_METHOD, NULL);
 		return;
 	}
 
 	ret = abus_unsubscribe_service(abus, json_rpc->service_name, event_name);
 	if (ret) {
-		json_rpc->error_code = ret;
+		json_rpc_set_error(json_rpc, ret, NULL);
 		return;
 	}
 
