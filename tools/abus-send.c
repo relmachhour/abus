@@ -31,13 +31,19 @@ static void print_basic_type(const char *prefix, const char *name, const json_va
 	switch (val->type) {
 		case JSON_INT:
 		case JSON_FLOAT:
-		case JSON_TRUE:
-		case JSON_FALSE:
-		case JSON_NULL:
 			printf("%s%s=%*s\n", prefix, name, val->length, val->u.data);
 			break;
 		case JSON_STRING:
 			printf("%s%s=\"%*s\"\n", prefix, name, val->length, val->u.data);
+			break;
+		case JSON_TRUE:
+			printf("%s%s=true\n", prefix, name);
+			break;
+		case JSON_FALSE:
+			printf("%s%s=false\n", prefix, name);
+			break;
+		case JSON_NULL:
+			printf("%s%s=null\n", prefix, name);
 			break;
 		default:
 			fprintf(stderr, "unknown type %d for param '%s'\n", val->type, name);
