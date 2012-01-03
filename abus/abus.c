@@ -1177,6 +1177,8 @@ void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
 			json_rpc_append_args(json_rpc, JSON_OBJECT_BEGIN, -1);
 
 			json_rpc_append_strn(json_rpc, "name", attr_name, hkeyl(service->attr_htab));
+			/* or field "readonly" ? */
+			json_rpc_append_int(json_rpc, "flags", attr->flags);
 			if (attr->descr)
 				json_rpc_append_str(json_rpc, "descr", attr->descr);
 
@@ -1607,37 +1609,57 @@ static int attr_lookup(abus_t *abus, const char *service_name, const char *attr_
 	return 0;
 }
 
-static int attr_append(abus_t *abus, json_rpc_t *json_rpc, const char *service_name, const char *attr_name, bool honor_withoutval)
+
+static void attr_append_type(json_rpc_t *json_rpc, const char *service_name, const char *attr_name, int type, const void *data)
 {
-	abus_attr_t *attr;
-	int ret;
-
-	/* TODO: iterate over set when "attr." */
-	ret = attr_lookup(abus, service_name, attr_name, false, NULL, &attr);
-	if (ret) {
-		json_rpc_set_error(json_rpc, ret, NULL);
-		return JSONRPC_NO_METHOD;
-	}
-	if (honor_withoutval && (attr->flags & ABUS_RPC_WITHOUTVAL))
-		return JSONRPC_INVALID_METHOD;
-
-	switch(attr->ref.type) {
+	switch(type) {
 	case JSON_INT:
-		json_rpc_append_int(json_rpc, attr_name, *(int *)attr->ref.u.data);
+		json_rpc_append_int(json_rpc, attr_name, *(const int *)data);
 		break;
 	case JSON_FALSE:
 	case JSON_TRUE:
-		json_rpc_append_bool(json_rpc, attr_name, *(bool *)attr->ref.u.data);
+		json_rpc_append_bool(json_rpc, attr_name, *(const bool *)data);
 		break;
 	case JSON_FLOAT:
-		json_rpc_append_double(json_rpc, attr_name, *(double *)attr->ref.u.data);
+		json_rpc_append_double(json_rpc, attr_name, *(const double *)data);
 		break;
 	case JSON_STRING:
-		json_rpc_append_str(json_rpc, attr_name, attr->ref.u.data);
+		json_rpc_append_str(json_rpc, attr_name, data);
 		break;
 	default:
 		json_rpc_set_error(json_rpc, JSONRPC_INTERNAL_ERROR, NULL);
 	}
+}
+
+static int attr_append(abus_t *abus, json_rpc_t *json_rpc, const char *service_name, const char *attr_name)
+{
+	abus_service_t *service;
+	abus_attr_t *attr;
+	int ret, attr_name_len;
+
+	ret = attr_lookup(abus, service_name, attr_name, false, &service, &attr);
+	if (ret == 0) {
+		attr_append_type(json_rpc, service_name, attr_name, attr->ref.type, attr->ref.u.data);
+		return 0;
+	}
+
+	attr_name_len = strlen(attr_name);
+	if (attr_name_len > 0 && attr_name[attr_name_len-1] != '.') {
+			json_rpc_set_error(json_rpc, JSONRPC_NO_METHOD, NULL);
+			return JSONRPC_NO_METHOD;
+	}
+
+	/* iterate over prefix when exact match not found */
+	if (hfirst(service->attr_htab)) do
+	{
+		const char *key = (const char *)hkey(service->attr_htab);
+
+		if (!strncmp(key, attr_name, attr_name_len)) {
+			attr = hstuff(service->attr_htab);
+			attr_append_type(json_rpc, service_name, key, attr->ref.type, attr->ref.u.data);
+		}
+	}
+	while (hnext(service->attr_htab));
 
 	return 0;
 }
@@ -1654,13 +1676,33 @@ static int attr_append(abus_t *abus, json_rpc_t *json_rpc, const char *service_n
  */
 int abus_append_attr(abus_t *abus, json_rpc_t *json_rpc, const char *service_name, const char *attr_name)
 {
-	return attr_append(abus, json_rpc, service_name, attr_name, false);
+	return attr_append(abus, json_rpc, service_name, attr_name);
 }
+
+static char json_type2char(int json_type)
+{
+	switch(json_type) {
+	case JSON_INT:
+		return 'i';
+	case JSON_FALSE:
+	case JSON_TRUE:
+		return 'b';
+	case JSON_FLOAT:
+		return 'f';
+	case JSON_STRING:
+		return 's';
+	}
+	return '?';
+}
+
+#define ABUS_ATTR_CHANGED_PREFIX "attr_changed%%"
 
 static int attr_decl_type(abus_t *abus, const char *service_name, const char *attr_name, int json_type, void *val, int len, int flags, const char *descr)
 {
 	abus_attr_t *attr;
 	int ret;
+	char event_name[JSONRPC_METHNAME_SZ_MAX];
+	char event_fmt[JSONRPC_METHNAME_SZ_MAX];
 
 	ret = attr_lookup(abus, service_name, attr_name, true, NULL, &attr);
 	if (ret)
@@ -1673,6 +1715,16 @@ static int attr_decl_type(abus_t *abus, const char *service_name, const char *at
 	attr->ref.u.data = val;
 
 	attr->descr = descr ? strdup(descr) : NULL;
+
+	if (!(flags & ABUS_RPC_RDONLY)) {
+		snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
+		snprintf(event_fmt, sizeof(event_fmt), "%s:%c:%s",
+					attr_name, json_type2char(json_type), descr);
+
+		ret = abus_decl_event(abus, service_name, event_name, descr, event_fmt);
+		if (ret)
+			return ret;
+	}
 
 	return 0;
 }
@@ -1722,7 +1774,8 @@ int abus_undecl_attr(abus_t *abus, const char *service_name, const char *attr_na
 {
 	abus_attr_t *attr;
 	abus_service_t *service;
-	int ret;
+	int ret, flags;
+	char event_name[JSONRPC_METHNAME_SZ_MAX];
 
 	ret = attr_lookup(abus, service_name, attr_name, false, &service, &attr);
 	if (ret)
@@ -1736,7 +1789,7 @@ int abus_undecl_attr(abus_t *abus, const char *service_name, const char *attr_na
 	if (attr->descr)
 		free(attr->descr);
 
-	/* FIXME: unregister associated attr_changed events */
+	flags = attr->flags;
 
 	/* FIXME: assumes the hashtab still pointing at element found */
 	free(hkey(service->attr_htab));
@@ -1746,6 +1799,12 @@ int abus_undecl_attr(abus_t *abus, const char *service_name, const char *attr_na
 	service_may_cleanup(abus, service, service_name);
 
 	pthread_mutex_unlock(&abus->mutex);
+
+	/* unregister associated attr_changed events */
+	if (!(flags & ABUS_RPC_RDONLY)) {
+		snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
+		abus_undecl_event(abus, service_name, event_name);
+	}
 
 	return 0;
 }
@@ -1757,14 +1816,16 @@ int abus_attr_changed(abus_t *abus, const char *service_name, const char *attr_n
 {
 	json_rpc_t json_rpc;
 	int ret;
+	char event_name[JSONRPC_METHNAME_SZ_MAX];
 
-	ret = abus_request_event_init(abus, service_name, "attr_changed", &json_rpc);
+	snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
+
+	ret = abus_request_event_init(abus, service_name, event_name, &json_rpc);
 	if (ret)
 		return ret;
 
-	/* TODO: hash the value of attr in order to detect real change? */
-
-	ret = attr_append(abus, &json_rpc, service_name, attr_name, true);
+	/* TODO: honor the without_val flag per subscribers */
+	ret = attr_append(abus, &json_rpc, service_name, attr_name);
 	if (ret == 0)
 		ret = abus_request_event_publish(abus, &json_rpc, 0);
 
@@ -1947,7 +2008,6 @@ int abus_attr_set_str(abus_t *abus, const char *service_name, const char *attr_n
 	return attr_set_type(abus, service_name, attr_name, JSON_STRING, val, 0, timeout);
 }
 
-#define ABUS_ATTR_CHANGED_PREFIX "attr_changed%%"
 /**
   Subscribe to changes of the values of attributes in a service
 
@@ -2015,7 +2075,7 @@ void abus_req_attr_get_cb(json_rpc_t *json_rpc, void *arg)
 			return;
 		}
 
-		ret = attr_append(abus, json_rpc, json_rpc->service_name, attr_name, false);
+		ret = attr_append(abus, json_rpc, json_rpc->service_name, attr_name);
 		if (ret != 0) {
 			json_rpc_set_error(json_rpc, ret, NULL);
 			return;
