@@ -25,6 +25,7 @@
 #include "abus.h"
 
 static int opt_timeout = 1000; /* ms */
+static int opt_verbose;
 
 static void print_basic_type(const char *prefix, const char *name, const json_val_t *val)
 {
@@ -123,17 +124,19 @@ int forward_rpc_stdinout(abus_t *abus)
 	return ret;
 }
 
-int usage(const char *argv0)
+static int usage(const char *argv0, int exit_code)
 {
 	printf("usage: %s [options] SERVICE.METHOD [key:[bdis]]=value]...\n", argv0);
     printf(
     "  -h, --help                 this help message\n"
-    "  -t, --timeout=TIMEOUT      timeout in milliseconds\n"
+    "  -t, --timeout=TIMEOUT      timeout in milliseconds (%d)\n"
+    "  -v, --verbose              verbose\n"
     "  -V, --version              version of A-Bus\n"
     "  -y, --async                asynchronous query\n"
-    "  -w, --wait-async           wait for asynchronous query, without callback\n"
-	);
-	exit(EXIT_SUCCESS);
+    "  -w, --wait-async           wait for asynchronous query, without callback\n",
+	opt_timeout);
+
+	exit(exit_code);
 }
 
 int main(int argc, char **argv)
@@ -152,17 +155,21 @@ int main(int argc, char **argv)
 		struct option long_options[] = {
 			{ 0 },
 		};
-		int c = getopt_long(argc, argv, "hywV", long_options, &option_index);
+		int c = getopt_long(argc, argv, "ht:vywV", long_options, &option_index);
 		if (c == -1)
 			break;
 		switch (c) {
 		case 'h':
-			usage(argv[0]);
+			usage(argv[0], EXIT_SUCCESS);
 			break;
 		case 't':
 			opt_timeout = strtol(optarg, &endptr, 10);
 			if (optarg == endptr)
-				usage(argv[0]);
+				usage(argv[0], EXIT_FAILURE);
+			break;
+		case 'v':
+			++opt_verbose;
+			setenv("ABUS_MSG_VERBOSE", "1", 1);
 			break;
 		case 'y':
 			opt_async = 1;
@@ -179,7 +186,7 @@ int main(int argc, char **argv)
 		}
 	}
 	if (optind >= argc)
-		usage(argv[0]);
+		usage(argv[0], EXIT_SUCCESS);
 
 
 	abus_init(&abus);
@@ -220,7 +227,7 @@ int main(int argc, char **argv)
 		type = strchr(key, ':');
 		if (key[0] == '\0' || !type) {
 			fprintf(stderr, "incomplete definition for key '%s'\n", key);
-			usage(argv[0]);
+			usage(argv[0], EXIT_FAILURE);
 		}
 		*type++ = '\0';
 		val = strchr(type, ':');
@@ -235,7 +242,7 @@ int main(int argc, char **argv)
 				json_rpc_append_int(json_rpc, key, strtol(val, &endptr, 0));
 				if (val == endptr) {
 					fprintf(stderr, "invalid format for key '%s'\n", key);
-					usage(argv[0]);
+					usage(argv[0], EXIT_FAILURE);
 				}
 				break;
 		case 'b':
@@ -245,7 +252,7 @@ int main(int argc, char **argv)
 				json_rpc_append_double(json_rpc, key, strtod(val, &endptr));
 				if (val == endptr) {
 					fprintf(stderr, "invalid format for key '%s'\n", key);
-					usage(argv[0]);
+					usage(argv[0], EXIT_FAILURE);
 				}
 				break;
 		case 's':
@@ -253,22 +260,33 @@ int main(int argc, char **argv)
 				break;
 		default:
 			fprintf(stderr, "unknown type '%s' for key '%s'\n", type, key);
-			usage(argv[0]);
+			usage(argv[0], EXIT_FAILURE);
 		}
 	}
 
 	/* for unitary A-Bus testing purpose */
 	if (opt_async) {
+		/* no timeout for abus_request_method_invoke_async() */
+		ret = abus_request_method_invoke_async(&abus, json_rpc,
+							opt_wait_async ? 0 : opt_timeout,
+							&async_print_all_cb, 0, "async cookie");
+		if (ret != 0) {
+			abus_request_method_cleanup(&abus, json_rpc);
+			abus_cleanup(&abus);
+			exit(EXIT_FAILURE);
+		}
 		if (opt_wait_async) {
-			/* no timeout for abus_request_method_invoke_async() */
-			ret = abus_request_method_invoke_async(&abus, json_rpc, 0, &async_print_all_cb, 0, "async cookie");
 			ret = abus_request_method_wait_async(&abus, json_rpc, opt_timeout);
 		} else {
-			ret = abus_request_method_invoke_async(&abus, json_rpc, opt_timeout, &async_print_all_cb, 0, "async cookie");
 			sleep(2);
 		}
 	} else {
-		abus_request_method_invoke(&abus, json_rpc, 0, opt_timeout);
+		ret = abus_request_method_invoke(&abus, json_rpc, 0, opt_timeout);
+		if (ret != 0) {
+			abus_request_method_cleanup(&abus, json_rpc);
+			abus_cleanup(&abus);
+			exit(EXIT_FAILURE);
+		}
 		async_print_all_cb(json_rpc, "printall cookie");
 		abus_request_method_cleanup(&abus, json_rpc);
 	}
