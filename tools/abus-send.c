@@ -218,49 +218,71 @@ int main(int argc, char **argv)
 	if (ret)
 		exit(EXIT_FAILURE);
 
-	while (++optind < argc) {
-		char *key, *type, *val, *endptr;
 
+	if (!strcmp(method_name, "get")) {
+		/* begin the array */
+		json_rpc_append_args(json_rpc,
+						JSON_KEY, "attr", -1,
+						JSON_ARRAY_BEGIN,
+						-1);
 
-		key = argv[optind];
+		while (++optind < argc) {
+			json_rpc_append_args(json_rpc, JSON_OBJECT_BEGIN, -1);
 
-		type = strchr(key, ':');
-		if (key[0] == '\0' || !type) {
-			fprintf(stderr, "incomplete definition for key '%s'\n", key);
-			usage(argv[0], EXIT_FAILURE);
+			json_rpc_append_str(json_rpc, "name", argv[optind]);
+
+			json_rpc_append_args(json_rpc, JSON_OBJECT_END, -1);
 		}
-		*type++ = '\0';
-		val = strchr(type, ':');
-		if (!val || val[0] == '\0') {
-			json_rpc_append_null(json_rpc, key);
-			continue;
-		}
-		*val++ = '\0';
-
-		switch(*type) {
-		case 'i':
-				json_rpc_append_int(json_rpc, key, strtol(val, &endptr, 0));
-				if (val == endptr) {
-					fprintf(stderr, "invalid format for key '%s'\n", key);
-					usage(argv[0], EXIT_FAILURE);
-				}
-				break;
-		case 'b':
-				json_rpc_append_bool(json_rpc, key, !strcmp(val, "true"));
-				break;
-		case 'f':
-				json_rpc_append_double(json_rpc, key, strtod(val, &endptr));
-				if (val == endptr) {
-					fprintf(stderr, "invalid format for key '%s'\n", key);
-					usage(argv[0], EXIT_FAILURE);
-				}
-				break;
-		case 's':
-				json_rpc_append_str(json_rpc, key, val);
-				break;
-		default:
-			fprintf(stderr, "unknown type '%s' for key '%s'\n", type, key);
-			usage(argv[0], EXIT_FAILURE);
+		/* end the array */
+		json_rpc_append_args(json_rpc,
+						JSON_ARRAY_END,
+						-1);
+	}
+	else
+	{
+		while (++optind < argc) {
+			char *key, *type, *val, *endptr;
+	
+			key = argv[optind];
+	
+			type = strchr(key, ':');
+			if (key[0] == '\0' || !type) {
+				fprintf(stderr, "incomplete definition for key '%s'\n", key);
+				usage(argv[0], EXIT_FAILURE);
+			}
+			*type++ = '\0';
+			val = strchr(type, ':');
+			if (!val || val[0] == '\0') {
+				json_rpc_append_null(json_rpc, key);
+				continue;
+			}
+			*val++ = '\0';
+	
+			switch(*type) {
+			case 'i':
+					json_rpc_append_int(json_rpc, key, strtol(val, &endptr, 0));
+					if (val == endptr) {
+						fprintf(stderr, "invalid format for key '%s'\n", key);
+						usage(argv[0], EXIT_FAILURE);
+					}
+					break;
+			case 'b':
+					json_rpc_append_bool(json_rpc, key, !strcmp(val, "true"));
+					break;
+			case 'f':
+					json_rpc_append_double(json_rpc, key, strtod(val, &endptr));
+					if (val == endptr) {
+						fprintf(stderr, "invalid format for key '%s'\n", key);
+						usage(argv[0], EXIT_FAILURE);
+					}
+					break;
+			case 's':
+					json_rpc_append_str(json_rpc, key, val);
+					break;
+			default:
+				fprintf(stderr, "unknown type '%s' for key '%s'\n", type, key);
+				usage(argv[0], EXIT_FAILURE);
+			}
 		}
 	}
 

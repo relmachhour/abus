@@ -45,17 +45,19 @@
 #define ABUS_INTROSPECT_METHOD "*"
 #define ABUS_SUBSCRIBE_METHOD "subscribe"
 #define ABUS_UNSUBSCRIBE_METHOD "unsubscribe"
-#define ABUS_GET_VERSION_METHOD "abus_get_version"
 #define ABUS_EVENT_METHOD "event"
+#define ABUS_GET_METHOD "get"
+#define ABUS_SET_METHOD "set"
 
 static void *abus_thread_routine(void *arg);
 
 static int create_service_path(abus_t *abus, const char *service_name);
 static int remove_service_path(abus_t *abus, const char *service_name);
-static void abus_req_get_version_service_cb(json_rpc_t *json_rpc, void *arg);
 static void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg);
 static void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg);
 static void abus_req_unsubscribe_service_cb(json_rpc_t *json_rpc, void *arg);
+static void abus_req_attr_get_cb(json_rpc_t *json_rpc, void *arg);
+static void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg);
 static int abus_unsubscribe_service(abus_t *abus, const char *service_name, const char *event_name);
 static int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json_rpc, const struct sockaddr *sock_src_addr, socklen_t sock_addrlen);
 
@@ -76,14 +78,13 @@ static int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_
   \brief A-Bus callback type definition
  */
 
+static const char abus_version[] = "A-Bus " PACKAGE_VERSION;
 /*!
  * Get version of A-Bus library
   \return pointer to a statically located string of the A-Bus version
  */
 const char *abus_get_version()
 {
-	static const char abus_version[] = "A-Bus " PACKAGE_VERSION;
-
 	return abus_version;
 }
 
@@ -240,6 +241,20 @@ int abus_cleanup(abus_t *abus)
 				hdestroy(service->event_htab);
 			}
 
+			/* delete attr_htab */
+			if (service->attr_htab) {
+				if (hfirst(service->attr_htab)) do
+				{
+					abus_attr_t *attr = hstuff(service->attr_htab);
+					free(hkey(service->attr_htab));
+					if (attr->descr)
+						free(attr->descr);
+					free(attr);
+				}
+				while (hnext(service->attr_htab));
+				hdestroy(service->attr_htab);
+			}
+
 			remove_service_path(abus, (const char*)hkey(abus->service_htab));
 			free(hkey(abus->service_htab));
 			free(hstuff(abus->service_htab));
@@ -254,6 +269,26 @@ int abus_cleanup(abus_t *abus)
 	pthread_mutex_destroy(&abus->mutex);
 
 	return 0;
+}
+
+void static service_may_cleanup(abus_t *abus, abus_service_t *service, const char *service_name)
+{
+	/* no more stuff in service? */
+	if (hcount(service->method_htab) == 0 &&
+		hcount(service->event_htab) == 0 &&
+		hcount(service->attr_htab) == 0)
+	{
+		remove_service_path(abus, service_name);
+
+		hdestroy(service->method_htab);
+		hdestroy(service->event_htab);
+		hdestroy(service->attr_htab);
+
+		free(hkey(abus->service_htab));
+		free(hstuff(abus->service_htab));
+
+		hdel(abus->service_htab);
+	}
 }
 
 static int abus_resp_send(json_rpc_t *json_rpc)
@@ -377,6 +412,8 @@ static int service_lookup(abus_t *abus, const char *service_name, bool create, a
 	int srv_len = strlen(service_name);
 	abus_service_t *service;
 	abus_method_t *new_method;
+	abus_attr_t *new_attr;
+	int ret = 0;
 
 	if (!abus->service_htab)
 		abus->service_htab = hcreate(3);
@@ -385,6 +422,7 @@ static int service_lookup(abus_t *abus, const char *service_name, bool create, a
 		service = hstuff(abus->service_htab);
 	} else if (!create) {
 		service = NULL;
+		ret = JSONRPC_NO_METHOD;
 	} else {
 		service = calloc(1, sizeof(abus_service_t));
 
@@ -392,16 +430,16 @@ static int service_lookup(abus_t *abus, const char *service_name, bool create, a
 
 		service->method_htab = hcreate(3);
 		service->event_htab = hcreate(3);
+		service->attr_htab = hcreate(3);
 		hadd(abus->service_htab, strdup(service_name), srv_len, service);
 
-		new_method = calloc(1, sizeof(abus_method_t));
-		new_method->callback = &abus_req_get_version_service_cb;
-		new_method->flags = 0;
-		new_method->arg = abus;
-		new_method->descr = strdup("Get the version of A-Bus library, and tell the service is still alive");
-		new_method->fmt = strdup("");
-		new_method->result_fmt = strdup("abus_version:s:Version of the A-Bus library for this service");
-		hadd(service->method_htab, strdup(ABUS_GET_VERSION_METHOD), strlen(ABUS_GET_VERSION_METHOD), new_method);
+		new_attr = calloc(1, sizeof(abus_attr_t));
+		new_attr->flags = ABUS_RPC_RDONLY;
+		new_attr->ref.type = JSON_STRING;
+		new_attr->ref.length = sizeof(abus_version);
+		new_attr->ref.u.data = (char*)abus_version;
+		new_attr->descr = strdup("Version of the A-Bus library for this service");
+		hadd(service->attr_htab, strdup("abus.version"), strlen("abus.version"), new_attr);
 
 		new_method = calloc(1, sizeof(abus_method_t));
 		new_method->callback = &abus_req_introspect_service_cb;
@@ -420,10 +458,22 @@ static int service_lookup(abus_t *abus, const char *service_name, bool create, a
 		new_method->flags = 0;
 		new_method->arg = abus;
 		hadd(service->method_htab, strdup(ABUS_UNSUBSCRIBE_METHOD), strlen(ABUS_UNSUBSCRIBE_METHOD), new_method);
+
+		new_method = calloc(1, sizeof(abus_method_t));
+		new_method->callback = &abus_req_attr_get_cb;
+		new_method->flags = 0;
+		new_method->arg = abus;
+		hadd(service->method_htab, strdup(ABUS_GET_METHOD), strlen(ABUS_GET_METHOD), new_method);
+
+		new_method = calloc(1, sizeof(abus_method_t));
+		new_method->callback = &abus_req_attr_set_cb;
+		new_method->flags = 0;
+		new_method->arg = abus;
+		hadd(service->method_htab, strdup(ABUS_SET_METHOD), strlen(ABUS_SET_METHOD), new_method);
 	}
 	*service_p = service;
 
-	return 0;
+	return ret;
 }
 
 static int method_lookup(abus_t *abus, const char *service_name, const char *method_name, bool create, abus_service_t **service_p, abus_method_t **method)
@@ -441,7 +491,7 @@ static int method_lookup(abus_t *abus, const char *service_name, const char *met
 	if (!service && !create) {
 		pthread_mutex_unlock(&abus->mutex);
 		*method = NULL;
-		return 0;
+		return JSONRPC_NO_METHOD;
 	}
 
 	if (hfind(service->method_htab, method_name, mth_len)) {
@@ -449,7 +499,7 @@ static int method_lookup(abus_t *abus, const char *service_name, const char *met
 	} else if (!create) {
 		pthread_mutex_unlock(&abus->mutex);
 		*method = NULL;
-		return 0;
+		return JSONRPC_NO_METHOD;
 	} else {
 		*method = calloc(1, sizeof(abus_method_t));
 		hadd(service->method_htab, strdup(method_name), mth_len, *method);
@@ -475,7 +525,7 @@ static int event_lookup(abus_t *abus, const char *service_name, const char *even
 	if (!service && !create) {
 		pthread_mutex_unlock(&abus->mutex);
 		*event = NULL;
-		return 0;
+		return JSONRPC_NO_METHOD;
 	}
 
 	if (hfind(service->event_htab, event_name, evt_len)) {
@@ -483,7 +533,7 @@ static int event_lookup(abus_t *abus, const char *service_name, const char *even
 	} else if (!create) {
 		pthread_mutex_unlock(&abus->mutex);
 		*event = NULL;
-		return 0;
+		return JSONRPC_NO_METHOD;
 	} else {
 		*event = calloc(1, sizeof(abus_event_t));
 		(*event)->subscriber_htab = hcreate(1);
@@ -647,14 +697,9 @@ int abus_undecl_method(abus_t *abus, const char *service_name, const char *metho
 	free(hstuff(service->method_htab));
 	hdel(service->method_htab);
 
-	/* no more methods in service? */
-	if (hcount(service->method_htab) == 0)
-	{
-		remove_service_path(abus, service_name);
-		free(hkey(abus->service_htab));
-		free(hstuff(abus->service_htab));
-		hdel(abus->service_htab);
-	}
+	/* no more stuff in service? */
+	service_may_cleanup(abus, service, service_name);
+
 	pthread_mutex_unlock(&abus->mutex);
 
 	return 0;
@@ -848,7 +893,7 @@ int abus_request_method_invoke(abus_t *abus, json_rpc_t *json_rpc, int flags, in
 	json_rpc->msglen = ret;
 
 	ret = json_rpc_parse_msg(json_rpc, json_rpc->msgbuf, json_rpc->msglen);
-	if (ret || json_rpc->parsing_status != PARSING_OK) {
+	if (ret || json_rpc->parsing_status != PARSING_OK || json_rpc->error_code) {
 		if (json_rpc->error_code)
 			ret = json_rpc->error_code;
 		else if (!ret)
@@ -897,9 +942,9 @@ int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json
 	json_rpc->sock = abus->sock;
 
 	ret = json_rpc_parse_msg(json_rpc, buffer, len);
-	if (ret || json_rpc->parsing_status != PARSING_OK) {
+	if (!json_rpc->error_code && (ret || json_rpc->parsing_status != PARSING_OK)) {
 		/* TODO send "error" JSON-RPC */
-		json_rpc->error_code = JSONRPC_PARSE_ERROR;
+		json_rpc->error_code = ret ? ret : JSONRPC_PARSE_ERROR;
 	}
 
 	if (!json_rpc->error_code && json_rpc->service_name && json_rpc->method_name)
@@ -907,10 +952,9 @@ int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json
 		/* this is a request */
 		/* TODO: event & more than on cb possible */
 
-		method_lookup(abus, json_rpc->service_name, json_rpc->method_name, false, NULL, &method);
-	
-		if (!method)
-			json_rpc->error_code = JSONRPC_NO_METHOD;
+		ret = method_lookup(abus, json_rpc->service_name, json_rpc->method_name, false, NULL, &method);
+		if (ret)
+			json_rpc->error_code = ret;
 	
 		json_rpc_resp_init(json_rpc);
 	
@@ -1024,16 +1068,6 @@ int abus_forward_rpc(abus_t *abus, char *buffer, int *buflen, int flags, int tim
 }
 
 /*
-  callback for internal use, to offer get version of a service
- */
-void abus_req_get_version_service_cb(json_rpc_t *json_rpc, void *arg)
-{
-	json_rpc_append_str(json_rpc, "abus_version", abus_get_version());
-
-	return;
-}
-
-/*
   callback for internal use, to offer introspection of a service
  */
 void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
@@ -1042,6 +1076,7 @@ void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
 	abus_service_t *service;
 	abus_method_t *method;
 	abus_event_t *event;
+	abus_attr_t *attr;
 
 	if (!abus->service_htab || !json_rpc->service_name) {
 		json_rpc_set_error(json_rpc, JSONRPC_INTERNAL_ERROR, NULL);
@@ -1070,6 +1105,8 @@ void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
 			const char *method_name = (const char*)hkey(service->method_htab);
 	
 			if (!strncmp(ABUS_INTROSPECT_METHOD, method_name, hkeyl(service->method_htab)) ||
+					!strncmp(ABUS_GET_METHOD, method_name, hkeyl(service->method_htab)) ||
+					!strncmp(ABUS_SET_METHOD, method_name, hkeyl(service->method_htab)) ||
 					!strncmp(ABUS_SUBSCRIBE_METHOD, method_name, hkeyl(service->method_htab)) ||
 					!strncmp(ABUS_UNSUBSCRIBE_METHOD, method_name, hkeyl(service->method_htab)))
 				continue;
@@ -1124,6 +1161,32 @@ void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
 		json_rpc_append_args(json_rpc, JSON_ARRAY_END, -1);
 	}
 
+	/* attributes */
+	if (service->attr_htab && hfirst(service->attr_htab))
+	{
+		json_rpc_append_args(json_rpc,
+						JSON_KEY, "attrs", -1,
+						JSON_ARRAY_BEGIN, 
+						-1);
+
+		do {
+			const char *attr_name = (const char*)hkey(service->attr_htab);
+	
+			attr = hstuff(service->attr_htab);
+
+			json_rpc_append_args(json_rpc, JSON_OBJECT_BEGIN, -1);
+
+			json_rpc_append_strn(json_rpc, "name", attr_name, hkeyl(service->attr_htab));
+			if (attr->descr)
+				json_rpc_append_str(json_rpc, "descr", attr->descr);
+
+			json_rpc_append_args(json_rpc, JSON_OBJECT_END, -1);
+		}
+		while (hnext(service->attr_htab));
+
+		json_rpc_append_args(json_rpc, JSON_ARRAY_END, -1);
+	}
+
 	pthread_mutex_unlock(&abus->mutex);
 
 	return;
@@ -1172,6 +1235,56 @@ int abus_decl_event(abus_t *abus, const char *service_name, const char *event_na
 
 	return 0;
 }
+
+/**
+	Undeclare an A-Bus event
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the event belongs to
+  \param[in] event_name	name of event to be unexposed
+  \return 0 if successful, non nul value otherwise
+  \sa abus_decl_event()
+ */
+int abus_undecl_event(abus_t *abus, const char *service_name, const char *event_name)
+{
+	abus_event_t *event;
+	abus_service_t *service;
+	int ret;
+
+	ret = event_lookup(abus, service_name, event_name, false, &service, &event);
+	if (ret)
+		return ret;
+
+	if (!service || !event)
+		return JSONRPC_NO_METHOD;
+
+	pthread_mutex_lock(&abus->mutex);
+
+	if (hfirst(event->subscriber_htab)) do
+	{
+		/* TODO: unsubscribe from remote services ? */
+		free(hkey(event->subscriber_htab));
+		free(hstuff(event->subscriber_htab));
+	}
+	while (hnext(event->subscriber_htab));
+
+	if (event->descr)
+		free(event->descr);
+	if (event->fmt)
+		free(event->fmt);
+
+	/* FIXME: assumes the hashtab still pointing at element found */
+	free(hkey(service->event_htab));
+	free(hstuff(service->event_htab));
+	hdel(service->event_htab);
+
+	service_may_cleanup(abus, service, service_name);
+
+	pthread_mutex_unlock(&abus->mutex);
+
+	return 0;
+}
+
 
 /*!
 	Initialize a new RPC to be published by a service
@@ -1309,6 +1422,8 @@ int abus_event_subscribe(abus_t *abus, const char *service_name, const char *eve
 		return ret;
 
 	json_rpc_append_str(&json_rpc, "event", event_name);
+	if (flags & ABUS_RPC_WITHOUTVAL)
+		json_rpc_append_bool(&json_rpc, "wihtout_value", flags & ABUS_RPC_WITHOUTVAL);
 
 	/* MUST use the A-Bus sock in order to get the event RPC issued on that socket,
 		hence the use of abus_request_method_invoke_async()
@@ -1386,6 +1501,7 @@ void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 	char event_name[JSONRPC_METHNAME_SZ_MAX];
 	void *key, *stuff;
 	int ret;
+	bool withoutval = true;
 
 	ret = json_rpc_get_str(json_rpc, "event", event_name, sizeof(event_name));
 	if (ret != 0) {
@@ -1393,8 +1509,11 @@ void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 		return;
 	}
 
-	event_lookup(abus, json_rpc->service_name, event_name, false, NULL, &event);
-	if (!event) {
+	/* optional */
+	json_rpc_get_bool(json_rpc, "without_value", &withoutval);
+
+	ret = event_lookup(abus, json_rpc->service_name, event_name, false, NULL, &event);
+	if (ret) {
 		json_rpc_set_error(json_rpc, ret, NULL);
 		return;
 	}
@@ -1410,18 +1529,18 @@ void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 	event->uniq_subscriber_cnt++;
 	stuff = memdup(&json_rpc->sock_src_addr, json_rpc->sock_addrlen);
 
+	/* TODO: add the withoutval flag to stuff */
 	hadd(event->subscriber_htab, key, sizeof(event->uniq_subscriber_cnt), stuff);
-
-	return;
 }
 
 int abus_unsubscribe_service(abus_t *abus, const char *service_name, const char *event_name)
 {
 	abus_event_t *event;
+	int ret;
 
-	event_lookup(abus, service_name, event_name, false, NULL, &event);
-	if (!event || !event->subscriber_htab) {
-		return JSONRPC_NO_METHOD;
+	ret = event_lookup(abus, service_name, event_name, false, NULL, &event);
+	if (ret || !event || !event->subscriber_htab) {
+		return ret ? ret : JSONRPC_INTERNAL_ERROR;
 	}
 
 	free(hkey(event->subscriber_htab));
@@ -1452,8 +1571,558 @@ void abus_req_unsubscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 		json_rpc_set_error(json_rpc, ret, NULL);
 		return;
 	}
+}
 
-	return;
+static int attr_lookup(abus_t *abus, const char *service_name, const char *attr_name, bool create, abus_service_t **service_p, abus_attr_t **attr)
+{
+	int attr_len = strlen(attr_name);
+	abus_service_t *service;
+
+	pthread_mutex_lock(&abus->mutex);
+
+	service_lookup(abus, service_name, create, &service);
+
+	if (service_p)
+		*service_p = service;
+
+	if (!service && !create) {
+		pthread_mutex_unlock(&abus->mutex);
+		*attr = NULL;
+		return JSONRPC_NO_METHOD;
+	}
+
+	if (hfind(service->attr_htab, attr_name, attr_len)) {
+		*attr = hstuff(service->attr_htab);
+	} else if (!create) {
+		pthread_mutex_unlock(&abus->mutex);
+		*attr = NULL;
+		return JSONRPC_NO_METHOD;
+	} else {
+		*attr = calloc(1, sizeof(abus_attr_t));
+		hadd(service->attr_htab, strdup(attr_name), attr_len, *attr);
+	}
+
+	pthread_mutex_unlock(&abus->mutex);
+
+	return 0;
+}
+
+static int attr_append(abus_t *abus, json_rpc_t *json_rpc, const char *service_name, const char *attr_name, bool honor_withoutval)
+{
+	abus_attr_t *attr;
+	int ret;
+
+	/* TODO: iterate over set when "attr." */
+	ret = attr_lookup(abus, service_name, attr_name, false, NULL, &attr);
+	if (ret) {
+		json_rpc_set_error(json_rpc, ret, NULL);
+		return JSONRPC_NO_METHOD;
+	}
+	if (honor_withoutval && (attr->flags & ABUS_RPC_WITHOUTVAL))
+		return JSONRPC_INVALID_METHOD;
+
+	switch(attr->ref.type) {
+	case JSON_INT:
+		json_rpc_append_int(json_rpc, attr_name, *(int *)attr->ref.u.data);
+		break;
+	case JSON_FALSE:
+	case JSON_TRUE:
+		json_rpc_append_bool(json_rpc, attr_name, *(bool *)attr->ref.u.data);
+		break;
+	case JSON_FLOAT:
+		json_rpc_append_double(json_rpc, attr_name, *(double *)attr->ref.u.data);
+		break;
+	case JSON_STRING:
+		json_rpc_append_str(json_rpc, attr_name, attr->ref.u.data);
+		break;
+	default:
+		json_rpc_set_error(json_rpc, JSONRPC_INTERNAL_ERROR, NULL);
+	}
+
+	return 0;
+}
+
+/**
+	Append to a RPC a new parameter and its value from a declared attribute
+
+  \param abus	pointer to A-Bus handle
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to append
+  \return   0 if successful, non nul value otherwise
+  \sa abus_decl_attr_*
+ */
+int abus_append_attr(abus_t *abus, json_rpc_t *json_rpc, const char *service_name, const char *attr_name)
+{
+	return attr_append(abus, json_rpc, service_name, attr_name, false);
+}
+
+static int attr_decl_type(abus_t *abus, const char *service_name, const char *attr_name, int json_type, void *val, int len, int flags, const char *descr)
+{
+	abus_attr_t *attr;
+	int ret;
+
+	ret = attr_lookup(abus, service_name, attr_name, true, NULL, &attr);
+	if (ret)
+		return ret;
+
+	attr->flags = flags;
+
+	attr->ref.type = json_type;
+	attr->ref.length = len;
+	attr->ref.u.data = val;
+
+	attr->descr = descr ? strdup(descr) : NULL;
+
+	return 0;
+}
+
+/**
+  Declare an attribute of type integer in a service
+ */
+int abus_decl_attr_int(abus_t *abus, const char *service_name, const char *attr_name, int *val, int flags, const char *descr)
+{
+	return attr_decl_type(abus, service_name, attr_name, JSON_INT, val, 0, flags, descr);
+}
+
+/**
+  Declare an attribute of type bool in a service
+ */
+int abus_decl_attr_bool(abus_t *abus, const char *service_name, const char *attr_name, bool *val, int flags, const char *descr)
+{
+	return attr_decl_type(abus, service_name, attr_name, JSON_TRUE, val, 0, flags, descr);
+}
+
+/**
+  Declare an attribute of type double in a service
+ */
+int abus_decl_attr_double(abus_t *abus, const char *service_name, const char *attr_name, double *val, int flags, const char *descr)
+{
+	return attr_decl_type(abus, service_name, attr_name, JSON_FLOAT, val, 0, flags, descr);
+}
+
+/**
+  Declare an attribute of type string in a service
+ */
+int abus_decl_attr_str(abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t n, int flags, const char *descr)
+{
+	return attr_decl_type(abus, service_name, attr_name, JSON_STRING, val, n, flags, descr);
+}
+
+/**
+	Undeclare an A-Bus attribute
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to be unexposed
+  \return 0 if successful, non nul value otherwise
+  \sa abus_decl_attr_*()
+ */
+int abus_undecl_attr(abus_t *abus, const char *service_name, const char *attr_name)
+{
+	abus_attr_t *attr;
+	abus_service_t *service;
+	int ret;
+
+	ret = attr_lookup(abus, service_name, attr_name, false, &service, &attr);
+	if (ret)
+		return ret;
+
+	if (!service || !attr)
+		return JSONRPC_NO_METHOD;
+
+	pthread_mutex_lock(&abus->mutex);
+
+	if (attr->descr)
+		free(attr->descr);
+
+	/* FIXME: unregister associated attr_changed events */
+
+	/* FIXME: assumes the hashtab still pointing at element found */
+	free(hkey(service->attr_htab));
+	free(hstuff(service->attr_htab));
+	hdel(service->attr_htab);
+
+	service_may_cleanup(abus, service, service_name);
+
+	pthread_mutex_unlock(&abus->mutex);
+
+	return 0;
+}
+
+/**
+  Notify the value of an attribute has changed
+ */
+int abus_attr_changed(abus_t *abus, const char *service_name, const char *attr_name)
+{
+	json_rpc_t json_rpc;
+	int ret;
+
+	ret = abus_request_event_init(abus, service_name, "attr_changed", &json_rpc);
+	if (ret)
+		return ret;
+
+	/* TODO: hash the value of attr in order to detect real change? */
+
+	ret = attr_append(abus, &json_rpc, service_name, attr_name, true);
+	if (ret == 0)
+		ret = abus_request_event_publish(abus, &json_rpc, 0);
+
+	abus_request_event_cleanup(abus, &json_rpc);
+
+	return ret;
+}
+
+int attr_get_type(abus_t *abus, const char *service_name, const char *attr_name, int json_type, void *val, size_t len, int timeout)
+{
+	json_rpc_t json_rpc;
+	int ret;
+
+	/* TODO: no RPC when attr's service is local to process? */
+
+    ret = abus_request_method_init(abus, service_name, ABUS_GET_METHOD, &json_rpc);
+    if (ret)
+        return ret;
+
+	/* "service.get" "attr":[{"name":attr.a}] -> attr.a:xxx */
+
+	/* begin the array */
+	json_rpc_append_args(&json_rpc,
+					JSON_KEY, "attr", -1,
+					JSON_ARRAY_BEGIN,
+					JSON_OBJECT_BEGIN,
+					-1);
+
+    json_rpc_append_str(&json_rpc, "name", attr_name);
+
+	/* end the array */
+	json_rpc_append_args(&json_rpc,
+					JSON_OBJECT_END,
+					JSON_ARRAY_END,
+					-1);
+
+	ret = abus_request_method_invoke(abus, &json_rpc, ABUS_RPC_FLAG_NONE, timeout);
+	if (ret != 0) {
+		abus_request_method_cleanup(abus, &json_rpc);
+		return ret;
+	}
+
+	switch (json_type) {
+	case JSON_INT:
+    	ret = json_rpc_get_int(&json_rpc, attr_name, (int *)val);
+		break;
+	case JSON_TRUE:
+	case JSON_FALSE:
+    	ret = json_rpc_get_bool(&json_rpc, attr_name, (bool*)val);
+		break;
+	case JSON_FLOAT:
+    	ret = json_rpc_get_double(&json_rpc, attr_name, (double *)val);
+		break;
+	case JSON_STRING:
+    	ret = json_rpc_get_str(&json_rpc, attr_name, (char *)val, len);
+		break;
+	default:
+		ret = JSONRPC_INTERNAL_ERROR;
+	}
+
+    abus_request_method_cleanup(abus, &json_rpc);
+
+	return ret;
+}
+
+int attr_set_type(abus_t *abus, const char *service_name, const char *attr_name, int json_type, const void *val, size_t len, int timeout)
+{
+	json_rpc_t json_rpc;
+	int ret;
+
+	/* TODO: no RPC when attr's service is local to process? */
+
+    ret = abus_request_method_init(abus, service_name, ABUS_SET_METHOD, &json_rpc);
+    if (ret)
+        return ret;
+
+	/* "service.set" "attr":[{"name":attr.a, "value":new_value}] */
+
+	/* begin the array */
+	json_rpc_append_args(&json_rpc,
+					JSON_KEY, "attr", -1,
+					JSON_ARRAY_BEGIN,
+					JSON_OBJECT_BEGIN,
+					-1);
+
+    json_rpc_append_str(&json_rpc, "name", attr_name);
+
+	switch (json_type) {
+	case JSON_INT:
+    	ret = json_rpc_append_int(&json_rpc, "value", *(int *)val);
+		break;
+	case JSON_TRUE:
+	case JSON_FALSE:
+    	ret = json_rpc_append_bool(&json_rpc, "value", *(bool*)val);
+		break;
+	case JSON_FLOAT:
+    	ret = json_rpc_append_double(&json_rpc, "value", *(double *)val);
+		break;
+	case JSON_STRING:
+    	ret = json_rpc_append_str(&json_rpc, "value", (char *)val);
+		break;
+	default:
+		ret = JSONRPC_INTERNAL_ERROR;
+	}
+
+	/* end the array */
+	json_rpc_append_args(&json_rpc,
+					JSON_OBJECT_END,
+					JSON_ARRAY_END,
+					-1);
+
+    ret = abus_request_method_invoke(abus, &json_rpc, ABUS_RPC_FLAG_NONE, timeout);
+
+    abus_request_method_cleanup(abus, &json_rpc);
+
+	return ret;
+}
+
+/**
+  Get the value of an integer attribute from a service
+ */
+int abus_attr_get_int(abus_t *abus, const char *service_name, const char *attr_name, int *val, int timeout)
+{
+	return attr_get_type(abus, service_name, attr_name, JSON_INT, val, 0, timeout);
+}
+
+/**
+  Get the value of an boolean attribute from a service
+ */
+int abus_attr_get_bool(abus_t *abus, const char *service_name, const char *attr_name, bool *val, int timeout)
+{
+	return attr_get_type(abus, service_name, attr_name, JSON_TRUE, val, 0, timeout);
+}
+
+/**
+  Get the value of an double float attribute from a service
+ */
+int abus_attr_get_double(abus_t *abus, const char *service_name, const char *attr_name, double *val, int timeout)
+{
+	return attr_get_type(abus, service_name, attr_name, JSON_FLOAT, val, 0, timeout);
+}
+
+/**
+  Get the value of an string attribute from a service
+ */
+int abus_attr_get_str(abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t len, int timeout)
+{
+	return attr_get_type(abus, service_name, attr_name, JSON_STRING, val, len, timeout);
+}
+
+/**
+  Set the value of an integer attribute in a service
+ */
+int abus_attr_set_int(abus_t *abus, const char *service_name, const char *attr_name, int val, int timeout)
+{
+	return attr_set_type(abus, service_name, attr_name, JSON_INT, &val, 0, timeout);
+}
+
+/**
+  Set the value of an boolean attribute in a service
+ */
+int abus_attr_set_bool(abus_t *abus, const char *service_name, const char *attr_name, bool val, int timeout)
+{
+	return attr_set_type(abus, service_name, attr_name, JSON_TRUE, &val, 0, timeout);
+}
+
+/**
+  Set the value of an double float attribute in a service
+ */
+int abus_attr_set_double(abus_t *abus, const char *service_name, const char *attr_name, double val, int timeout)
+{
+	return attr_set_type(abus, service_name, attr_name, JSON_FLOAT, &val, 0, timeout);
+}
+
+/**
+  Set the value of an string attribute in a service
+ */
+int abus_attr_set_str(abus_t *abus, const char *service_name, const char *attr_name, const char *val, int timeout)
+{
+	return attr_set_type(abus, service_name, attr_name, JSON_STRING, val, 0, timeout);
+}
+
+#define ABUS_ATTR_CHANGED_PREFIX "attr_changed%%"
+/**
+  Subscribe to changes of the values of attributes in a service
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the event belongs to
+  \param[in] attr_name	name of attribute to subscribe to
+  \param[in] callback	function to be called upon event publication or subscribe timeout.
+  \param[in] flags		ABUS_RPC flags
+  \param[in] arg		opaque pointer value to be passed to \a callback. may be NULL.
+  \param[in] timeout	receive timeout of subscribe request in milliseconds
+  \return   0 if successful, non nul value otherwise
+ */
+int abus_attr_subscribe_onchange(abus_t *abus, const char *service_name, const char *attr_name, abus_callback_t callback, int flags, void *arg, int timeout)
+{
+	char event_name[JSONRPC_METHNAME_SZ_MAX];
+
+	snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
+
+	return abus_event_subscribe(abus, service_name, event_name, callback, flags, arg, timeout);
+}
+
+/**
+  Unsubscribe to changes of the values of attributes from a service
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the event belongs to
+  \param[in] attr_name	name of attribute to unsubscribe from
+  \param[in] callback	function to be called upon event publication or subscribe timeout.
+  \param[in] arg		opaque pointer value to be passed to \a callback. may be NULL.
+  \param[in] timeout	receive timeout of unsubscribe request in milliseconds
+  \return   0 if successful, non nul value otherwise
+ */
+int abus_attr_unsubscribe_onchange(abus_t *abus, const char *service_name, const char *attr_name, abus_callback_t callback, void *arg, int timeout)
+{
+	char event_name[JSONRPC_METHNAME_SZ_MAX];
+
+	snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
+
+	return abus_event_unsubscribe(abus, service_name, event_name, callback, arg, timeout);
+}
+
+
+/*
+  callback for internal use, to offer get accessor of an attribute
+ */
+void abus_req_attr_get_cb(json_rpc_t *json_rpc, void *arg)
+{
+	abus_t *abus = (abus_t *)arg;
+	char attr_name[JSONRPC_METHNAME_SZ_MAX];
+	int ret, i, count;
+
+    count = json_rpc_get_array_count(json_rpc, "attr");
+    if (count < 0) {
+		json_rpc_set_error(json_rpc, count, NULL);
+		return;
+    }
+
+    for (i = 0; i<count; i++) {
+		/* Aim at i-th element within array "attr" */
+		json_rpc_get_point_at(json_rpc, "attr", i);
+
+		ret = json_rpc_get_str(json_rpc, "name", attr_name, sizeof(attr_name));
+		if (ret != 0) {
+			json_rpc_set_error(json_rpc, ret, NULL);
+			return;
+		}
+
+		ret = attr_append(abus, json_rpc, json_rpc->service_name, attr_name, false);
+		if (ret != 0) {
+			json_rpc_set_error(json_rpc, ret, NULL);
+			return;
+		}
+	}
+
+	/* Aim back out of array */
+	json_rpc_get_point_at(json_rpc, NULL, 0);
+}
+
+/*
+  callback for internal use, to offer set accessor of an attribute
+ */
+void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
+{
+	abus_t *abus = (abus_t *)arg;
+	char attr_name[JSONRPC_METHNAME_SZ_MAX];
+	int i, count;
+	abus_attr_t *attr;
+	int ret;
+	int a;
+	bool b;
+	double d;
+
+    count = json_rpc_get_array_count(json_rpc, "attr");
+    if (count < 0) {
+		json_rpc_set_error(json_rpc, count, NULL);
+		return;
+    }
+
+    for (i = 0; i<count; i++) {
+		bool attr_changed = false;
+
+		/* Aim at i-th element within array "attr" */
+		json_rpc_get_point_at(json_rpc, "attr", i);
+
+		ret = json_rpc_get_str(json_rpc, "name", attr_name, sizeof(attr_name));
+		if (ret != 0) {
+			json_rpc_set_error(json_rpc, ret, NULL);
+			return;
+		}
+	
+		ret = attr_lookup(abus, json_rpc->service_name, attr_name, false, NULL, &attr);
+		if (ret) {
+			json_rpc_set_error(json_rpc, ret, NULL);
+			return;
+		}
+	
+		if (attr->flags & ABUS_RPC_RDONLY) {
+			json_rpc_set_error(json_rpc, JSONRPC_INVALID_METHOD, "Cannot set read-only attribute");
+			return;
+		}
+	
+		switch(attr->ref.type) {
+		case JSON_INT:
+			ret = json_rpc_get_int(json_rpc, "value", &a);
+			if (ret) {
+				json_rpc_set_error(json_rpc, ret, NULL);
+				return;
+			}
+			if (*(int*)attr->ref.u.data != a) {
+				*(int*)attr->ref.u.data = a;
+				attr_changed = true;
+			}
+			break;
+		case JSON_FALSE:
+		case JSON_TRUE:
+			ret = json_rpc_get_bool(json_rpc, "value", &b);
+			if (ret) {
+				json_rpc_set_error(json_rpc, ret, NULL);
+				return;
+			}
+			if (*(bool*)attr->ref.u.data != b) {
+				*(bool*)attr->ref.u.data = b;
+				attr_changed = true;
+			}
+			break;
+		case JSON_FLOAT:
+			ret = json_rpc_get_double(json_rpc, "value", &d);
+			if (ret) {
+				json_rpc_set_error(json_rpc, ret, NULL);
+				return;
+			}
+			if (*(double*)attr->ref.u.data != d) {
+				*(double*)attr->ref.u.data = d;
+				attr_changed = true;
+			}
+			break;
+		case JSON_STRING:
+			ret = json_rpc_get_str(json_rpc, "value", attr->ref.u.data, attr->ref.length);
+			if (ret) {
+				json_rpc_set_error(json_rpc, ret, NULL);
+				return;
+			}
+			/* TODO: implement detection? */
+			attr_changed = true;
+			break;
+		default:
+			json_rpc_set_error(json_rpc, JSONRPC_INTERNAL_ERROR, NULL);
+		}
+	
+		if (attr_changed)
+			abus_attr_changed(abus, json_rpc->service_name, attr_name);
+	}
+
+	/* Aim back out of array */
+	json_rpc_get_point_at(json_rpc, NULL, 0);
 }
 
 /*! @} */
