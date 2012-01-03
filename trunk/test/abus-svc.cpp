@@ -20,6 +20,7 @@
 
 #define RPC_TIMEOUT 1000 /* ms */
 #define SVC_NAME "gtestsvc"
+#define DEPSILON 1e-6
 
 class AbusTest : public testing::Test {
     protected:
@@ -253,6 +254,39 @@ class AbusEchoTest : public AbusTest {
 	    json_rpc_t json_rpc_;
 };
 
+class AbusAttrTest : public AbusTest {
+    protected:
+        virtual void SetUp() {
+            AbusTest::SetUp();
+
+			m_int = INT_MAX;
+			m_bool = true;
+			m_double = M_PI;
+			strncpy(m_str, abus_get_copyright(), sizeof(m_str));
+
+	        EXPECT_EQ(0, abus_decl_attr_int(&abus_, SVC_NAME, "int", &m_int, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_int(&abus_, SVC_NAME, "int_ro", &m_int, ABUS_RPC_RDONLY, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_bool(&abus_, SVC_NAME, "bool", &m_bool, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_double(&abus_, SVC_NAME, "double", &m_double, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_str(&abus_, SVC_NAME, "str", m_str, sizeof(m_str), 0, NULL));
+        }
+        virtual void TearDown() {
+
+			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "int"));
+			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "int_ro"));
+			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "bool"));
+			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "double"));
+			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "str"));
+
+            AbusTest::TearDown();
+        }
+
+	    int m_int;
+	    bool m_bool;
+	    double m_double;
+	    char m_str[256];
+};
+
 TEST_F(AbusReqTest, BasicSvc) {
 	int res_value;
 
@@ -318,7 +352,7 @@ TEST_F(AbusReqTest, MissingArg) {
 	/* pass only 1 parameter: "a", make "b" missing */
 	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", 2));
 
-	EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
+	EXPECT_EQ(JSONRPC_INVALID_METHOD, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
 
     EXPECT_EQ(JSONRPC_INVALID_METHOD, json_rpc_get_int(&json_rpc_, "res_value", &res_value));
 }
@@ -330,7 +364,7 @@ TEST_F(AbusReqTest, InvalidType) {
 	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", 2));
 	EXPECT_EQ(0, json_rpc_append_str(&json_rpc_, "b", "crook"));
 
-	EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
+	EXPECT_EQ(JSONRPC_INVALID_METHOD, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
 
     EXPECT_EQ(JSONRPC_INVALID_METHOD, json_rpc_get_int(&json_rpc_, "res_value", &res_value));
 }
@@ -357,11 +391,11 @@ TEST_F(AbusJtypesTest, AllTypes)
 
 	EXPECT_EQ(a, res_a);
 	EXPECT_EQ(b, res_b);
-	EXPECT_TRUE(d-res_d < 1e-6);
+	EXPECT_TRUE(d-res_d < DEPSILON);
 	EXPECT_TRUE(strncmp(res_s, abus_get_copyright(), sizeof(res_s)) == 0);
 }
 
-TEST_F(AbusArrayTest, AllTypes)
+TEST_F(AbusArrayTest, SqrArray)
 {
 	int count, i, res_value;
     const int array_count = 199;
@@ -488,6 +522,47 @@ TEST_F(AbusEchoTest, BigEscapedCharStringParam) {
 
 	EXPECT_EQ(strlen(bufrcv), bufsnd_len);
 	EXPECT_TRUE(strncmp(bufsnd, bufrcv, bufsnd_len) == 0);
+}
+
+TEST_F(AbusAttrTest, AllTypes) {
+	int a;
+    bool b;
+    double d;
+    char s[512];
+
+	EXPECT_EQ(0, abus_attr_get_int(&abus_, SVC_NAME, "int", &a, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_get_bool(&abus_, SVC_NAME, "bool", &b, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_get_double(&abus_, SVC_NAME, "double", &d, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_get_str(&abus_, SVC_NAME, "str", s, sizeof(s), RPC_TIMEOUT));
+
+	EXPECT_EQ(a, m_int);
+	EXPECT_EQ(b, m_bool);
+	EXPECT_TRUE(d-m_double < DEPSILON);
+	EXPECT_TRUE(strncmp(m_str, s, sizeof(s)) == 0);
+
+	EXPECT_EQ(0, abus_attr_set_int(&abus_, SVC_NAME, "int", -1, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_set_bool(&abus_, SVC_NAME, "bool", false, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_set_double(&abus_, SVC_NAME, "double", M_E, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_set_str(&abus_, SVC_NAME, "str", abus_get_version(), RPC_TIMEOUT));
+
+	EXPECT_EQ(-1, m_int);
+	EXPECT_FALSE(m_bool);
+	EXPECT_TRUE(M_E-m_double < DEPSILON);
+	EXPECT_TRUE(strncmp(m_str, abus_get_version(), sizeof(m_str)) == 0);
+
+	/* inexistant attr name */
+	EXPECT_EQ(JSONRPC_NO_METHOD, abus_attr_get_int(&abus_, SVC_NAME, "no_such_int", &a, RPC_TIMEOUT));
+	EXPECT_EQ(JSONRPC_NO_METHOD, abus_attr_set_int(&abus_, SVC_NAME, "no_such_int", -2, RPC_TIMEOUT));
+	EXPECT_EQ(-1, m_int);
+
+	EXPECT_EQ(JSONRPC_INVALID_METHOD, abus_attr_set_int(&abus_, SVC_NAME, "int_ro", -3, RPC_TIMEOUT));
+	EXPECT_EQ(-1, m_int);
+
+	/* TODO:
+	   - empty set/get -> no error
+	   - multiple attributes
+	   - int abus_attr_changed(abus_t *abus, const char *service_name, const char *attr_name);
+	 */
 }
 
 // TODO:

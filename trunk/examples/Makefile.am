@@ -8,6 +8,8 @@ EXTRA_PROGRAMS   = \
 		example-client \
 		example-svc-array \
 		example-clnt-array \
+		example-svc-attr \
+		example-clnt-attr \
 		example-svc-event \
 		example-clientpp \
  		example-servicepp \
@@ -44,6 +46,10 @@ example_servicexx_SOURCES = example-servicexx.cpp
 example_svc_array_SOURCES = example-svc-array.c
 
 example_clnt_array_SOURCES = example-clnt-array.c
+
+example_svc_attr_SOURCES = example-svc-attr.c
+
+example_clnt_attr_SOURCES = example-clnt-attr.c
 
 LDADD    = $(top_builddir)/abus/libabus.la
 

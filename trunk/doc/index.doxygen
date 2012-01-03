@@ -124,6 +124,20 @@ tools/abus-send examplesvc.\*
  * To be used with the client example-clnt-array.
  */
 /*!
+ * \example example-clnt-attr.c
+ * This example is a client written in C, dealing with attributes in a data model.
+ *
+ * For the example to work, the service "exampleattrsvc" must be provided by running program
+ * example-svc-attr.
+ */
+/*!
+ * \example example-svc-attr.c
+ * This example is a service named "exampleattrsvc" written in C,
+ * dealing with attributes in a data model.
+ *
+ * To be used with the client example-clnt-attr.
+ */
+/*!
  * \example example-svc-event.c
  * This example is a service named "examplesvc" exposing an event
  * called "enter_pressed". Any time the ENTER key is pressed on

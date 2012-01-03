@@ -32,7 +32,12 @@ typedef void (*abus_callback_t)(json_rpc_t *json_rpc, void *arg);
 #define ABUS_RPC_FLAG_NONE	0x00
 #define ABUS_RPC_THREADED	0x01
 #define ABUS_RPC_EXCL		0x02
-/* TODO flags for VISIBILITY: process, network, default: host */
+#define ABUS_RPC_RDONLY		0x04
+#define ABUS_RPC_WITHOUTVAL	0x08
+/* TODO flags:
+	VISIBILITY: process, network, default: host ?
+	NO_REPLY?
+ */
 
 typedef struct abus_method {
 	/* method name from htab key */
@@ -46,12 +51,19 @@ typedef struct abus_method {
 } abus_method_t;
 
 typedef struct abus_event {
-	/* event name from htab key */
+	/* event name from htab key. TODO: per subsr's flags */
 	htab *subscriber_htab;	// uniq_subscriber_cnt->subscriber's sockaddr_un
 	unsigned uniq_subscriber_cnt;
 	char *descr;
 	char *fmt;
 } abus_event_t;
+
+typedef struct abus_attr {
+	/* attr name from htab key */
+	json_val_t ref;
+	int flags;
+	char *descr;
+} abus_attr_t;
 
 static inline int abus_method_is_threaded(const abus_method_t *method) { return method && (method->flags & ABUS_RPC_THREADED); }
 static inline int abus_method_is_excl(const abus_method_t *method) { return method && (method->flags & ABUS_RPC_EXCL); }
@@ -61,6 +73,7 @@ typedef struct abus_service {
 	htab *method_htab;	// method name->abus_method_t
 
 	htab *event_htab;	// event name->abus_event_t
+	htab *attr_htab;	// attr name->abus_attr_t
 } abus_service_t;
 
 typedef struct abus {
@@ -102,12 +115,36 @@ int abus_request_method_wait_async(abus_t *abus, json_rpc_t *json_rpc, int timeo
 
 /* publish/subscribe */
 int abus_decl_event(abus_t *abus, const char *service_name, const char *event_name, const char *descr, const char *fmt);
-/* TODO: int abus_undecl_event(abus_t *abus, const char *service_name, const char *event_name); */
+int abus_undecl_event(abus_t *abus, const char *service_name, const char *event_name);
 int abus_request_event_init(abus_t *abus, const char *service_name, const char *event_name, json_rpc_t *json_rpc);
 int abus_request_event_publish(abus_t *abus, json_rpc_t *json_rpc, int flags);
 int abus_request_event_cleanup(abus_t *abus, json_rpc_t *json_rpc);
 int abus_event_subscribe(abus_t *abus, const char *service_name, const char *event_name, abus_callback_t callback, int flags, void *arg, int timeout);
 int abus_event_unsubscribe(abus_t *abus, const char *service_name, const char *event_name, abus_callback_t callback, void *arg, int timeout);
+
+/* attributes/data model service side*/
+int abus_decl_attr_int(abus_t *abus, const char *service_name, const char *attr_name, int *val, int flags, const char *descr);
+int abus_decl_attr_bool(abus_t *abus, const char *service_name, const char *attr_name, bool *val, int flags, const char *descr);
+int abus_decl_attr_double(abus_t *abus, const char *service_name, const char *attr_name, double *val, int flags, const char *descr);
+int abus_decl_attr_str(abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t n, int flags, const char *descr);
+int abus_undecl_attr(abus_t *abus, const char *service_name, const char *attr_name);
+int abus_attr_changed(abus_t *abus, const char *service_name, const char *attr_name);
+int abus_append_attr(abus_t *abus, json_rpc_t *json_rpc, const char *service_name, const char *attr_name);
+
+/* attributes/data model client side*/
+int abus_attr_get_int(abus_t *abus, const char *service_name, const char *attr_name, int *val, int timeout);
+int abus_attr_get_bool(abus_t *abus, const char *service_name, const char *attr_name, bool *val, int timeout);
+int abus_attr_get_double(abus_t *abus, const char *service_name, const char *attr_name, double *val, int timeout);
+int abus_attr_get_str(abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t n, int timeout);
+
+int abus_attr_set_int(abus_t *abus, const char *service_name, const char *attr_name, int val, int timeout);
+int abus_attr_set_bool(abus_t *abus, const char *service_name, const char *attr_name, bool val, int timeout);
+int abus_attr_set_double(abus_t *abus, const char *service_name, const char *attr_name, double val, int timeout);
+int abus_attr_set_str(abus_t *abus, const char *service_name, const char *attr_name, const char *val, int timeout);
+
+int abus_attr_subscribe_onchange(abus_t *abus, const char *service_name, const char *attr_name, abus_callback_t callback, int flags, void *arg, int timeout);
+int abus_attr_unsubscribe_onchange(abus_t *abus, const char *service_name, const char *attr_name, abus_callback_t callback, void *arg, int timeout);
+
 
 /* Fast/CGI helper */
 int abus_forward_rpc(abus_t *abus, char *buffer, int *buflen, int flags, int timeout);
