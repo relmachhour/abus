@@ -70,7 +70,7 @@ typedef struct json_val {
 /** Max length of a service name, limited anyway by max AF_UNIX socket address(108) */
 #define JSONRPC_SVCNAME_SZ_MAX 32
 /** Max length of a method name, limited anyway by max AF_UNIX socket address(108) */
-#define JSONRPC_METHNAME_SZ_MAX 32
+#define JSONRPC_METHNAME_SZ_MAX 64
 
 enum json_rpc_key_token_e {
 		TOK_NONE = 0,
