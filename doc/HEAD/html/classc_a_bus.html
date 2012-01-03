@@ -103,34 +103,233 @@ Public Member Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0750d412560b576172b9c4f3d6752874"></a><!-- doxytag: member="cABus::~cABus" ref="a0750d412560b576172b9c4f3d6752874" args="()" -->
 virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus.html#a0750d412560b576172b9c4f3d6752874">~cABus</a> ()</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac40d70e76dd93687e472547539c7dee2"></a><!-- doxytag: member="cABus::decl_method" ref="ac40d70e76dd93687e472547539c7dee2" args="(const char *service_name, const char *method_name, abus_callback_t method_callback, int flags=0, void *arg=NULL, const char *fmt=NULL, const char *result_fmt=NULL)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus.html#ac40d70e76dd93687e472547539c7dee2">decl_method</a> (const char *service_name, const char *method_name, abus_callback_t method_callback, int flags=0, void *arg=NULL, const char *fmt=NULL, const char *result_fmt=NULL)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a new method in a service. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afd1c57ba2c82572e16f774e4ccfdf86e"></a><!-- doxytag: member="cABus::undecl_method" ref="afd1c57ba2c82572e16f774e4ccfdf86e" args="(const char *service_name, const char *method_name)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus.html#afd1c57ba2c82572e16f774e4ccfdf86e">undecl_method</a> (const char *service_name, const char *method_name)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Undeclare a method from a service. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus.html#a3f3f94c61885bb4a0676056b75778a61">decl_method</a> (const char *service_name, const char *method_name, abus_callback_t method_callback, int flags=0, void *arg=NULL, const char *descr=NULL, const char *fmt=NULL, const char *result_fmt=NULL)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a new method in a service.  <a href="#a3f3f94c61885bb4a0676056b75778a61"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus.html#afd1c57ba2c82572e16f774e4ccfdf86e">undecl_method</a> (const char *service_name, const char *method_name)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Undeclare a method from a service.  <a href="#afd1c57ba2c82572e16f774e4ccfdf86e"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae9f5928a1fa94252ba17e59408b3d57f"></a><!-- doxytag: member="cABus::RequestMethod" ref="ae9f5928a1fa94252ba17e59408b3d57f" args="(const char *service_name, const char *method_name)" -->
 <a class="el" href="classc_a_bus_request_method.html">cABusRequestMethod</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus.html#ae9f5928a1fa94252ba17e59408b3d57f">RequestMethod</a> (const char *service_name, const char *method_name)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Instantiate a new RPC for invocation. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8945f714199f391757a57b60fe84eb43"></a><!-- doxytag: member="cABus::decl_event" ref="a8945f714199f391757a57b60fe84eb43" args="(const char *service_name, const char *event_name, const char *fmt=NULL)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus.html#a8945f714199f391757a57b60fe84eb43">decl_event</a> (const char *service_name, const char *event_name, const char *fmt=NULL)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae8a5b73491fabd230a06ca787c16d020"></a><!-- doxytag: member="cABus::decl_event" ref="ae8a5b73491fabd230a06ca787c16d020" args="(const char *service_name, const char *event_name, const char *descr=NULL, const char *fmt=NULL)" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus.html#ae8a5b73491fabd230a06ca787c16d020">decl_event</a> (const char *service_name, const char *event_name, const char *descr=NULL, const char *fmt=NULL)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a new event in a service. <br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a55a7f2dc96bc2e1e6110c87fb6edaa67"></a><!-- doxytag: member="cABus::RequestEvent" ref="a55a7f2dc96bc2e1e6110c87fb6edaa67" args="(const char *service_name, const char *event_name)" -->
 <a class="el" href="classc_a_bus_request_event.html">cABusRequestEvent</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus.html#a55a7f2dc96bc2e1e6110c87fb6edaa67">RequestEvent</a> (const char *service_name, const char *event_name)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Instantiate a new event for publishing. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3ed72d7bc8519e149c77b242b177958a"></a><!-- doxytag: member="cABus::event_subscribe" ref="a3ed72d7bc8519e149c77b242b177958a" args="(const char *service_name, const char *event_name, abus_callback_t callback, int flags=ABUS_RPC_FLAG_NONE, void *arg=NULL, int timeout=&#45;1)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus.html#a3ed72d7bc8519e149c77b242b177958a">event_subscribe</a> (const char *service_name, const char *event_name, abus_callback_t callback, int flags=ABUS_RPC_FLAG_NONE, void *arg=NULL, int timeout=-1)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Subscribe to an event from a service. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a952d59da55b0c30ba8ddeb766c23c2d0"></a><!-- doxytag: member="cABus::event_unsubscribe" ref="a952d59da55b0c30ba8ddeb766c23c2d0" args="(const char *service_name, const char *event_name, abus_callback_t callback, void *arg=NULL, int timeout=&#45;1)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus.html#a952d59da55b0c30ba8ddeb766c23c2d0">event_unsubscribe</a> (const char *service_name, const char *event_name, abus_callback_t callback, void *arg=NULL, int timeout=-1)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Unsubscribe from an event. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus.html#a3ed72d7bc8519e149c77b242b177958a">event_subscribe</a> (const char *service_name, const char *event_name, abus_callback_t callback, int flags=ABUS_RPC_FLAG_NONE, void *arg=NULL, int timeout=-1)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Subscribe to an event from a service.  <a href="#a3ed72d7bc8519e149c77b242b177958a"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus.html#a952d59da55b0c30ba8ddeb766c23c2d0">event_unsubscribe</a> (const char *service_name, const char *event_name, abus_callback_t callback, void *arg=NULL, int timeout=-1)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Unsubscribe from an event.  <a href="#a952d59da55b0c30ba8ddeb766c23c2d0"></a><br/></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>A-Bus class. </p>
 <dl><dt><b>Examples: </b></dt><dd>
 <p><a class="el" href="example-clientpp_8cpp-example.html#_a0">example-clientpp.cpp</a>, and <a class="el" href="example-servicepp_8cpp-example.html#_a5">example-servicepp.cpp</a>.</p>
 </dd>
-</dl></div><hr/>The documentation for this class was generated from the following file:<ul>
+</dl></div><hr/><h2>Member Function Documentation</h2>
+<a class="anchor" id="a3f3f94c61885bb4a0676056b75778a61"></a><!-- doxytag: member="cABus::decl_method" ref="a3f3f94c61885bb4a0676056b75778a61" args="(const char *service_name, const char *method_name, abus_callback_t method_callback, int flags=0, void *arg=NULL, const char *descr=NULL, const char *fmt=NULL, const char *result_fmt=NULL)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int cABus::decl_method </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>method_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">abus_callback_t&#160;</td>
+          <td class="paramname"><em>method_callback</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flags</em> = <code>0</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>arg</em> = <code>NULL</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>descr</em> = <code>NULL</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>fmt</em> = <code>NULL</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>result_fmt</em> = <code>NULL</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Declare a new method in a service. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd>declpp_method(), <a class="el" href="classc_a_bus.html#afd1c57ba2c82572e16f774e4ccfdf86e" title="Undeclare a method from a service.">undecl_method()</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="afd1c57ba2c82572e16f774e4ccfdf86e"></a><!-- doxytag: member="cABus::undecl_method" ref="afd1c57ba2c82572e16f774e4ccfdf86e" args="(const char *service_name, const char *method_name)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int cABus::undecl_method </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>method_name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Undeclare a method from a service. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="classc_a_bus.html#a3f3f94c61885bb4a0676056b75778a61" title="Declare a new method in a service.">decl_method()</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a3ed72d7bc8519e149c77b242b177958a"></a><!-- doxytag: member="cABus::event_subscribe" ref="a3ed72d7bc8519e149c77b242b177958a" args="(const char *service_name, const char *event_name, abus_callback_t callback, int flags=ABUS_RPC_FLAG_NONE, void *arg=NULL, int timeout=&#45;1)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int cABus::event_subscribe </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>event_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">abus_callback_t&#160;</td>
+          <td class="paramname"><em>callback</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flags</em> = <code>ABUS_RPC_FLAG_NONE</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>arg</em> = <code>NULL</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em> = <code>-1</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Subscribe to an event from a service. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd>event_subscribepp(), <a class="el" href="classc_a_bus.html#a952d59da55b0c30ba8ddeb766c23c2d0" title="Unsubscribe from an event.">event_unsubscribe()</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a952d59da55b0c30ba8ddeb766c23c2d0"></a><!-- doxytag: member="cABus::event_unsubscribe" ref="a952d59da55b0c30ba8ddeb766c23c2d0" args="(const char *service_name, const char *event_name, abus_callback_t callback, void *arg=NULL, int timeout=&#45;1)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int cABus::event_unsubscribe </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>event_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">abus_callback_t&#160;</td>
+          <td class="paramname"><em>callback</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>arg</em> = <code>NULL</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em> = <code>-1</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Unsubscribe from an event. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="classc_a_bus.html#a3ed72d7bc8519e149c77b242b177958a" title="Subscribe to an event from a service.">event_subscribe()</a> </dd></dl>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="abus_8hpp_source.html">abus.hpp</a></li>
 </ul>
 </div>
@@ -138,7 +337,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="classc_a_bus.html">cABus</a>      </li>
-      <li class="footer">Generated on Fri Dec 30 2011 13:16:02 for A-Bus Library by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 19:13:10 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

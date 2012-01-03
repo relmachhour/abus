@@ -37,10 +37,12 @@ var NAVTREE =
       [ "example-client.c", "example-client_8c-example.html", null ],
       [ "example-clientpp.cpp", "example-clientpp_8cpp-example.html", null ],
       [ "example-clnt-array.c", "example-clnt-array_8c-example.html", null ],
+      [ "example-clnt-attr.c", "example-clnt-attr_8c-example.html", null ],
       [ "example-service.c", "example-service_8c-example.html", null ],
       [ "example-servicepp.cpp", "example-servicepp_8cpp-example.html", null ],
       [ "example-servicexx.cpp", "example-servicexx_8cpp-example.html", null ],
       [ "example-svc-array.c", "example-svc-array_8c-example.html", null ],
+      [ "example-svc-attr.c", "example-svc-attr_8c-example.html", null ],
       [ "example-svc-event.c", "example-svc-event_8c-example.html", null ],
       [ "index.html", "index_8html-example.html", null ],
       [ "lighttpd.conf", "lighttpd_8conf-example.html", null ]

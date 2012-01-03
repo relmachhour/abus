@@ -79,7 +79,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="contents">
 <p>This example is the same example of a service named "examplesvc", except it is written in C++. Although using the C-only API, it shows how to declare a class-based callback by using abus_decl_method_member(). To be used with the clients example-client or example-clientpp.</p>
 <div class="fragment"><pre class="fragment"><span class="comment">/*</span>
-<span class="comment"> * Copyright (C) 2011 Stephane Fillod</span>
+<span class="comment"> * Copyright (C) 2011-2012 Stephane Fillod</span>
 <span class="comment"> *</span>
 <span class="comment"> *   This library is free software; you can redistribute it and/or modify</span>
 <span class="comment"> *   it under the terms of the GNU Library General Public License as</span>
@@ -119,14 +119,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
         <span class="keywordtype">int</span> ret;
 
         ret  = <a name="a0"></a><a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(json_rpc, <span class="stringliteral">&quot;a&quot;</span>, &amp;a);
-        ret |= <a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(json_rpc, <span class="stringliteral">&quot;b&quot;</span>, &amp;b);
+        <span class="keywordflow">if</span> (ret == 0)
+                ret = <a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(json_rpc, <span class="stringliteral">&quot;b&quot;</span>, &amp;b);
 
 
         printf(<span class="stringliteral">&quot;## %s: arg=%s, ret=%d, a=%d, b=%d, =&gt; result=%d\n&quot;</span>, __func__,
                                         m_foo, ret, a, b, a+b);
 
         <span class="keywordflow">if</span> (ret)
-                <a name="a1"></a><a class="code" href="group__abus.html#ga9630933b39f907073628c1d6a9eb950b" title="Set the error code and message in a RPC before response.">json_rpc_set_error</a>(json_rpc, JSONRPC_INVALID_METHOD, NULL);
+                <a name="a1"></a><a class="code" href="group__abus.html#gaabb59255346696234a3940cfd07197d5" title="Set the error code and message in a RPC before response.">json_rpc_set_error</a>(json_rpc, ret, NULL);
         <span class="keywordflow">else</span>
                 <a name="a2"></a><a class="code" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int</a>(json_rpc, <span class="stringliteral">&quot;res_value&quot;</span>, a+b);
 }
@@ -137,14 +138,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
         <span class="keywordtype">int</span> ret;
 
         ret  = <a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(json_rpc, <span class="stringliteral">&quot;a&quot;</span>, &amp;a);
-        ret |= <a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(json_rpc, <span class="stringliteral">&quot;b&quot;</span>, &amp;b);
+        <span class="keywordflow">if</span> (ret == 0)
+                ret = <a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(json_rpc, <span class="stringliteral">&quot;b&quot;</span>, &amp;b);
 
 
         printf(<span class="stringliteral">&quot;## %s: arg=%s, ret=%d, a=%d, b=%d, =&gt; result=%d\n&quot;</span>, __func__,
                                         m_foo, ret, a, b, a*b);
 
         <span class="keywordflow">if</span> (ret)
-                <a class="code" href="group__abus.html#ga9630933b39f907073628c1d6a9eb950b" title="Set the error code and message in a RPC before response.">json_rpc_set_error</a>(json_rpc, JSONRPC_INVALID_METHOD, NULL);
+                <a class="code" href="group__abus.html#gaabb59255346696234a3940cfd07197d5" title="Set the error code and message in a RPC before response.">json_rpc_set_error</a>(json_rpc, ret, NULL);
         <span class="keywordflow">else</span>
                 <a class="code" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int</a>(json_rpc, <span class="stringliteral">&quot;res_value&quot;</span>, a*b);
 }
@@ -158,11 +160,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
         abus_decl_method_cxx(&amp;abus, <span class="stringliteral">&quot;examplesvc&quot;</span>, <span class="stringliteral">&quot;sum&quot;</span>, examplesvc, svc_sum_cb,
                                         ABUS_RPC_FLAG_NONE,
+                                        <span class="stringliteral">&quot;Compute summation of two integers&quot;</span>,
                                         <span class="stringliteral">&quot;a:i:first operand,b:i:second operand&quot;</span>,
                                         <span class="stringliteral">&quot;res_value:i:summation&quot;</span>);
 
         abus_decl_method_cxx(&amp;abus, <span class="stringliteral">&quot;examplesvc&quot;</span>, <span class="stringliteral">&quot;mult&quot;</span>, examplesvc, svc_mult_cb,
                                         ABUS_RPC_FLAG_NONE,
+                                        <span class="stringliteral">&quot;Compute multiplication of two integers&quot;</span>,
                                         <span class="stringliteral">&quot;a:i:first operand,b:i:second operand&quot;</span>,
                                         <span class="stringliteral">&quot;res_value:i:multiplication&quot;</span>);
 
@@ -181,7 +185,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Fri Dec 30 2011 13:16:02 for A-Bus Library by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 19:13:10 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

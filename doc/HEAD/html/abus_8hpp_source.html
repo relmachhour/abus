@@ -83,7 +83,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="contents">
 <div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">/*</span>
-<a name="l00002"></a>00002 <span class="comment"> * Copyright (C) 2011 Stephane Fillod</span>
+<a name="l00002"></a>00002 <span class="comment"> * Copyright (C) 2011-2012 Stephane Fillod</span>
 <a name="l00003"></a>00003 <span class="comment"> *</span>
 <a name="l00004"></a>00004 <span class="comment"> *   This library is free software; you can redistribute it and/or modify</span>
 <a name="l00005"></a>00005 <span class="comment"> *   it under the terms of the GNU Library General Public License as</span>
@@ -116,150 +116,153 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00040"></a>00040         }
 <a name="l00042"></a><a class="code" href="classc_a_bus_r_p_c.html#a7a416ebd10d6566736cad76d5d60d864">00042</a>         <span class="keyword">virtual</span> <a class="code" href="classc_a_bus_r_p_c.html#a7a416ebd10d6566736cad76d5d60d864" title="Destructor.">~cABusRPC</a>() { <span class="keywordflow">if</span> (m_bSelfAlloc) { json_rpc_cleanup(m_json_rpc); <span class="keyword">delete</span> m_json_rpc; } }
 <a name="l00043"></a>00043 
-<a name="l00045"></a><a class="code" href="classc_a_bus_r_p_c.html#a11b9783243241f5cd1a5ebb6ed642179">00045</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a11b9783243241f5cd1a5ebb6ed642179" title="Get the JSON type of a parameterfrom a RPC.">get_type</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name)
-<a name="l00046"></a>00046                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga3357cd9cc36c9554c0cf0cfbf2d97b1d" title="Get the JSON RPC type of a paramter.">json_rpc_get_type</a>(m_json_rpc, name); }
-<a name="l00047"></a>00047 
-<a name="l00049"></a><a class="code" href="classc_a_bus_r_p_c.html#a241ddfdba364495154737d48b29ed0ab">00049</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a241ddfdba364495154737d48b29ed0ab" title="Get the value of a parameter of type integer from a RPC.">get_int</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">int</span> *val)
-<a name="l00050"></a>00050                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(m_json_rpc, name, val); }
-<a name="l00052"></a><a class="code" href="classc_a_bus_r_p_c.html#a412a5bc1980e6be4453a83532512486e">00052</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a412a5bc1980e6be4453a83532512486e" title="Get the value of a parameter of type bool from a RPC.">get_bool</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">bool</span> *val)
-<a name="l00053"></a>00053                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga1ffe2527dd20e8683f90c0ee36913723" title="Get the value of a parameter of type boolean from a RPC.">json_rpc_get_bool</a>(m_json_rpc, name, val); }
-<a name="l00055"></a><a class="code" href="classc_a_bus_r_p_c.html#a26989d171a5ab402a146b15aa7ae7beb">00055</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a26989d171a5ab402a146b15aa7ae7beb" title="Get the value of a parameter of type double float from a RPC.">get_double</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span> *val)
-<a name="l00056"></a>00056                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gaa2667fc3c2c89ee172cf3d2a88e98761" title="Get the value of a parameter of type double float from a RPC.">json_rpc_get_double</a>(m_json_rpc, name, val); }
-<a name="l00058"></a><a class="code" href="classc_a_bus_r_p_c.html#a5fef77ff89c02f548d3f3088d07f1945">00058</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a5fef77ff89c02f548d3f3088d07f1945" title="Get the value of a parameter of type string from a RPC.">get_str</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">char</span> *val, <span class="keywordtype">size_t</span> n)
-<a name="l00059"></a>00059                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga86dff6d7ab2a107fe481a22e713bd0f7" title="Get the value of a parameter of type string from a RPC.">json_rpc_get_str</a>(m_json_rpc, name, val, n); }
-<a name="l00060"></a>00060 
-<a name="l00062"></a><a class="code" href="classc_a_bus_r_p_c.html#ac95bdfcaf718e1704f60ea1c56b53082">00062</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#ac95bdfcaf718e1704f60ea1c56b53082" title="Get the count of element in a named array from a RPC.">get_array_count</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name)
-<a name="l00063"></a>00063                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga7bbbd24ff202dce02334cefbc21d7928" title="Get the count of objects in &amp;quot;params&amp;quot; or &amp;quot;result&amp;quot; in a parsed JSON RPC...">json_rpc_get_array_count</a>(m_json_rpc, name); }
-<a name="l00065"></a><a class="code" href="classc_a_bus_r_p_c.html#a3d79bfebcaba09f33f6fac8375b8135e">00065</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a3d79bfebcaba09f33f6fac8375b8135e" title="Aim the json_rpc_get_{int,bool,..} functions at an object within an array from a RPC.">get_point_at</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">int</span> idx)
-<a name="l00066"></a>00066                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga97adf9e30c98f22e21cf410db25bed61" title="Aim the json_rpc_get_{int,bool,..} functions at an object within an array of &amp;quot;params&amp;quot; or &amp;q...">json_rpc_get_point_at</a>(m_json_rpc, name, idx); }
-<a name="l00067"></a>00067 
-<a name="l00069"></a><a class="code" href="classc_a_bus_r_p_c.html#ad032bff042a56fbd40258ac3df2a2912">00069</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#ad032bff042a56fbd40258ac3df2a2912" title="Append to a RPC a new parameter and its value of type integer.">append_int</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">int</span> val)
-<a name="l00070"></a>00070                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int</a>(m_json_rpc, name, val); }
-<a name="l00072"></a><a class="code" href="classc_a_bus_r_p_c.html#a0b6ea8d4d8f7415924710c6e8a08b8d3">00072</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a0b6ea8d4d8f7415924710c6e8a08b8d3" title="Append to a RPC a new parameter and its value of type boolean.">append_bool</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">bool</span> val)
-<a name="l00073"></a>00073                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gafe1fc67b45e60521255ccc6fe3bbe3df" title="Append to a RPC a new parameter and its value of type boolean.">json_rpc_append_bool</a>(m_json_rpc, name, val); }
-<a name="l00075"></a><a class="code" href="classc_a_bus_r_p_c.html#a0d9d7412311ea5daf17e9d9a28f5583c">00075</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a0d9d7412311ea5daf17e9d9a28f5583c" title="Append to a RPC a new parameter and its value of type double float.">append_double</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span> val)
-<a name="l00076"></a>00076                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gac904d3f10cd852cc15a21aa4e8c68b0c" title="Append to a RPC a new parameter and its value of type double float.">json_rpc_append_double</a>(m_json_rpc, name, val); }
-<a name="l00078"></a><a class="code" href="classc_a_bus_r_p_c.html#a7ccdcbdb9c0feac014317fb51495a383">00078</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a7ccdcbdb9c0feac014317fb51495a383" title="Append to a RPC a new parameter and its value of type null.">append_null</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name)
-<a name="l00079"></a>00079                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga932d457c51536e3c67cdbab23c2323f8" title="Append to a RPC a new parameter and its value of type null.">json_rpc_append_null</a>(m_json_rpc, name); }
-<a name="l00081"></a><a class="code" href="classc_a_bus_r_p_c.html#a194d0c1bfb7bfd93236def4270846e4e">00081</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a194d0c1bfb7bfd93236def4270846e4e" title="Append to a RPC a new parameter and its value of type string.">append_strn</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keyword">const</span> <span class="keywordtype">char</span> *val, <span class="keywordtype">size_t</span> n)
-<a name="l00082"></a>00082                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga5443b57e902804585b97f677d189431a" title="Append to a RPC a new parameter and its value of type string.">json_rpc_append_strn</a>(m_json_rpc, name, val, n); }
-<a name="l00084"></a><a class="code" href="classc_a_bus_r_p_c.html#ac9bbe70320126c2fd9abf81de37c5d81">00084</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#ac9bbe70320126c2fd9abf81de37c5d81" title="Append to a RPC a new parameter and its value of type string.">append_str</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keyword">const</span> <span class="keywordtype">char</span> *s)
-<a name="l00085"></a>00085                 { <span class="keywordflow">return</span> json_rpc_append_str(m_json_rpc, name, s); }
-<a name="l00087"></a><a class="code" href="classc_a_bus_r_p_c.html#a73d8aaa4cc6f72b6248afd902a58dcb2">00087</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a73d8aaa4cc6f72b6248afd902a58dcb2" title="Append to a RPC a list of JSON atoms.">append_args</a>(<span class="keywordtype">void</span> *dummy, ...)
-<a name="l00088"></a>00088                 { <span class="keywordtype">int</span> ret; va_list ap; va_start(ap, dummy); ret = <a class="code" href="group__abus.html#gaa59d065704b7ff46734371b58dda8e4e" title="Append to a RPC a va_list of JSON atoms.">json_rpc_append_vargs</a>(m_json_rpc, ap); va_end(ap); <span class="keywordflow">return</span> ret; }
-<a name="l00089"></a>00089 
-<a name="l00091"></a><a class="code" href="classc_a_bus_r_p_c.html#ac5f416a3d2e8a953c75dad8027dad994">00091</a>         <span class="keywordtype">void</span> <a class="code" href="classc_a_bus_r_p_c.html#ac5f416a3d2e8a953c75dad8027dad994" title="Set the error code and message in a RPC before response.">set_error</a>(<span class="keywordtype">int</span> error_code, <span class="keyword">const</span> <span class="keywordtype">char</span> *message = NULL)
-<a name="l00092"></a>00092                 { <a class="code" href="group__abus.html#ga9630933b39f907073628c1d6a9eb950b" title="Set the error code and message in a RPC before response.">json_rpc_set_error</a>(m_json_rpc, error_code, message); }
-<a name="l00093"></a>00093 
-<a name="l00094"></a>00094 <span class="keyword">protected</span>:
-<a name="l00095"></a>00095         <span class="keywordtype">bool</span>            m_bSelfAlloc;   <span class="comment">/* m_json_rpc has been alloc&#39;ed by constructor */</span>
-<a name="l00096"></a>00096         json_rpc_t *m_json_rpc;
-<a name="l00097"></a>00097 };
-<a name="l00098"></a>00098 
-<a name="l00115"></a><a class="code" href="classc_a_bus_request_method.html">00115</a> <span class="keyword">class </span><a class="code" href="classc_a_bus_request_method.html" title="A-Bus method RPC.">cABusRequestMethod</a>: <span class="keyword">public</span> <a class="code" href="classc_a_bus_r_p_c.html" title="Base class of A-Bus Remote Procedure Call.">cABusRPC</a> {
-<a name="l00116"></a>00116 <span class="keyword">public</span>:
-<a name="l00118"></a><a class="code" href="classc_a_bus_request_method.html#a20cc25deb1be203f5a63207e66d0d28e">00118</a>         <a class="code" href="classc_a_bus_request_method.html#a20cc25deb1be203f5a63207e66d0d28e" title="Constructor for a method RPC.">cABusRequestMethod</a>(abus_t *abus) : <a class="code" href="classc_a_bus_r_p_c.html" title="Base class of A-Bus Remote Procedure Call.">cABusRPC</a>(), m_abus(abus)  {}
-<a name="l00120"></a><a class="code" href="classc_a_bus_request_method.html#aab43b987d791775d950bc2af0b0a26a4">00120</a>         <a class="code" href="classc_a_bus_request_method.html#aab43b987d791775d950bc2af0b0a26a4" title="Destructor.">~cABusRequestMethod</a>() {}
-<a name="l00121"></a>00121 
-<a name="l00122"></a>00122         <span class="comment">/* \internal */</span>
-<a name="l00123"></a>00123         <span class="keywordtype">int</span> init(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *method_name)
-<a name="l00124"></a>00124                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gacd0f9150830116ff3525cf6c7e05478f" title="Initialize for request method, client side.">abus_request_method_init</a>(m_abus, service_name, method_name, m_json_rpc); }
-<a name="l00125"></a>00125 
-<a name="l00127"></a><a class="code" href="classc_a_bus_request_method.html#a112bc6c0e28fc8a5db7e77625e9d1c2f">00127</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_request_method.html#a112bc6c0e28fc8a5db7e77625e9d1c2f" title="Invoke the RPC synchronously.">invoke</a>(<span class="keywordtype">int</span> flags, <span class="keywordtype">int</span> timeout)
-<a name="l00128"></a>00128                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gae11f19e9033b6537259a125f4b8c9b21" title="synchronous invocation">abus_request_method_invoke</a>(m_abus, m_json_rpc, flags, timeout); }
-<a name="l00129"></a>00129 
-<a name="l00131"></a><a class="code" href="classc_a_bus_request_method.html#aba9ea276af239d185795a2a70df09eb6">00131</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_request_method.html#aba9ea276af239d185795a2a70df09eb6" title="Invoke the RPC asynchronously.">invokeAsync</a>(<span class="keywordtype">int</span> flags, <span class="keywordtype">int</span> timeout, abus_callback_t callback, <span class="keywordtype">void</span> *arg)
-<a name="l00132"></a>00132                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gacb221ecd41f014b38bb3a4055111e39d" title="Asynchronous invocation of a RPC.">abus_request_method_invoke_async</a>(m_abus, m_json_rpc, timeout, callback, flags, arg); }
-<a name="l00133"></a>00133 
-<a name="l00135"></a><a class="code" href="classc_a_bus_request_method.html#ab1e4bb165ee672873eed9c546f55ffe6">00135</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_request_method.html#ab1e4bb165ee672873eed9c546f55ffe6" title="Wait of the asynchronously invoked RPC to complete.">waitAsync</a>(<span class="keywordtype">int</span> timeout)
-<a name="l00136"></a>00136                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gaefbdffce700658ec7b8ec72ed6911cae" title="Wait for an asynchronous method request.">abus_request_method_wait_async</a>(m_abus, m_json_rpc, timeout); }
-<a name="l00137"></a>00137 
-<a name="l00138"></a>00138 <span class="keyword">private</span>:
-<a name="l00139"></a>00139         abus_t *m_abus;
-<a name="l00140"></a>00140 };
-<a name="l00141"></a>00141 
-<a name="l00154"></a><a class="code" href="classc_a_bus_request_event.html">00154</a> <span class="keyword">class </span><a class="code" href="classc_a_bus_request_event.html" title="A-Bus event RPC.">cABusRequestEvent</a>: <a class="code" href="classc_a_bus_r_p_c.html" title="Base class of A-Bus Remote Procedure Call.">cABusRPC</a> {
-<a name="l00155"></a>00155 <span class="keyword">public</span>:
-<a name="l00157"></a><a class="code" href="classc_a_bus_request_event.html#a7208b75b4da5feb2ba3544383af92597">00157</a>         <a class="code" href="classc_a_bus_request_event.html#a7208b75b4da5feb2ba3544383af92597" title="Constructor for an event RPC.">cABusRequestEvent</a>(abus_t *abus) : m_abus(abus)  {}
-<a name="l00159"></a><a class="code" href="classc_a_bus_request_event.html#af42e4be4700e75f66623f33578c28ca6">00159</a>         <a class="code" href="classc_a_bus_request_event.html#af42e4be4700e75f66623f33578c28ca6" title="Destructor.">~cABusRequestEvent</a>() { }
-<a name="l00160"></a>00160 
-<a name="l00161"></a>00161         <span class="comment">/* \internal */</span>
-<a name="l00162"></a>00162         <span class="keywordtype">int</span> init(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *event_name)
-<a name="l00163"></a>00163                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gaf752f471ab94e0c086f0c931c521f95f" title="Initialize a new RPC to be published by a service.">abus_request_event_init</a>(m_abus, service_name, event_name, m_json_rpc); }
-<a name="l00164"></a>00164 
-<a name="l00166"></a><a class="code" href="classc_a_bus_request_event.html#a19bb037339bfad5f0fdc4f68eceb13e9">00166</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_request_event.html#a19bb037339bfad5f0fdc4f68eceb13e9" title="Publish the event.">publish</a>(<span class="keywordtype">int</span> flags = ABUS_RPC_FLAG_NONE)
-<a name="l00167"></a>00167                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga460695254c43fd31a2c0ad17abeb213c" title="Publish (i.e.">abus_request_event_publish</a>(m_abus, m_json_rpc, flags); }
-<a name="l00168"></a>00168 
-<a name="l00169"></a>00169 <span class="keyword">private</span>:
-<a name="l00170"></a>00170         abus_t *m_abus;
-<a name="l00171"></a>00171 };
-<a name="l00172"></a>00172 
+<a name="l00048"></a><a class="code" href="classc_a_bus_r_p_c.html#a11b9783243241f5cd1a5ebb6ed642179">00048</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a11b9783243241f5cd1a5ebb6ed642179" title="Get the JSON type of a parameter from a RPC.">get_type</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name)
+<a name="l00049"></a>00049                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga3357cd9cc36c9554c0cf0cfbf2d97b1d" title="Get the JSON RPC type of a paramter.">json_rpc_get_type</a>(m_json_rpc, name); }
+<a name="l00050"></a>00050 
+<a name="l00055"></a><a class="code" href="classc_a_bus_r_p_c.html#a241ddfdba364495154737d48b29ed0ab">00055</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a241ddfdba364495154737d48b29ed0ab" title="Get the value of a parameter of type integer from a RPC.">get_int</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">int</span> *val)
+<a name="l00056"></a>00056                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(m_json_rpc, name, val); }
+<a name="l00061"></a><a class="code" href="classc_a_bus_r_p_c.html#a412a5bc1980e6be4453a83532512486e">00061</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a412a5bc1980e6be4453a83532512486e" title="Get the value of a parameter of type bool from a RPC.">get_bool</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">bool</span> *val)
+<a name="l00062"></a>00062                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga1ffe2527dd20e8683f90c0ee36913723" title="Get the value of a parameter of type boolean from a RPC.">json_rpc_get_bool</a>(m_json_rpc, name, val); }
+<a name="l00067"></a><a class="code" href="classc_a_bus_r_p_c.html#a26989d171a5ab402a146b15aa7ae7beb">00067</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a26989d171a5ab402a146b15aa7ae7beb" title="Get the value of a parameter of type double float from a RPC.">get_double</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span> *val)
+<a name="l00068"></a>00068                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gaa2667fc3c2c89ee172cf3d2a88e98761" title="Get the value of a parameter of type double float from a RPC.">json_rpc_get_double</a>(m_json_rpc, name, val); }
+<a name="l00073"></a><a class="code" href="classc_a_bus_r_p_c.html#a5fef77ff89c02f548d3f3088d07f1945">00073</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a5fef77ff89c02f548d3f3088d07f1945" title="Get the value of a parameter of type string (nul terminated) from a RPC.">get_str</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">char</span> *val, <span class="keywordtype">size_t</span> n)
+<a name="l00074"></a>00074                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga86dff6d7ab2a107fe481a22e713bd0f7" title="Get the value of a parameter of type string (nul terminated) from a RPC.">json_rpc_get_str</a>(m_json_rpc, name, val, n); }
+<a name="l00075"></a>00075 
+<a name="l00080"></a><a class="code" href="classc_a_bus_r_p_c.html#a63f856540d41075d6b052e40bb844cf7">00080</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a63f856540d41075d6b052e40bb844cf7" title="Get the value of a parameter of type string from a RPC.">get_strn</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">char</span> *val, <span class="keywordtype">size_t</span> *n)
+<a name="l00081"></a>00081                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga07761e685a5f94ea04afd81af4b341f1" title="Get the value of a parameter of type string from a RPC.">json_rpc_get_strn</a>(m_json_rpc, name, val, n); }
+<a name="l00082"></a>00082 
+<a name="l00087"></a><a class="code" href="classc_a_bus_r_p_c.html#ac95bdfcaf718e1704f60ea1c56b53082">00087</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#ac95bdfcaf718e1704f60ea1c56b53082" title="Get the count of element in a named array from a RPC.">get_array_count</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name)
+<a name="l00088"></a>00088                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga7bbbd24ff202dce02334cefbc21d7928" title="Get the count of objects in &amp;quot;params&amp;quot; or &amp;quot;result&amp;quot; in a parsed JSON RPC...">json_rpc_get_array_count</a>(m_json_rpc, name); }
+<a name="l00093"></a><a class="code" href="classc_a_bus_r_p_c.html#a3d79bfebcaba09f33f6fac8375b8135e">00093</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a3d79bfebcaba09f33f6fac8375b8135e" title="Aim the json_rpc_get_{int,bool,..} functions at an object within an array from a RPC.">get_point_at</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">int</span> idx)
+<a name="l00094"></a>00094                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga97adf9e30c98f22e21cf410db25bed61" title="Aim the json_rpc_get_{int,bool,..} functions at an object within an array of &amp;quot;params&amp;quot; or &amp;q...">json_rpc_get_point_at</a>(m_json_rpc, name, idx); }
+<a name="l00095"></a>00095 
+<a name="l00100"></a><a class="code" href="classc_a_bus_r_p_c.html#ad032bff042a56fbd40258ac3df2a2912">00100</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#ad032bff042a56fbd40258ac3df2a2912" title="Append to a RPC a new parameter and its value of type integer.">append_int</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">int</span> val)
+<a name="l00101"></a>00101                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int</a>(m_json_rpc, name, val); }
+<a name="l00106"></a><a class="code" href="classc_a_bus_r_p_c.html#a0b6ea8d4d8f7415924710c6e8a08b8d3">00106</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a0b6ea8d4d8f7415924710c6e8a08b8d3" title="Append to a RPC a new parameter and its value of type boolean.">append_bool</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">bool</span> val)
+<a name="l00107"></a>00107                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gafe1fc67b45e60521255ccc6fe3bbe3df" title="Append to a RPC a new parameter and its value of type boolean.">json_rpc_append_bool</a>(m_json_rpc, name, val); }
+<a name="l00112"></a><a class="code" href="classc_a_bus_r_p_c.html#a0d9d7412311ea5daf17e9d9a28f5583c">00112</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a0d9d7412311ea5daf17e9d9a28f5583c" title="Append to a RPC a new parameter and its value of type double float.">append_double</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span> val)
+<a name="l00113"></a>00113                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gac904d3f10cd852cc15a21aa4e8c68b0c" title="Append to a RPC a new parameter and its value of type double float.">json_rpc_append_double</a>(m_json_rpc, name, val); }
+<a name="l00118"></a><a class="code" href="classc_a_bus_r_p_c.html#a7ccdcbdb9c0feac014317fb51495a383">00118</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a7ccdcbdb9c0feac014317fb51495a383" title="Append to a RPC a new parameter and its value of type null.">append_null</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name)
+<a name="l00119"></a>00119                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga932d457c51536e3c67cdbab23c2323f8" title="Append to a RPC a new parameter and its value of type null.">json_rpc_append_null</a>(m_json_rpc, name); }
+<a name="l00124"></a><a class="code" href="classc_a_bus_r_p_c.html#a194d0c1bfb7bfd93236def4270846e4e">00124</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a194d0c1bfb7bfd93236def4270846e4e" title="Append to a RPC a new parameter and its value of type string.">append_strn</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keyword">const</span> <span class="keywordtype">char</span> *val, <span class="keywordtype">size_t</span> n)
+<a name="l00125"></a>00125                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga5443b57e902804585b97f677d189431a" title="Append to a RPC a new parameter and its value of type string.">json_rpc_append_strn</a>(m_json_rpc, name, val, n); }
+<a name="l00130"></a><a class="code" href="classc_a_bus_r_p_c.html#ac9bbe70320126c2fd9abf81de37c5d81">00130</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#ac9bbe70320126c2fd9abf81de37c5d81" title="Append to a RPC a new parameter and its value of type string.">append_str</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keyword">const</span> <span class="keywordtype">char</span> *s)
+<a name="l00131"></a>00131                 { <span class="keywordflow">return</span> json_rpc_append_str(m_json_rpc, name, s); }
+<a name="l00136"></a><a class="code" href="classc_a_bus_r_p_c.html#a73d8aaa4cc6f72b6248afd902a58dcb2">00136</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a73d8aaa4cc6f72b6248afd902a58dcb2" title="Append to a RPC a list of JSON atoms.">append_args</a>(<span class="keywordtype">void</span> *dummy, ...)
+<a name="l00137"></a>00137                 { <span class="keywordtype">int</span> ret; va_list ap; va_start(ap, dummy); ret = <a class="code" href="group__abus.html#gaa59d065704b7ff46734371b58dda8e4e" title="Append to a RPC a va_list of JSON atoms.">json_rpc_append_vargs</a>(m_json_rpc, ap); va_end(ap); <span class="keywordflow">return</span> ret; }
+<a name="l00138"></a>00138 
+<a name="l00143"></a><a class="code" href="classc_a_bus_r_p_c.html#a25eb5073254dcfe4058be2890ee5b127">00143</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_r_p_c.html#a25eb5073254dcfe4058be2890ee5b127" title="Set the error code and message in a RPC before response.">set_error</a>(<span class="keywordtype">int</span> error_code, <span class="keyword">const</span> <span class="keywordtype">char</span> *message = NULL)
+<a name="l00144"></a>00144                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gaabb59255346696234a3940cfd07197d5" title="Set the error code and message in a RPC before response.">json_rpc_set_error</a>(m_json_rpc, error_code, message); }
+<a name="l00145"></a>00145 
+<a name="l00146"></a>00146 <span class="keyword">protected</span>:
+<a name="l00147"></a>00147         <span class="keywordtype">bool</span>            m_bSelfAlloc;   <span class="comment">/* m_json_rpc has been alloc&#39;ed by constructor */</span>
+<a name="l00148"></a>00148         json_rpc_t *m_json_rpc;
+<a name="l00149"></a>00149 };
+<a name="l00150"></a>00150 
+<a name="l00167"></a><a class="code" href="classc_a_bus_request_method.html">00167</a> <span class="keyword">class </span><a class="code" href="classc_a_bus_request_method.html" title="A-Bus method RPC.">cABusRequestMethod</a>: <span class="keyword">public</span> <a class="code" href="classc_a_bus_r_p_c.html" title="Base class of A-Bus Remote Procedure Call.">cABusRPC</a> {
+<a name="l00168"></a>00168 <span class="keyword">public</span>:
+<a name="l00170"></a><a class="code" href="classc_a_bus_request_method.html#a20cc25deb1be203f5a63207e66d0d28e">00170</a>         <a class="code" href="classc_a_bus_request_method.html#a20cc25deb1be203f5a63207e66d0d28e" title="Constructor for a method RPC.">cABusRequestMethod</a>(abus_t *abus) : <a class="code" href="classc_a_bus_r_p_c.html" title="Base class of A-Bus Remote Procedure Call.">cABusRPC</a>(), m_abus(abus)  {}
+<a name="l00172"></a><a class="code" href="classc_a_bus_request_method.html#aab43b987d791775d950bc2af0b0a26a4">00172</a>         <a class="code" href="classc_a_bus_request_method.html#aab43b987d791775d950bc2af0b0a26a4" title="Destructor.">~cABusRequestMethod</a>() {}
 <a name="l00173"></a>00173 
-<a name="l00177"></a><a class="code" href="group__abusmm.html#gac692eb5476e3635575751f25430a7175">00177</a> <span class="preprocessor">#define abus_declpp_method_member(_cl, _method) \</span>
-<a name="l00178"></a>00178 <span class="preprocessor">        static void _method##Wrapper(json_rpc_t *json_rpc, void *arg) \</span>
-<a name="l00179"></a>00179 <span class="preprocessor">                { \</span>
-<a name="l00180"></a>00180 <span class="preprocessor">                        _cl *_pObj = (_cl *) arg; \</span>
-<a name="l00181"></a>00181 <span class="preprocessor">                        cABusRPC cbRPC(json_rpc);\</span>
-<a name="l00182"></a>00182 <span class="preprocessor">                        _pObj-&gt;_method(&amp;cbRPC); \</span>
-<a name="l00183"></a>00183 <span class="preprocessor">                } \</span>
-<a name="l00184"></a>00184 <span class="preprocessor">        void _method(cABusRPC *)</span>
-<a name="l00185"></a>00185 <span class="preprocessor"></span>
-<a name="l00188"></a><a class="code" href="classc_a_bus.html">00188</a> <span class="keyword">class </span><a class="code" href="classc_a_bus.html" title="A-Bus class.">cABus</a> {
-<a name="l00189"></a>00189 <span class="keyword">public</span>:
-<a name="l00191"></a><a class="code" href="classc_a_bus.html#ac8e0ee4b9f27ea8e6642ef4c38b402c8">00191</a>         <a class="code" href="classc_a_bus.html#ac8e0ee4b9f27ea8e6642ef4c38b402c8" title="Constructor for access to A-Bus.">cABus</a>() { <a class="code" href="group__abus.html#gae6978d51da337838da12bca1c2c27659" title="Initialize for A-Bus operation.">abus_init</a>(&amp;m_abus); }
-<a name="l00193"></a><a class="code" href="classc_a_bus.html#a0750d412560b576172b9c4f3d6752874">00193</a>         <span class="keyword">virtual</span> <a class="code" href="classc_a_bus.html#a0750d412560b576172b9c4f3d6752874" title="Destructor.">~cABus</a>() { <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;m_abus); }
-<a name="l00194"></a>00194 
-<a name="l00196"></a><a class="code" href="classc_a_bus.html#ac40d70e76dd93687e472547539c7dee2">00196</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus.html#ac40d70e76dd93687e472547539c7dee2" title="Declare a new method in a service.">decl_method</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *method_name,
-<a name="l00197"></a>00197                                         abus_callback_t method_callback, <span class="keywordtype">int</span> flags = 0, <span class="keywordtype">void</span> *arg = NULL,
-<a name="l00198"></a>00198                                         <span class="keyword">const</span> <span class="keywordtype">char</span> *fmt = NULL, <span class="keyword">const</span> <span class="keywordtype">char</span> *result_fmt = NULL)
-<a name="l00199"></a>00199                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga4e70d862fb8670bfe5397869d3d41b71" title="Decalare an A-Bus method.">abus_decl_method</a>(&amp;m_abus, service_name, method_name, method_callback, flags, arg, fmt, result_fmt); }
-<a name="l00200"></a>00200 
-<a name="l00202"></a>00202 <span class="preprocessor">#define declpp_method(_service_name, _method_name, _obj, _method, _flags, fmt, res_fmt) \</span>
-<a name="l00203"></a>00203 <span class="preprocessor">        decl_method((_service_name), (_method_name), &amp;(_obj)-&gt;_method##Wrapper, (_flags), (void *)(_obj), fmt, res_fmt)</span>
-<a name="l00204"></a>00204 <span class="preprocessor"></span>
-<a name="l00206"></a><a class="code" href="classc_a_bus.html#afd1c57ba2c82572e16f774e4ccfdf86e">00206</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus.html#afd1c57ba2c82572e16f774e4ccfdf86e" title="Undeclare a method from a service.">undecl_method</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *method_name)
-<a name="l00207"></a>00207                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga1d2c5a2ca5147f5991d1a78f801f5fdf" title="Undeclare an A-Bus method.">abus_undecl_method</a>(&amp;m_abus, service_name, method_name); }
-<a name="l00208"></a>00208 
-<a name="l00210"></a><a class="code" href="classc_a_bus.html#ae9f5928a1fa94252ba17e59408b3d57f">00210</a>         <a class="code" href="classc_a_bus_request_method.html" title="A-Bus method RPC.">cABusRequestMethod</a> *<a class="code" href="classc_a_bus.html#ae9f5928a1fa94252ba17e59408b3d57f" title="Instantiate a new RPC for invocation.">RequestMethod</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *method_name) {
-<a name="l00211"></a>00211                 <a class="code" href="classc_a_bus_request_method.html" title="A-Bus method RPC.">cABusRequestMethod</a> *p = <span class="keyword">new</span> <a class="code" href="classc_a_bus_request_method.html" title="A-Bus method RPC.">cABusRequestMethod</a>(&amp;m_abus);
-<a name="l00212"></a>00212                 <span class="keywordflow">if</span> (p) p-&gt;init(service_name, method_name);
-<a name="l00213"></a>00213                 <span class="keywordflow">return</span> p;
-<a name="l00214"></a>00214         }
-<a name="l00215"></a>00215 
-<a name="l00217"></a><a class="code" href="classc_a_bus.html#a8945f714199f391757a57b60fe84eb43">00217</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus.html#a8945f714199f391757a57b60fe84eb43" title="Declare a new event in a service.">decl_event</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *event_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *fmt = NULL)
-<a name="l00218"></a>00218                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga5fe9afa6fca86ff07ca63498800be99c" title="Decalare an A-Bus event.">abus_decl_event</a>(&amp;m_abus, service_name, event_name, fmt); }
-<a name="l00219"></a>00219 
-<a name="l00221"></a><a class="code" href="classc_a_bus.html#a55a7f2dc96bc2e1e6110c87fb6edaa67">00221</a>         <a class="code" href="classc_a_bus_request_event.html" title="A-Bus event RPC.">cABusRequestEvent</a> *<a class="code" href="classc_a_bus.html#a55a7f2dc96bc2e1e6110c87fb6edaa67" title="Instantiate a new event for publishing.">RequestEvent</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *event_name) {
-<a name="l00222"></a>00222                 <a class="code" href="classc_a_bus_request_event.html" title="A-Bus event RPC.">cABusRequestEvent</a> *p = <span class="keyword">new</span> <a class="code" href="classc_a_bus_request_event.html" title="A-Bus event RPC.">cABusRequestEvent</a>(&amp;m_abus);
-<a name="l00223"></a>00223                 <span class="keywordflow">if</span> (p) p-&gt;init(service_name, event_name);
-<a name="l00224"></a>00224                 <span class="keywordflow">return</span> p;
-<a name="l00225"></a>00225         }
-<a name="l00226"></a>00226 
-<a name="l00228"></a><a class="code" href="classc_a_bus.html#a3ed72d7bc8519e149c77b242b177958a">00228</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus.html#a3ed72d7bc8519e149c77b242b177958a" title="Subscribe to an event from a service.">event_subscribe</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *event_name, abus_callback_t callback, <span class="keywordtype">int</span> flags = ABUS_RPC_FLAG_NONE, <span class="keywordtype">void</span> *arg = NULL, <span class="keywordtype">int</span> timeout = -1)
-<a name="l00229"></a>00229                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga04ae18204c46552f427908813091c726" title="Register callback for event notification and send subscription to service.">abus_event_subscribe</a>(&amp;m_abus, service_name, event_name, callback, flags, arg, timeout); }
-<a name="l00230"></a>00230 
-<a name="l00232"></a><a class="code" href="classc_a_bus.html#a952d59da55b0c30ba8ddeb766c23c2d0">00232</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus.html#a952d59da55b0c30ba8ddeb766c23c2d0" title="Unsubscribe from an event.">event_unsubscribe</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *event_name, abus_callback_t callback, <span class="keywordtype">void</span> *arg = NULL, <span class="keywordtype">int</span> timeout = -1)
-<a name="l00233"></a>00233                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gaa04d46deeba36cd917dfaf8531ca2dde" title="Unregister callback for event notification and send unsubscription to service.">abus_event_unsubscribe</a>(&amp;m_abus, service_name, event_name, callback, arg, timeout); }
-<a name="l00234"></a>00234 
-<a name="l00235"></a>00235 
-<a name="l00237"></a>00237 <span class="preprocessor">#define event_subscribepp(_service_name, _event_name, _obj, _method, _flags, _timeout) \</span>
-<a name="l00238"></a>00238 <span class="preprocessor">        event_subscribe((_service_name), (_event_name), &amp;(_obj)-&gt;_method##Wrapper, (_flags), (void *)(_obj), (_timeout))</span>
-<a name="l00239"></a>00239 <span class="preprocessor"></span>
-<a name="l00240"></a>00240 <span class="preprocessor">#define event_unsubscribepp(_service_name, _event_name, _obj, _method, _timeout) \</span>
-<a name="l00241"></a>00241 <span class="preprocessor">        event_unsubscribe((_service_name), (_event_name), &amp;(_obj)-&gt;_method##Wrapper, (void *)(_obj), (_timeout))</span>
-<a name="l00242"></a>00242 <span class="preprocessor"></span>
-<a name="l00243"></a>00243 <span class="keyword">private</span>:
-<a name="l00244"></a>00244         abus_t m_abus;
-<a name="l00245"></a>00245 
-<a name="l00246"></a>00246 };
-<a name="l00247"></a>00247 
-<a name="l00250"></a>00250 <span class="preprocessor">#endif  </span><span class="comment">/* _ABUS_HPP */</span>
+<a name="l00174"></a>00174         <span class="comment">/* \internal */</span>
+<a name="l00175"></a>00175         <span class="keywordtype">int</span> init(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *method_name)
+<a name="l00176"></a>00176                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gacd0f9150830116ff3525cf6c7e05478f" title="Initialize for request method, client side.">abus_request_method_init</a>(m_abus, service_name, method_name, m_json_rpc); }
+<a name="l00177"></a>00177 
+<a name="l00179"></a><a class="code" href="classc_a_bus_request_method.html#a112bc6c0e28fc8a5db7e77625e9d1c2f">00179</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_request_method.html#a112bc6c0e28fc8a5db7e77625e9d1c2f" title="Invoke the RPC synchronously.">invoke</a>(<span class="keywordtype">int</span> flags, <span class="keywordtype">int</span> timeout)
+<a name="l00180"></a>00180                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gae11f19e9033b6537259a125f4b8c9b21" title="Synchronous invocation of a method.">abus_request_method_invoke</a>(m_abus, m_json_rpc, flags, timeout); }
+<a name="l00181"></a>00181 
+<a name="l00183"></a><a class="code" href="classc_a_bus_request_method.html#aba9ea276af239d185795a2a70df09eb6">00183</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_request_method.html#aba9ea276af239d185795a2a70df09eb6" title="Invoke the RPC asynchronously.">invokeAsync</a>(<span class="keywordtype">int</span> flags, <span class="keywordtype">int</span> timeout, abus_callback_t callback, <span class="keywordtype">void</span> *arg)
+<a name="l00184"></a>00184                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gacb221ecd41f014b38bb3a4055111e39d" title="Asynchronous invocation of a RPC.">abus_request_method_invoke_async</a>(m_abus, m_json_rpc, timeout, callback, flags, arg); }
+<a name="l00185"></a>00185 
+<a name="l00187"></a><a class="code" href="classc_a_bus_request_method.html#ab1e4bb165ee672873eed9c546f55ffe6">00187</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_request_method.html#ab1e4bb165ee672873eed9c546f55ffe6" title="Wait of the asynchronously invoked RPC to complete.">waitAsync</a>(<span class="keywordtype">int</span> timeout)
+<a name="l00188"></a>00188                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gaefbdffce700658ec7b8ec72ed6911cae" title="Wait for an asynchronous method request.">abus_request_method_wait_async</a>(m_abus, m_json_rpc, timeout); }
+<a name="l00189"></a>00189 
+<a name="l00190"></a>00190 <span class="keyword">private</span>:
+<a name="l00191"></a>00191         abus_t *m_abus;
+<a name="l00192"></a>00192 };
+<a name="l00193"></a>00193 
+<a name="l00206"></a><a class="code" href="classc_a_bus_request_event.html">00206</a> <span class="keyword">class </span><a class="code" href="classc_a_bus_request_event.html" title="A-Bus event RPC.">cABusRequestEvent</a>: <a class="code" href="classc_a_bus_r_p_c.html" title="Base class of A-Bus Remote Procedure Call.">cABusRPC</a> {
+<a name="l00207"></a>00207 <span class="keyword">public</span>:
+<a name="l00209"></a><a class="code" href="classc_a_bus_request_event.html#a7208b75b4da5feb2ba3544383af92597">00209</a>         <a class="code" href="classc_a_bus_request_event.html#a7208b75b4da5feb2ba3544383af92597" title="Constructor for an event RPC.">cABusRequestEvent</a>(abus_t *abus) : m_abus(abus)  {}
+<a name="l00211"></a><a class="code" href="classc_a_bus_request_event.html#af42e4be4700e75f66623f33578c28ca6">00211</a>         <a class="code" href="classc_a_bus_request_event.html#af42e4be4700e75f66623f33578c28ca6" title="Destructor.">~cABusRequestEvent</a>() { }
+<a name="l00212"></a>00212 
+<a name="l00213"></a>00213         <span class="comment">/* \internal */</span>
+<a name="l00214"></a>00214         <span class="keywordtype">int</span> init(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *event_name)
+<a name="l00215"></a>00215                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gaf752f471ab94e0c086f0c931c521f95f" title="Initialize a new RPC to be published by a service.">abus_request_event_init</a>(m_abus, service_name, event_name, m_json_rpc); }
+<a name="l00216"></a>00216 
+<a name="l00218"></a><a class="code" href="classc_a_bus_request_event.html#a19bb037339bfad5f0fdc4f68eceb13e9">00218</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus_request_event.html#a19bb037339bfad5f0fdc4f68eceb13e9" title="Publish the event.">publish</a>(<span class="keywordtype">int</span> flags = ABUS_RPC_FLAG_NONE)
+<a name="l00219"></a>00219                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga460695254c43fd31a2c0ad17abeb213c" title="Publish (i.e.">abus_request_event_publish</a>(m_abus, m_json_rpc, flags); }
+<a name="l00220"></a>00220 
+<a name="l00221"></a>00221 <span class="keyword">private</span>:
+<a name="l00222"></a>00222         abus_t *m_abus;
+<a name="l00223"></a>00223 };
+<a name="l00224"></a>00224 
+<a name="l00225"></a>00225 
+<a name="l00229"></a><a class="code" href="group__abusmm.html#gac692eb5476e3635575751f25430a7175">00229</a> <span class="preprocessor">#define abus_declpp_method_member(_cl, _method) \</span>
+<a name="l00230"></a>00230 <span class="preprocessor">        static void _method##Wrapper(json_rpc_t *json_rpc, void *arg) \</span>
+<a name="l00231"></a>00231 <span class="preprocessor">                { \</span>
+<a name="l00232"></a>00232 <span class="preprocessor">                        _cl *_pObj = (_cl *) arg; \</span>
+<a name="l00233"></a>00233 <span class="preprocessor">                        cABusRPC cbRPC(json_rpc);\</span>
+<a name="l00234"></a>00234 <span class="preprocessor">                        _pObj-&gt;_method(&amp;cbRPC); \</span>
+<a name="l00235"></a>00235 <span class="preprocessor">                } \</span>
+<a name="l00236"></a>00236 <span class="preprocessor">        void _method(cABusRPC *)</span>
+<a name="l00237"></a>00237 <span class="preprocessor"></span>
+<a name="l00240"></a><a class="code" href="classc_a_bus.html">00240</a> <span class="keyword">class </span><a class="code" href="classc_a_bus.html" title="A-Bus class.">cABus</a> {
+<a name="l00241"></a>00241 <span class="keyword">public</span>:
+<a name="l00243"></a><a class="code" href="classc_a_bus.html#ac8e0ee4b9f27ea8e6642ef4c38b402c8">00243</a>         <a class="code" href="classc_a_bus.html#ac8e0ee4b9f27ea8e6642ef4c38b402c8" title="Constructor for access to A-Bus.">cABus</a>() { <a class="code" href="group__abus.html#gae6978d51da337838da12bca1c2c27659" title="Initialize for A-Bus operation.">abus_init</a>(&amp;m_abus); }
+<a name="l00245"></a><a class="code" href="classc_a_bus.html#a0750d412560b576172b9c4f3d6752874">00245</a>         <span class="keyword">virtual</span> <a class="code" href="classc_a_bus.html#a0750d412560b576172b9c4f3d6752874" title="Destructor.">~cABus</a>() { <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;m_abus); }
+<a name="l00246"></a>00246 
+<a name="l00251"></a><a class="code" href="classc_a_bus.html#a3f3f94c61885bb4a0676056b75778a61">00251</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus.html#a3f3f94c61885bb4a0676056b75778a61" title="Declare a new method in a service.">decl_method</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *method_name,
+<a name="l00252"></a>00252                                         abus_callback_t method_callback, <span class="keywordtype">int</span> flags = 0, <span class="keywordtype">void</span> *arg = NULL,
+<a name="l00253"></a>00253                                         <span class="keyword">const</span> <span class="keywordtype">char</span> *descr = NULL, <span class="keyword">const</span> <span class="keywordtype">char</span> *fmt = NULL, <span class="keyword">const</span> <span class="keywordtype">char</span> *result_fmt = NULL)
+<a name="l00254"></a>00254                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gab292f8de3bf410245d5282b92fb611c4" title="Decalare an A-Bus method.">abus_decl_method</a>(&amp;m_abus, service_name, method_name, method_callback, flags, arg, descr, fmt, result_fmt); }
+<a name="l00255"></a>00255 
+<a name="l00257"></a>00257 <span class="preprocessor">#define declpp_method(_service_name, _method_name, _obj, _method, _flags, descr, fmt, res_fmt) \</span>
+<a name="l00258"></a>00258 <span class="preprocessor">        decl_method((_service_name), (_method_name), &amp;(_obj)-&gt;_method##Wrapper, (_flags), (void *)(_obj), descr, fmt, res_fmt)</span>
+<a name="l00259"></a>00259 <span class="preprocessor"></span>
+<a name="l00264"></a><a class="code" href="classc_a_bus.html#afd1c57ba2c82572e16f774e4ccfdf86e">00264</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus.html#afd1c57ba2c82572e16f774e4ccfdf86e" title="Undeclare a method from a service.">undecl_method</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *method_name)
+<a name="l00265"></a>00265                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga1d2c5a2ca5147f5991d1a78f801f5fdf" title="Undeclare an A-Bus method.">abus_undecl_method</a>(&amp;m_abus, service_name, method_name); }
+<a name="l00266"></a>00266 
+<a name="l00268"></a><a class="code" href="classc_a_bus.html#ae9f5928a1fa94252ba17e59408b3d57f">00268</a>         <a class="code" href="classc_a_bus_request_method.html" title="A-Bus method RPC.">cABusRequestMethod</a> *<a class="code" href="classc_a_bus.html#ae9f5928a1fa94252ba17e59408b3d57f" title="Instantiate a new RPC for invocation.">RequestMethod</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *method_name) {
+<a name="l00269"></a>00269                 <a class="code" href="classc_a_bus_request_method.html" title="A-Bus method RPC.">cABusRequestMethod</a> *p = <span class="keyword">new</span> <a class="code" href="classc_a_bus_request_method.html" title="A-Bus method RPC.">cABusRequestMethod</a>(&amp;m_abus);
+<a name="l00270"></a>00270                 <span class="keywordflow">if</span> (p) p-&gt;init(service_name, method_name);
+<a name="l00271"></a>00271                 <span class="keywordflow">return</span> p;
+<a name="l00272"></a>00272         }
+<a name="l00273"></a>00273 
+<a name="l00275"></a><a class="code" href="classc_a_bus.html#ae8a5b73491fabd230a06ca787c16d020">00275</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus.html#ae8a5b73491fabd230a06ca787c16d020" title="Declare a new event in a service.">decl_event</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *event_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *descr = NULL, <span class="keyword">const</span> <span class="keywordtype">char</span> *fmt = NULL)
+<a name="l00276"></a>00276                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga49fee4614741a85a70c4fb6de11af9d8" title="Decalare an A-Bus event.">abus_decl_event</a>(&amp;m_abus, service_name, event_name, descr, fmt); }
+<a name="l00277"></a>00277 
+<a name="l00279"></a><a class="code" href="classc_a_bus.html#a55a7f2dc96bc2e1e6110c87fb6edaa67">00279</a>         <a class="code" href="classc_a_bus_request_event.html" title="A-Bus event RPC.">cABusRequestEvent</a> *<a class="code" href="classc_a_bus.html#a55a7f2dc96bc2e1e6110c87fb6edaa67" title="Instantiate a new event for publishing.">RequestEvent</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *event_name) {
+<a name="l00280"></a>00280                 <a class="code" href="classc_a_bus_request_event.html" title="A-Bus event RPC.">cABusRequestEvent</a> *p = <span class="keyword">new</span> <a class="code" href="classc_a_bus_request_event.html" title="A-Bus event RPC.">cABusRequestEvent</a>(&amp;m_abus);
+<a name="l00281"></a>00281                 <span class="keywordflow">if</span> (p) p-&gt;init(service_name, event_name);
+<a name="l00282"></a>00282                 <span class="keywordflow">return</span> p;
+<a name="l00283"></a>00283         }
+<a name="l00284"></a>00284 
+<a name="l00289"></a><a class="code" href="classc_a_bus.html#a3ed72d7bc8519e149c77b242b177958a">00289</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus.html#a3ed72d7bc8519e149c77b242b177958a" title="Subscribe to an event from a service.">event_subscribe</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *event_name, abus_callback_t callback, <span class="keywordtype">int</span> flags = ABUS_RPC_FLAG_NONE, <span class="keywordtype">void</span> *arg = NULL, <span class="keywordtype">int</span> timeout = -1)
+<a name="l00290"></a>00290                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#ga04ae18204c46552f427908813091c726" title="Register callback for event notification and send subscription to service.">abus_event_subscribe</a>(&amp;m_abus, service_name, event_name, callback, flags, arg, timeout); }
+<a name="l00291"></a>00291 
+<a name="l00296"></a><a class="code" href="classc_a_bus.html#a952d59da55b0c30ba8ddeb766c23c2d0">00296</a>         <span class="keywordtype">int</span> <a class="code" href="classc_a_bus.html#a952d59da55b0c30ba8ddeb766c23c2d0" title="Unsubscribe from an event.">event_unsubscribe</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *service_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *event_name, abus_callback_t callback, <span class="keywordtype">void</span> *arg = NULL, <span class="keywordtype">int</span> timeout = -1)
+<a name="l00297"></a>00297                 { <span class="keywordflow">return</span> <a class="code" href="group__abus.html#gaa04d46deeba36cd917dfaf8531ca2dde" title="Unregister callback for event notification and send unsubscription to service.">abus_event_unsubscribe</a>(&amp;m_abus, service_name, event_name, callback, arg, timeout); }
+<a name="l00298"></a>00298 
+<a name="l00299"></a>00299 
+<a name="l00301"></a>00301 <span class="preprocessor">#define event_subscribepp(_service_name, _event_name, _obj, _method, _flags, _timeout) \</span>
+<a name="l00302"></a>00302 <span class="preprocessor">        event_subscribe((_service_name), (_event_name), &amp;(_obj)-&gt;_method##Wrapper, (_flags), (void *)(_obj), (_timeout))</span>
+<a name="l00303"></a>00303 <span class="preprocessor"></span>
+<a name="l00304"></a>00304 <span class="preprocessor">#define event_unsubscribepp(_service_name, _event_name, _obj, _method, _timeout) \</span>
+<a name="l00305"></a>00305 <span class="preprocessor">        event_unsubscribe((_service_name), (_event_name), &amp;(_obj)-&gt;_method##Wrapper, (void *)(_obj), (_timeout))</span>
+<a name="l00306"></a>00306 <span class="preprocessor"></span>
+<a name="l00307"></a>00307 <span class="keyword">private</span>:
+<a name="l00308"></a>00308         abus_t m_abus;
+<a name="l00309"></a>00309 
+<a name="l00310"></a>00310 };
+<a name="l00311"></a>00311 
+<a name="l00314"></a>00314 <span class="preprocessor">#endif  </span><span class="comment">/* _ABUS_HPP */</span>
 </pre></div></div>
 </div>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><b>abus.hpp</b>      </li>
-      <li class="footer">Generated on Fri Dec 30 2011 13:16:02 for A-Bus Library by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 19:13:10 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

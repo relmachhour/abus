@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>A-Bus Library: example-client.c</title>
+<title>A-Bus Library: example-clnt-attr.c</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/search.js"></script>
@@ -69,19 +69,17 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <script type="text/javascript">
-  initNavTree('example-client_8c-example.html','');
+  initNavTree('example-clnt-attr_8c-example.html','');
 </script>
 <div id="doc-content">
 <div class="header">
   <div class="headertitle">
-<h1>example-client.c</h1>  </div>
+<h1>example-clnt-attr.c</h1>  </div>
 </div>
 <div class="contents">
-<p>This example is a client written in C, performing a synchronous method invocation. For the example to work, the service "examplesvc" must be provided by running program example-service or example-servicepp.</p>
-<p>This client is equivalent to the following call of abus-send: </p>
-<div class="fragment"><pre class="fragment">tools/abus-send examplesvc.sum a:i:${my_a} b:i:${my_b}
-</pre></div><div class="fragment"><pre class="fragment"><span class="comment">/*</span>
-<span class="comment"> * Copyright (C) 2011 Stephane Fillod</span>
+<p>This example is a client written in C, dealing with attributes in a data model. For the example to work, the service "exampleattrsvc" must be provided by running program example-svc-attr.</p>
+<div class="fragment"><pre class="fragment"><span class="comment">/*</span>
+<span class="comment"> * Copyright (C) 2012 Stephane Fillod</span>
 <span class="comment"> *</span>
 <span class="comment"> *   This library is free software; you can redistribute it and/or modify</span>
 <span class="comment"> *   it under the terms of the GNU Library General Public License as</span>
@@ -107,40 +105,42 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 {
         abus_t abus;
         json_rpc_t json_rpc;
-        <span class="keywordtype">int</span> ret, res_value;
-        <span class="keyword">const</span> <span class="keywordtype">char</span> *service_name = <span class="stringliteral">&quot;examplesvc&quot;</span>;
+        <span class="keywordtype">int</span> ret;
+        <span class="keyword">const</span> <span class="keywordtype">char</span> *service_name = <span class="stringliteral">&quot;exampleattrsvc&quot;</span>;
+        <span class="keyword">const</span> <span class="keywordtype">char</span> *attr_name;
+        <span class="keywordtype">int</span> my_int;
 
-        <span class="keywordflow">if</span> (argc &lt; 4) {
-                printf(<span class="stringliteral">&quot;usage: %s METHOD firstvalue secondvalue\n&quot;</span>, argv[0]);
+        <span class="keywordflow">if</span> (argc &lt; 2) {
+                printf(<span class="stringliteral">&quot;usage: %s ATTR newintegervalue\n&quot;</span>, argv[0]);
+                printf(<span class="stringliteral">&quot;usage: ATTR: some_int|some_other_int\n&quot;</span>, argv[0]);
                 exit(EXIT_FAILURE);
         }
 
         <a name="a0"></a><a class="code" href="group__abus.html#gae6978d51da337838da12bca1c2c27659" title="Initialize for A-Bus operation.">abus_init</a>(&amp;abus);
 
-        <span class="comment">/* method name is taken from command line */</span>
-        ret = <a name="a1"></a><a class="code" href="group__abus.html#gacd0f9150830116ff3525cf6c7e05478f" title="Initialize for request method, client side.">abus_request_method_init</a>(&amp;abus, service_name, argv[1], &amp;json_rpc);
-        <span class="keywordflow">if</span> (ret)
-                exit(EXIT_FAILURE);
+        <span class="comment">/* attr name is taken from command line */</span>
+        attr_name = argv[1];
 
-        <span class="comment">/* pass 2 parameters: &quot;a&quot; and &quot;b&quot; */</span>
-        <a name="a2"></a><a class="code" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int</a>(&amp;json_rpc, <span class="stringliteral">&quot;a&quot;</span>, atoi(argv[2]));
-        <a class="code" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int</a>(&amp;json_rpc, <span class="stringliteral">&quot;b&quot;</span>, atoi(argv[3]));
-
-        ret = <a name="a3"></a><a class="code" href="group__abus.html#gae11f19e9033b6537259a125f4b8c9b21" title="Synchronous invocation of a method.">abus_request_method_invoke</a>(&amp;abus, &amp;json_rpc, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT);
-        <span class="keywordflow">if</span> (ret != 0) {
+        ret = <a name="a1"></a><a class="code" href="group__abus.html#ga9491b55fcd9384d8151aa348369c6f33" title="Get the value of an integer attribute from a service.">abus_attr_get_int</a>(&amp;abus, service_name, attr_name, &amp;my_int, RPC_TIMEOUT);
+        <span class="keywordflow">if</span> (ret) {
                 printf(<span class="stringliteral">&quot;RPC failed with error %d\n&quot;</span>, ret);
+                <a name="a2"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
                 exit(EXIT_FAILURE);
         }
 
-        ret = <a name="a4"></a><a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(&amp;json_rpc, <span class="stringliteral">&quot;res_value&quot;</span>, &amp;res_value);
+        printf(<span class="stringliteral">&quot;Previous value: %s=%d\n&quot;</span>, attr_name, my_int);
 
-        <span class="keywordflow">if</span> (ret == 0)
-                printf(<span class="stringliteral">&quot;res_value=%d\n&quot;</span>, res_value);
-        <span class="keywordflow">else</span>
-                printf(<span class="stringliteral">&quot;No result? error %d\n&quot;</span>, ret);
+        my_int = atoi(argv[2]);
 
-        <a name="a5"></a><a class="code" href="group__abus.html#gae015568322fca8202167c54d29f1603c" title="Release ressources associated with a RPC.">abus_request_method_cleanup</a>(&amp;abus, &amp;json_rpc);
-        <a name="a6"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+        ret = <a name="a3"></a><a class="code" href="group__abus.html#ga631f6a06af0a568c5c29f1af6d5d7d7d" title="Set the value of an integer attribute in a service.">abus_attr_set_int</a>(&amp;abus, service_name, attr_name, my_int, RPC_TIMEOUT);
+        <span class="keywordflow">if</span> (ret) {
+                printf(<span class="stringliteral">&quot;RPC failed with error %d\n&quot;</span>, ret);
+                <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+                exit(EXIT_FAILURE);
+        }
+        printf(<span class="stringliteral">&quot;New value: %s=%d\n&quot;</span>, attr_name, my_int);
+
+        <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
 
         <span class="keywordflow">return</span> EXIT_SUCCESS;
 }

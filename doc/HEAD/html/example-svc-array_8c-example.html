@@ -79,7 +79,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="contents">
 <p>This example is a service named "examplearraysvc" written in C, dealing with arrays in argument and in response. To be used with the client example-clnt-array.</p>
 <div class="fragment"><pre class="fragment"><span class="comment">/*</span>
-<span class="comment"> * Copyright (C) 2011 Stephane Fillod</span>
+<span class="comment"> * Copyright (C) 2011-2012 Stephane Fillod</span>
 <span class="comment"> *</span>
 <span class="comment"> *   This library is free software; you can redistribute it and/or modify</span>
 <span class="comment"> *   it under the terms of the GNU Library General Public License as</span>
@@ -107,8 +107,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
         <span class="keywordtype">int</span> *ary = NULL;
 
         ret = <a name="a0"></a><a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(json_rpc, <span class="stringliteral">&quot;k&quot;</span>, &amp;k);
+        <span class="keywordflow">if</span> (ret != 0) {
+                <a name="a1"></a><a class="code" href="group__abus.html#gaabb59255346696234a3940cfd07197d5" title="Set the error code and message in a RPC before response.">json_rpc_set_error</a>(json_rpc, ret, NULL);
+                <span class="keywordflow">return</span>;
+        }
 
-        count = <a name="a1"></a><a class="code" href="group__abus.html#ga7bbbd24ff202dce02334cefbc21d7928" title="Get the count of objects in &amp;quot;params&amp;quot; or &amp;quot;result&amp;quot; in a parsed JSON RPC...">json_rpc_get_array_count</a>(json_rpc, <span class="stringliteral">&quot;my_array&quot;</span>);
+        count = <a name="a2"></a><a class="code" href="group__abus.html#ga7bbbd24ff202dce02334cefbc21d7928" title="Get the count of objects in &amp;quot;params&amp;quot; or &amp;quot;result&amp;quot; in a parsed JSON RPC...">json_rpc_get_array_count</a>(json_rpc, <span class="stringliteral">&quot;my_array&quot;</span>);
         <span class="keywordflow">if</span> (count &gt;= 0) {
 
                 <span class="comment">/* first put all the values in an array, in order to not mix</span>
@@ -118,19 +122,23 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
                 <span class="keywordflow">for</span> (i = 0; i&lt;count; i++) {
                         <span class="comment">/* Aim at i-th element within array &quot;my_array&quot; */</span>
-                        ret |= <a name="a2"></a><a class="code" href="group__abus.html#ga97adf9e30c98f22e21cf410db25bed61" title="Aim the json_rpc_get_{int,bool,..} functions at an object within an array of &amp;quot;params&amp;quot; or &amp;q...">json_rpc_get_point_at</a>(json_rpc, <span class="stringliteral">&quot;my_array&quot;</span>, i);
+                        ret = <a name="a3"></a><a class="code" href="group__abus.html#ga97adf9e30c98f22e21cf410db25bed61" title="Aim the json_rpc_get_{int,bool,..} functions at an object within an array of &amp;quot;params&amp;quot; or &amp;q...">json_rpc_get_point_at</a>(json_rpc, <span class="stringliteral">&quot;my_array&quot;</span>, i);
+                        <span class="keywordflow">if</span> (ret != 0)
+                                <span class="keywordflow">break</span>;
 
                         <span class="comment">/* from that dictionary, get parameter &quot;a&quot;</span>
 <span class="comment">                         * Rem: expects all array elements to contain at least a param &quot;a&quot;</span>
 <span class="comment">                         */</span>
-                        ret |= <a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(json_rpc, <span class="stringliteral">&quot;a&quot;</span>, &amp;ary[i]);
+                        ret = <a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(json_rpc, <span class="stringliteral">&quot;a&quot;</span>, &amp;ary[i]);
+                        <span class="keywordflow">if</span> (ret != 0)
+                                <span class="keywordflow">break</span>;
                 }
         }
 
         printf(<span class="stringliteral">&quot;## %s: arg=%s, ret=%d, k=%d, array count=%d\n&quot;</span>, __func__, (<span class="keyword">const</span> <span class="keywordtype">char</span>*)arg, ret, k, count);
 
         <span class="keywordflow">if</span> (ret) {
-                <a name="a3"></a><a class="code" href="group__abus.html#ga9630933b39f907073628c1d6a9eb950b" title="Set the error code and message in a RPC before response.">json_rpc_set_error</a>(json_rpc, JSONRPC_INVALID_METHOD, NULL);
+                <a class="code" href="group__abus.html#gaabb59255346696234a3940cfd07197d5" title="Set the error code and message in a RPC before response.">json_rpc_set_error</a>(json_rpc, ret, NULL);
         } <span class="keywordflow">else</span> {
 
                 <a name="a4"></a><a class="code" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int</a>(json_rpc, <span class="stringliteral">&quot;res_k&quot;</span>, k);
@@ -153,9 +161,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
                 <span class="comment">/* end the array */</span>
                 <a class="code" href="group__abus.html#gab5c1434f4a96d22320319f6caf45173b" title="Variable arg wrapper for json_rpc_append_vargs()">json_rpc_append_args</a>(json_rpc, JSON_ARRAY_END, -1);
-
-                free(ary);
         }
+        <span class="keywordflow">if</span> (ary)
+                free(ary);
 }
 
 <span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)
@@ -165,9 +173,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
         <a name="a6"></a><a class="code" href="group__abus.html#gae6978d51da337838da12bca1c2c27659" title="Initialize for A-Bus operation.">abus_init</a>(&amp;abus);
 
-        <a name="a7"></a><a class="code" href="group__abus.html#ga4e70d862fb8670bfe5397869d3d41b71" title="Decalare an A-Bus method.">abus_decl_method</a>(&amp;abus, <span class="stringliteral">&quot;examplearraysvc&quot;</span>, <span class="stringliteral">&quot;sqr&quot;</span>, &amp;svc_array_sqr_cb,
+        <a name="a7"></a><a class="code" href="group__abus.html#gab292f8de3bf410245d5282b92fb611c4" title="Decalare an A-Bus method.">abus_decl_method</a>(&amp;abus, <span class="stringliteral">&quot;examplearraysvc&quot;</span>, <span class="stringliteral">&quot;sqr&quot;</span>, &amp;svc_array_sqr_cb,
                                         ABUS_RPC_FLAG_NONE,
                                         <span class="stringliteral">&quot;square cookie&quot;</span>,
+                                        <span class="stringliteral">&quot;Compute square value of all the elements of an array. Serves as an example of how to deal with array in A-Bus&quot;</span>,
                                         <span class="stringliteral">&quot;k:i:some contant,my_array:(a:i:value to be squared,arg_index:i:index of arg for demo):array of stuff&quot;</span>,
                                         <span class="stringliteral">&quot;res_k:i:same contant,res_array:(res_a:i:squared value):array of squared stuff&quot;</span>);
 
@@ -184,7 +193,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Fri Dec 30 2011 13:16:02 for A-Bus Library by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 19:13:10 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

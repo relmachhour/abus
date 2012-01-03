@@ -79,7 +79,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="contents">
 <p>This example is the same example of a service named "examplesvc", except it is written using the wrapped C++ API. To be used with the clients example-client or example-clientpp.</p>
 <div class="fragment"><pre class="fragment"><span class="comment">/*</span>
-<span class="comment"> * Copyright (C) 2011 Stephane Fillod</span>
+<span class="comment"> * Copyright (C) 2011-2012 Stephane Fillod</span>
 <span class="comment"> *</span>
 <span class="comment"> *   This library is free software; you can redistribute it and/or modify</span>
 <span class="comment"> *   it under the terms of the GNU Library General Public License as</span>
@@ -119,14 +119,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
         <span class="keywordtype">int</span> ret;
 
         ret  = svc_rpc-&gt;<a name="a2"></a><a class="code" href="classc_a_bus_r_p_c.html#a241ddfdba364495154737d48b29ed0ab" title="Get the value of a parameter of type integer from a RPC.">get_int</a>(<span class="stringliteral">&quot;a&quot;</span>, &amp;a);
-        ret |= svc_rpc-&gt;<a class="code" href="classc_a_bus_r_p_c.html#a241ddfdba364495154737d48b29ed0ab" title="Get the value of a parameter of type integer from a RPC.">get_int</a>(<span class="stringliteral">&quot;b&quot;</span>, &amp;b);
+        <span class="keywordflow">if</span> (ret == 0)
+                ret = svc_rpc-&gt;<a class="code" href="classc_a_bus_r_p_c.html#a241ddfdba364495154737d48b29ed0ab" title="Get the value of a parameter of type integer from a RPC.">get_int</a>(<span class="stringliteral">&quot;b&quot;</span>, &amp;b);
 
 
         std::cout &lt;&lt; <span class="stringliteral">&quot;## &quot;</span> &lt;&lt; __func__ &lt;&lt; <span class="stringliteral">&quot;: arg=&quot;</span> &lt;&lt; m_foo &lt;&lt; <span class="stringliteral">&quot;, ret=&quot;</span> &lt;&lt; ret 
                         &lt;&lt; <span class="stringliteral">&quot;, a=&quot;</span> &lt;&lt; a &lt;&lt; <span class="stringliteral">&quot;, b=&quot;</span> &lt;&lt; b &lt;&lt; <span class="stringliteral">&quot;, =&gt; result=&quot;</span> &lt;&lt; a+b &lt;&lt; std::endl;
 
         <span class="keywordflow">if</span> (ret)
-                svc_rpc-&gt;<a name="a3"></a><a class="code" href="classc_a_bus_r_p_c.html#ac5f416a3d2e8a953c75dad8027dad994" title="Set the error code and message in a RPC before response.">set_error</a>(JSONRPC_INVALID_METHOD);
+                svc_rpc-&gt;<a name="a3"></a><a class="code" href="classc_a_bus_r_p_c.html#a25eb5073254dcfe4058be2890ee5b127" title="Set the error code and message in a RPC before response.">set_error</a>(ret);
         <span class="keywordflow">else</span>
                 svc_rpc-&gt;<a name="a4"></a><a class="code" href="classc_a_bus_r_p_c.html#ad032bff042a56fbd40258ac3df2a2912" title="Append to a RPC a new parameter and its value of type integer.">append_int</a>(<span class="stringliteral">&quot;res_value&quot;</span>, a+b);
 }
@@ -137,14 +138,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
         <span class="keywordtype">int</span> ret;
 
         ret  = svc_rpc-&gt;<a class="code" href="classc_a_bus_r_p_c.html#a241ddfdba364495154737d48b29ed0ab" title="Get the value of a parameter of type integer from a RPC.">get_int</a>(<span class="stringliteral">&quot;a&quot;</span>, &amp;a);
-        ret |= svc_rpc-&gt;<a class="code" href="classc_a_bus_r_p_c.html#a241ddfdba364495154737d48b29ed0ab" title="Get the value of a parameter of type integer from a RPC.">get_int</a>(<span class="stringliteral">&quot;b&quot;</span>, &amp;b);
+        <span class="keywordflow">if</span> (ret == 0)
+                ret = svc_rpc-&gt;<a class="code" href="classc_a_bus_r_p_c.html#a241ddfdba364495154737d48b29ed0ab" title="Get the value of a parameter of type integer from a RPC.">get_int</a>(<span class="stringliteral">&quot;b&quot;</span>, &amp;b);
 
 
         std::cout &lt;&lt; <span class="stringliteral">&quot;## &quot;</span> &lt;&lt; __func__ &lt;&lt; <span class="stringliteral">&quot;: arg=&quot;</span> &lt;&lt; m_foo &lt;&lt; <span class="stringliteral">&quot;, ret=&quot;</span> &lt;&lt; ret 
                         &lt;&lt; <span class="stringliteral">&quot;, a=&quot;</span> &lt;&lt; a &lt;&lt; <span class="stringliteral">&quot;, b=&quot;</span> &lt;&lt; b &lt;&lt; <span class="stringliteral">&quot;, =&gt; result=&quot;</span> &lt;&lt; a*b &lt;&lt; std::endl;
 
         <span class="keywordflow">if</span> (ret)
-                svc_rpc-&gt;<a class="code" href="classc_a_bus_r_p_c.html#ac5f416a3d2e8a953c75dad8027dad994" title="Set the error code and message in a RPC before response.">set_error</a>(JSONRPC_INVALID_METHOD);
+                svc_rpc-&gt;<a class="code" href="classc_a_bus_r_p_c.html#a25eb5073254dcfe4058be2890ee5b127" title="Set the error code and message in a RPC before response.">set_error</a>(ret);
         <span class="keywordflow">else</span>
                 svc_rpc-&gt;<a class="code" href="classc_a_bus_r_p_c.html#ad032bff042a56fbd40258ac3df2a2912" title="Append to a RPC a new parameter and its value of type integer.">append_int</a>(<span class="stringliteral">&quot;res_value&quot;</span>, a*b);
 }
@@ -158,11 +160,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
         abus-&gt;declpp_method(<span class="stringliteral">&quot;examplesvc&quot;</span>, <span class="stringliteral">&quot;sum&quot;</span>, examplesvc, svc_sum_cb,
                                         ABUS_RPC_FLAG_NONE,
+                                        <span class="stringliteral">&quot;Compute summation of two integers&quot;</span>,
                                         <span class="stringliteral">&quot;a:i:first operand,b:i:second operand&quot;</span>,
                                         <span class="stringliteral">&quot;res_value:i:summation&quot;</span>);
 
         abus-&gt;declpp_method(<span class="stringliteral">&quot;examplesvc&quot;</span>, <span class="stringliteral">&quot;mult&quot;</span>, examplesvc, svc_mult_cb,
                                         ABUS_RPC_FLAG_NONE,
+                                        <span class="stringliteral">&quot;Compute multiplication of two integers&quot;</span>,
                                         <span class="stringliteral">&quot;a:i:first operand,b:i:second operand&quot;</span>,
                                         <span class="stringliteral">&quot;res_value:i:multiplication&quot;</span>);
 
@@ -180,7 +184,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Fri Dec 30 2011 13:16:02 for A-Bus Library by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 19:13:10 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>
