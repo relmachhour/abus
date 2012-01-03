@@ -162,14 +162,12 @@ int json_rpc_parse_msg(json_rpc_t *json_rpc, const char *buffer, uint32_t len)
 	ret = json_parser_string(&parser, buffer, len, &processed);
 	if (ret) {
 		LogError("libjson parser error: %d\n", ret);
-		return 1;
+		return JSONRPC_PARSE_ERROR;
 	}
 
 	ret = json_parser_is_done(&parser);
 	if (!ret || json_rpc->parsing_status != PARSING_V2_0) {
 		LogError("libjson syntax error\n");
-
-		json_parser_free(&parser);
 
 		ret = JSONRPC_PARSE_ERROR;
 	} else if ((json_rpc->service_name && json_rpc->method_name)
@@ -382,6 +380,8 @@ int json_rpc_parser_callback(void *userdata, int type, const char *data, uint32_
 				json_rpc->error_token_seen = true;
 		} else {
 			json_rpc->last_param_key = strndup(data, length);
+			if (json_rpc->error_token_seen)
+				json_rpc->last_key_token = json_rpc_key_token(data, length);
 		}
 		break;
 
@@ -437,8 +437,12 @@ int json_rpc_parser_callback(void *userdata, int type, const char *data, uint32_
 				return ret;
 			}
 			if (json_rpc->error_token_seen && type == JSON_INT &&
-							json_rpc->last_key_token == TOK_CODE)
-				json_rpc->error_code = atoi(data);
+							json_rpc->last_key_token == TOK_CODE) {
+				char *endptr;
+				json_rpc->error_code = strtol(data, &endptr, 10);
+				if (data == endptr)
+					json_rpc->parsing_status = PARSING_INVALID;
+			}
 		}
 
 		break;
@@ -597,9 +601,12 @@ static int json_rpc_check_val_type(json_rpc_t *json_rpc, const char *name, json_
 
 	json_val = *json_valp;
 
-	if (json_val->type != type || !json_val->u.data ||
+	if (json_val->type != type)
+		return JSONRPC_INVALID_METHOD;	/* wrong type */
+
+	if (!json_val->u.data ||
             (type != JSON_STRING && json_val->length == 0))
-		return JSONRPC_PARSE_ERROR;	/* wrong type */
+		return JSONRPC_INTERNAL_ERROR;
 
 	return 0;
 }
