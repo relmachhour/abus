@@ -38,7 +38,7 @@ int abus_msg_verbose;
 
 static void un_sock_print_message(int out, const struct sockaddr *sockaddr, const char *msg, int msglen)
 {
-	LogDebug("## %5d %s %s:%d %*s",
+	LogDebug("## %5d %s %s:%d %.*s",
 					getpid(),
 					out ? "->" : "<-", 
 					sockaddr ? un_sock_name(sockaddr) : "",
@@ -146,7 +146,6 @@ int un_sock_sendto_svc(int sock, const void *buf, size_t len, const char *servic
 	struct sockaddr_un sockaddrun;
 	ssize_t ret;
 
-	memset(&sockaddrun, 0, sizeof(sockaddrun));
 	sockaddrun.sun_family = AF_UNIX;
 
 	/* TODO: prefix from env variable */
@@ -227,8 +226,6 @@ int un_sock_transaction(const int sockarg, void *buf, size_t len, size_t bufsz, 
 		return 0;
 	}
 	ret = len;
-	if (len < bufsz)
-		((char*)buf)[len] = '\0';
 
 	if (abus_msg_verbose)
 		un_sock_print_message(false, NULL, buf, len);
