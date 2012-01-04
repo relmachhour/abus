@@ -187,6 +187,13 @@ public:
 	int waitAsync(int timeout)
 		{ return abus_request_method_wait_async(m_abus, m_json_rpc, timeout); }
 
+	/*! Append to a RPC an attribute
+		\return	0	if successful, non nul value otherwise
+		\sa abus_append_attr()
+	 */
+	int append_attr(const char *service_name, const char *attr_name)
+		{ return abus_append_attr(m_abus, m_json_rpc, service_name, attr_name); }
+
 private:
 	abus_t *m_abus;
 };
@@ -217,6 +224,13 @@ public:
 	/*! Publish the event */
 	int publish(int flags = ABUS_RPC_FLAG_NONE)
 		{ return abus_request_event_publish(m_abus, m_json_rpc, flags); }
+
+	/*! Append to a RPC an attribute
+		\return	0	if successful, non nul value otherwise
+		\sa abus_append_attr()
+	 */
+	int append_attr(const char *service_name, const char *attr_name)
+		{ return abus_append_attr(m_abus, m_json_rpc, service_name, attr_name); }
 
 private:
 	abus_t *m_abus;
@@ -275,6 +289,13 @@ public:
 	int decl_event(const char *service_name, const char *event_name, const char *descr = NULL, const char *fmt = NULL)
 		{ return abus_decl_event(&m_abus, service_name, event_name, descr, fmt); }
 
+	/*! Undeclare an event from a service
+		\return	0	if successful, non nul value otherwise
+		\sa decl_event()
+	 */
+	int undecl_event(const char *service_name, const char *event_name)
+		{ return abus_undecl_event(&m_abus, service_name, event_name); }
+
 	/*! Instantiate a new event for publishing */
 	cABusRequestEvent *RequestEvent(const char *service_name, const char *event_name) {
 		cABusRequestEvent *p = new cABusRequestEvent(&m_abus);
@@ -303,6 +324,97 @@ public:
 	/*! Helper macro to be used with abus_declpp_method_member() */
 #define event_unsubscribepp(_service_name, _event_name, _obj, _method, _timeout) \
         event_unsubscribe((_service_name), (_event_name), &(_obj)->_method##Wrapper, (void *)(_obj), (_timeout))
+
+	/*! Declare a new attribute of type integer in a service */
+	int decl_attr_int(const char *service_name, const char *attr_name, int *val, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
+		{ return abus_decl_attr_int(&m_abus, service_name, attr_name, val, flags, descr); }
+	/*! Declare a new attribute of type boolean in a service */
+	int decl_attr_bool(const char *service_name, const char *attr_name, bool *val, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
+		{ return abus_decl_attr_bool(&m_abus, service_name, attr_name, val, flags, descr); }
+	/*! Declare a new attribute of type double in a service */
+	int decl_attr_double(const char *service_name, const char *attr_name, double *val, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
+		{ return abus_decl_attr_double(&m_abus, service_name, attr_name, val, flags, descr); }
+	/*! Declare a new attribute of type string in a service */
+	int decl_attr_str(const char *service_name, const char *attr_name, char *val, size_t n, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
+		{ return abus_decl_attr_str(&m_abus, service_name, attr_name, val, n, flags, descr); }
+
+	/*! Undeclare a method from a service
+		\return	0	if successful, non nul value otherwise
+		\sa decl_method()
+	 */
+	int undecl_attr(const char *service_name, const char *attr_name)
+		{ return abus_undecl_attr(&m_abus, service_name, attr_name); }
+
+	/*! Notify that the value of an attribute has changed
+	    Any listeners of this attribute will receive an event
+	 */
+	int abus_attr_changed(abus_t *abus, const char *service_name, const char *attr_name)
+		{ return abus_attr_changed(&m_abus, service_name, attr_name); }
+
+
+	/*! Get the value of an attribute of type integer exposed by a service
+		\return	0	if successful, non nul value otherwise
+	 */
+	int attr_get_int(const char *service_name, const char *attr_name, int *val, int timeout = -1)
+		{ return abus_attr_get_int(&m_abus, service_name, attr_name, val, timeout); }
+	/*! Get the value of an attribute of type boolean exposed by a service
+		\return	0	if successful, non nul value otherwise
+	 */
+	int attr_get_bool(const char *service_name, const char *attr_name, bool *val, int timeout = -1)
+		{ return abus_attr_get_bool(&m_abus, service_name, attr_name, val, timeout); }
+	/*! Get the value of an attribute of type double float exposed by a service
+		\return	0	if successful, non nul value otherwise
+	 */
+	int attr_get_double(const char *service_name, const char *attr_name, double *val, int timeout = -1)
+		{ return abus_attr_get_double(&m_abus, service_name, attr_name, val, timeout); }
+	/*! Get the value of an attribute of type string exposed by a service
+		\return	0	if successful, non nul value otherwise
+	 */
+	int attr_get_str(const char *service_name, const char *attr_name, char *val, size_t n, int timeout = -1)
+		{ return abus_attr_get_str(&m_abus, service_name, attr_name, val, n, timeout); }
+ 
+
+	/*! Set the value of an attribute of type integer exposed by a service
+		\return	0	if successful, non nul value otherwise
+	 */
+	int attr_set_int(const char *service_name, const char *attr_name, int val, int timeout = -1)
+		{ return abus_attr_set_int(&m_abus, service_name, attr_name, val, timeout); }
+	/*! Set the value of an attribute of type boolean exposed by a service
+		\return	0	if successful, non nul value otherwise
+	 */
+	int attr_set_bool(const char *service_name, const char *attr_name, bool val, int timeout = -1)
+		{ return abus_attr_set_bool(&m_abus, service_name, attr_name, val, timeout); }
+	/*! Set the value of an attribute of type double float exposed by a service
+		\return	0	if successful, non nul value otherwise
+	 */
+	int attr_set_double(const char *service_name, const char *attr_name, double val, int timeout = -1)
+		{ return abus_attr_set_double(&m_abus, service_name, attr_name, val, timeout); }
+	/*! Set the value of an attribute of type string exposed by a service
+		\return	0	if successful, non nul value otherwise
+	 */
+	int attr_set_str(const char *service_name, const char *attr_name, const char *val, int timeout = -1)
+		{ return abus_attr_set_str(&m_abus, service_name, attr_name, val, timeout); }
+
+
+	/*! Subscribe to change event of an attribute from a service
+		\return	0	if successful, non nul value otherwise
+		\sa attr_onchange_subscribepp(), attr_unsubscribe_onchange()
+	 */
+	int attr_subscribe_onchange(const char *service_name, const char *attr_name, abus_callback_t callback, int flags = ABUS_RPC_FLAG_NONE, void *arg = NULL, int timeout = -1)
+		{ return abus_attr_subscribe_onchange(&m_abus, service_name, attr_name, callback, flags, arg, timeout); }
+	/*! Unubscribe from change event of an attribute from a service
+		\return	0	if successful, non nul value otherwise
+		\sa attr_subscribe_onchange()
+	 */
+	int attr_unsubscribe_onchange(const char *service_name, const char *attr_name, abus_callback_t callback, void *arg, int timeout)
+		{ return abus_attr_unsubscribe_onchange(&m_abus, service_name, attr_name, callback, arg, timeout); }
+
+	/*! Helper macro to be used with abus_declpp_method_member() */
+#define attr_onchange_subscribepp(_service_name, _attr_name, _obj, _method, _flags, _timeout) \
+        attr_onchange_subscribe((_service_name), (_attr_name), &(_obj)->_method##Wrapper, (_flags), (void *)(_obj), (_timeout))
+	/*! Helper macro to be used with abus_declpp_method_member() */
+#define attr_onchange_unsubscribepp(_service_name, _attr_name, _obj, _method, _timeout) \
+        attr_onchange_unsubscribe((_service_name), (_attr_name), &(_obj)->_method##Wrapper, (void *)(_obj), (_timeout))
 
 private:
 	abus_t m_abus;
