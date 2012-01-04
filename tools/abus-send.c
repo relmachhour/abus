@@ -240,50 +240,73 @@ int main(int argc, char **argv)
 	}
 	else
 	{
+		int is_set_method = !strcmp(method_name, "set");
+
+		if (is_set_method)
+			json_rpc_append_args(json_rpc,
+						JSON_KEY, "attr", -1,
+						JSON_ARRAY_BEGIN, -1);
+
 		while (++optind < argc) {
-			char *key, *type, *val, *endptr;
-	
+			char *key, *keya, *type, *val, *endptr;
+
 			key = argv[optind];
-	
+
 			type = strchr(key, ':');
 			if (key[0] == '\0' || !type) {
 				fprintf(stderr, "incomplete definition for key '%s'\n", key);
 				usage(argv[0], EXIT_FAILURE);
 			}
 			*type++ = '\0';
+
+			if (is_set_method) {
+				json_rpc_append_args(json_rpc, JSON_OBJECT_BEGIN, -1);
+				json_rpc_append_str(json_rpc, "name", key);
+				keya = "value";
+			} else {
+				keya = key;
+			}
+
 			val = strchr(type, ':');
 			if (!val || val[0] == '\0') {
-				json_rpc_append_null(json_rpc, key);
+				json_rpc_append_null(json_rpc, keya);
 				continue;
 			}
 			*val++ = '\0';
 	
 			switch(*type) {
 			case 'i':
-					json_rpc_append_int(json_rpc, key, strtol(val, &endptr, 0));
+					json_rpc_append_int(json_rpc, keya, strtol(val, &endptr, 0));
 					if (val == endptr) {
 						fprintf(stderr, "invalid format for key '%s'\n", key);
 						usage(argv[0], EXIT_FAILURE);
 					}
 					break;
 			case 'b':
-					json_rpc_append_bool(json_rpc, key, !strcmp(val, "true"));
+					json_rpc_append_bool(json_rpc, keya, !strcmp(val, "true"));
 					break;
 			case 'f':
-					json_rpc_append_double(json_rpc, key, strtod(val, &endptr));
+					json_rpc_append_double(json_rpc, keya, strtod(val, &endptr));
 					if (val == endptr) {
 						fprintf(stderr, "invalid format for key '%s'\n", key);
 						usage(argv[0], EXIT_FAILURE);
 					}
 					break;
 			case 's':
-					json_rpc_append_str(json_rpc, key, val);
+					json_rpc_append_str(json_rpc, keya, val);
 					break;
 			default:
 				fprintf(stderr, "unknown type '%s' for key '%s'\n", type, key);
 				usage(argv[0], EXIT_FAILURE);
 			}
+
+			if (is_set_method) {
+        		json_rpc_append_args(json_rpc, JSON_OBJECT_END, -1);
+			}
 		}
+
+		if (is_set_method)
+			json_rpc_append_args(json_rpc, JSON_ARRAY_END, -1);
 	}
 
 	/* for unitary A-Bus testing purpose */
