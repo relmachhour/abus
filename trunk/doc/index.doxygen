@@ -136,6 +136,24 @@ tools/abus-send examplesvc.\*
  * dealing with attributes in a data model.
  *
  * To be used with the client example-clnt-attr.
+ *
+ * You may also use the abus-send program to test it:
+\code
+abus-send exampleattrsvc.get tree.some_int
+abus-send exampleattrsvc.get tree.
+
+abus-send exampleattrsvc.set tree.some_int:i:128
+
+abus-send exampleattrsvc.get ""
+\endcode
+ * Here is how to play with event emitted upon attribute change:
+\code
+abus-send exampleattrsvc.subscribe attr_changed%tree.some_int
+\endcode
+ * In another terminal, trigger the event with this command:
+\code
+example-clnt-attr tree.some_int 1000
+\endcode
  */
 /*!
  * \example example-svc-event.c
