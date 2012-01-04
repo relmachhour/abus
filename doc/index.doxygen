@@ -146,13 +146,9 @@ abus-send exampleattrsvc.set tree.some_int:i:128
 
 abus-send exampleattrsvc.get ""
 \endcode
- * Here is how to play with event emitted upon attribute change:
+ * Here is how to play with event emitted upon attribute change (one event every 5 seconds):
 \code
-abus-send exampleattrsvc.subscribe attr_changed%tree.some_int
-\endcode
- * In another terminal, trigger the event with this command:
-\code
-example-clnt-attr tree.some_int 1000
+abus-send exampleattrsvc.subscribe attr_changed%tree.auto_count
 \endcode
  */
 /*!
