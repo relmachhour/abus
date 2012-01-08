@@ -75,20 +75,29 @@ int main(int argc, char **argv)
 {
 	abus_t abus;
 	CExamplesvc *examplesvc = new CExamplesvc("foo");
+	int ret;
 
 	abus_init(&abus);
 
-	abus_decl_method_cxx(&abus, "examplesvc", "sum", examplesvc, svc_sum_cb,
+	ret = abus_decl_method_cxx(&abus, "examplesvc", "sum", examplesvc, svc_sum_cb,
 					ABUS_RPC_FLAG_NONE,
 					"Compute summation of two integers",
 					"a:i:first operand,b:i:second operand",
 					"res_value:i:summation");
+	if (ret != 0) {
+		abus_cleanup(&abus);
+		return EXIT_FAILURE;
+	}
 
-	abus_decl_method_cxx(&abus, "examplesvc", "mult", examplesvc, svc_mult_cb,
+	ret = abus_decl_method_cxx(&abus, "examplesvc", "mult", examplesvc, svc_mult_cb,
 					ABUS_RPC_FLAG_NONE,
 					"Compute multiplication of two integers",
 					"a:i:first operand,b:i:second operand",
 					"res_value:i:multiplication");
+	if (ret != 0) {
+		abus_cleanup(&abus);
+		return EXIT_FAILURE;
+	}
 
 	/* do other stuff */
 	sleep(10000);

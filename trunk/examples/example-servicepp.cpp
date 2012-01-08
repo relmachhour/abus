@@ -75,20 +75,29 @@ int main(int argc, char **argv)
 {
 	cABus *abus;
 	CExamplesvc *examplesvc = new CExamplesvc("foo");
+	int ret;
 
 	abus = new cABus();
 
-	abus->declpp_method("examplesvc", "sum", examplesvc, svc_sum_cb,
+	ret = abus->declpp_method("examplesvc", "sum", examplesvc, svc_sum_cb,
 					ABUS_RPC_FLAG_NONE,
 					"Compute summation of two integers",
 					"a:i:first operand,b:i:second operand",
 					"res_value:i:summation");
+	if (ret != 0) {
+		delete abus;
+		return EXIT_FAILURE;
+	}
 
-	abus->declpp_method("examplesvc", "mult", examplesvc, svc_mult_cb,
+	ret = abus->declpp_method("examplesvc", "mult", examplesvc, svc_mult_cb,
 					ABUS_RPC_FLAG_NONE,
 					"Compute multiplication of two integers",
 					"a:i:first operand,b:i:second operand",
 					"res_value:i:multiplication");
+	if (ret != 0) {
+		delete abus;
+		return EXIT_FAILURE;
+	}
 
 	/* do other stuff */
 	sleep(10000);

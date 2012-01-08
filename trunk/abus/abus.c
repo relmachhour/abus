@@ -127,13 +127,16 @@ int abus_init(abus_t *abus)
 	if (p)
 		abus_msg_verbose = atoi(p);
 
+	/* TODO: path prefix from env variable or conf file */
+
 	pthread_mutex_init(&abus->mutex, NULL);
 
 	/* make sure A-bus directory exist before creating socket */
 	ret = mkdir(abus_prefix, 0777);
 	if (ret == -1 && errno != EEXIST) {
-		LogError("a-bus mkdir '%s' failed: %s\n", abus_prefix, strerror(errno));
-		return -1;
+		ret = -errno;
+		LogError("A-Bus mkdir '%s' failed: %s\n", abus_prefix, strerror(errno));
+		return ret;
 	}
 
 	abus->sock = -1;
@@ -159,7 +162,7 @@ static int abus_launch_thread_ondemand(abus_t *abus)
 
 	abus->sock = un_sock_create();
 	if (abus->sock < 0)
-		return -1;
+		return abus->sock;
 
 	/*
 	 TODO: a special for client-only synchronous usage, without a-bus thread ?
@@ -293,15 +296,8 @@ void static service_may_cleanup(abus_t *abus, abus_service_t *service, const cha
 
 static int abus_resp_send(json_rpc_t *json_rpc)
 {
-	int len;
-
-	len = un_sock_sendto_sock(json_rpc->sock, json_rpc->msgbuf, json_rpc->msglen,
+	return un_sock_sendto_sock(json_rpc->sock, json_rpc->msgbuf, json_rpc->msglen,
 					(struct sockaddr*)&json_rpc->sock_src_addr, json_rpc->sock_addrlen);
-	if (len == -1) {
-		perror("abus srv sendto: ");
-		return -1;
-	}
-	return 0;
 }
 
 
@@ -330,10 +326,8 @@ void *abus_thread_routine(void *arg)
 		len = un_sock_recvfrom(abus->sock, buffer, JSONRPC_REQ_SZ_MAX,
 						(struct sockaddr*)&sock_src_addr,
 						&sock_addrlen);
-		if (len == -1) {
-			perror("abus srv recv: ");
+		if (len < 0)
 			continue;
-		}
 
 		json_rpc = calloc(1, sizeof(json_rpc_t));
 
@@ -363,25 +357,33 @@ int create_service_path(abus_t *abus, const char *service_name)
 	int ret;
 
 	if (strchr(service_name, '/'))
-		return -1;
+		return -EINVAL;
 
 	ret = abus_launch_thread_ondemand(abus);
 	if (ret)
 		return ret;
 
-	/* TODO: prefix from env variable */
 	snprintf(pid_rel_path, sizeof(pid_rel_path)-1, "_%d", getpid());
 
 	if (strlen(service_name) > 0) {
+		struct stat svcstat;
+
 		snprintf(service_path, sizeof(service_path)-1, "%s/%s",
 						abus_prefix, service_name);
 	
+		ret = stat(service_path, &svcstat);
+		if (ret == 0) {
+			char str[32];
+			if (abus_attr_get_str(abus, service_name, "abus.version",
+										str, sizeof(str), 200) == 0)
+				return -EEXIST;
+		}
 		unlink(service_path);
 	
 		/* /tmp/abus/<servicename> -> _<pid> */
 		ret = symlink(pid_rel_path, service_path);
 		if (ret == -1)
-			return ret;
+			return -errno;
 	}
 
 	return 0;
@@ -390,14 +392,11 @@ int create_service_path(abus_t *abus, const char *service_name)
 int remove_service_path(abus_t *abus, const char *service_name)
 {
 	char service_path[UNIX_PATH_MAX];
-	char pid_rel_path[UNIX_PATH_MAX];
 
 	if (strchr(service_name, '/'))
-		return -1;
+		return -EINVAL;
 
 	/* TODO: prefix from env variable */
-	snprintf(pid_rel_path, sizeof(pid_rel_path)-1, "_%d", getpid());
-
 	snprintf(service_path, sizeof(service_path)-1, "%s/%s",
 					abus_prefix, service_name);
 
@@ -424,10 +423,11 @@ static int service_lookup(abus_t *abus, const char *service_name, bool create, a
 		service = NULL;
 		ret = JSONRPC_NO_METHOD;
 	} else {
+		ret = create_service_path(abus, service_name);
+		if (ret)
+			return ret;
+
 		service = calloc(1, sizeof(abus_service_t));
-
-		create_service_path(abus, service_name);
-
 		service->method_htab = hcreate(3);
 		service->event_htab = hcreate(3);
 		service->attr_htab = hcreate(3);
@@ -480,19 +480,20 @@ static int method_lookup(abus_t *abus, const char *service_name, const char *met
 {
 	int mth_len = strlen(method_name);
 	abus_service_t *service;
+	int ret;
 
 	pthread_mutex_lock(&abus->mutex);
 
-	service_lookup(abus, service_name, create, &service);
+	ret = service_lookup(abus, service_name, create, &service);
+
+	if (ret) {
+		pthread_mutex_unlock(&abus->mutex);
+		*method = NULL;
+		return ret;
+	}
 
 	if (service_p)
 		*service_p = service;
-
-	if (!service && !create) {
-		pthread_mutex_unlock(&abus->mutex);
-		*method = NULL;
-		return JSONRPC_NO_METHOD;
-	}
 
 	if (hfind(service->method_htab, method_name, mth_len)) {
 		*method = hstuff(service->method_htab);
@@ -514,19 +515,20 @@ static int event_lookup(abus_t *abus, const char *service_name, const char *even
 {
 	int evt_len = strlen(event_name);
 	abus_service_t *service;
+	int ret;
 
 	pthread_mutex_lock(&abus->mutex);
 
-	service_lookup(abus, service_name, create, &service);
+	ret = service_lookup(abus, service_name, create, &service);
+
+	if (ret) {
+		pthread_mutex_unlock(&abus->mutex);
+		*event = NULL;
+		return ret;
+	}
 
 	if (service_p)
 		*service_p = service;
-
-	if (!service && !create) {
-		pthread_mutex_unlock(&abus->mutex);
-		*event = NULL;
-		return JSONRPC_NO_METHOD;
-	}
 
 	if (hfind(service->event_htab, event_name, evt_len)) {
 		*event = hstuff(service->event_htab);
@@ -616,6 +618,8 @@ static int abus_service_rpc(abus_t *abus, json_rpc_t *json_rpc, abus_method_t *m
 /*!
 	Decalare an A-Bus method
 
+  Redeclaration of an existing method is allowed.
+
   Rem: there's no need to call abus_undecl_method() before calling abus_cleanup().
 
   \param abus	pointer to A-Bus handle
@@ -629,7 +633,6 @@ static int abus_service_rpc(abus_t *abus, json_rpc_t *json_rpc, abus_method_t *m
   \param[in] result_fmt	abus_format describing the result of method, may be NULL
 
   \return 0 if successful, non nul value otherwise
-  \todo Allow redeclaration?
   \sa abus_undecl_method()
  */
 int abus_decl_method(abus_t *abus, const char *service_name, const char *method_name,
@@ -643,6 +646,15 @@ int abus_decl_method(abus_t *abus, const char *service_name, const char *method_
 	if (ret)
 		return ret;
 
+	pthread_mutex_lock(&abus->mutex);
+
+	if (method->descr)
+		free(method->descr);
+	if (method->fmt)
+		free(method->fmt);
+	if (method->result_fmt)
+		free(method->result_fmt);
+
 	method->callback = method_callback;
 	method->flags = flags;
 	method->arg = arg;
@@ -652,6 +664,8 @@ int abus_decl_method(abus_t *abus, const char *service_name, const char *method_
 
 	if (abus_method_is_excl(method))
 		pthread_mutex_init(&method->excl_mutex, NULL);
+
+	pthread_mutex_unlock(&abus->mutex);
 
 	return 0;
 }
@@ -886,9 +900,8 @@ int abus_request_method_invoke(abus_t *abus, json_rpc_t *json_rpc, int flags, in
 	 * recycle req msgbuf
 	 */
 	ret = un_sock_transaction(json_rpc->sock, json_rpc->msgbuf, json_rpc->msglen, json_rpc->msgbufsz, json_rpc->service_name, timeout);
-	if (ret < 0) {
+	if (ret < 0)
 		return ret;
-	}
 
 	json_rpc->msglen = ret;
 
@@ -1213,6 +1226,8 @@ static const char* event_name_from_method(const char *str)
 /*!
 	Decalare an A-Bus event
 
+  Redeclaration of an existing event is allowed.
+
   \param abus	pointer to A-Bus handle
   \param[in] service_name	name of service where the event belongs to
   \param[in] event_name	name of event that may be subscribed to
@@ -1220,7 +1235,6 @@ static const char* event_name_from_method(const char *str)
   \param[in] fmt	abus_format describing the arguments of the event, may be NULL
 
   \return 0 if successful, non nul value otherwise
-  \todo Allow redeclaration?
   \todo abus_undecl_event()
  */
 int abus_decl_event(abus_t *abus, const char *service_name, const char *event_name, const char *descr, const char *fmt)
@@ -1232,8 +1246,17 @@ int abus_decl_event(abus_t *abus, const char *service_name, const char *event_na
 	if (ret)
 		return ret;
 
+	pthread_mutex_lock(&abus->mutex);
+
+	if (event->descr)
+		free(event->descr);
+	if (event->fmt)
+		free(event->fmt);
+
 	event->descr = descr ? strdup(descr) : NULL;
 	event->fmt = fmt ? strdup(fmt) : NULL;
+
+	pthread_mutex_unlock(&abus->mutex);
 
 	return 0;
 }
@@ -1363,10 +1386,10 @@ int abus_request_event_publish(abus_t *abus, json_rpc_t *json_rpc, int flags)
 
 		ret = un_sock_sendto_sock(abus->sock, json_rpc->msgbuf, json_rpc->msglen,
 					(const struct sockaddr *)sockaddrun, un_sock_socklen(sockaddrun));
-		if (ret == -1) {
+		if (ret < 0) {
 			const char *event_name;
 			/* remove that subscriber if delivery failed */
-			perror("abus_request_event_publish(): sendto failed:");
+			LogDebug("%s(): get rid of gone subscriber", __func__);
 
 			event_name = event_name_from_method(json_rpc->method_name);
 			if (event_name)
@@ -1579,19 +1602,20 @@ static int attr_lookup(abus_t *abus, const char *service_name, const char *attr_
 {
 	int attr_len = strlen(attr_name);
 	abus_service_t *service;
+	int ret;
 
 	pthread_mutex_lock(&abus->mutex);
 
-	service_lookup(abus, service_name, create, &service);
+	ret = service_lookup(abus, service_name, create, &service);
+
+	if (ret) {
+		pthread_mutex_unlock(&abus->mutex);
+		*attr = NULL;
+		return ret;
+	}
 
 	if (service_p)
 		*service_p = service;
-
-	if (!service && !create) {
-		pthread_mutex_unlock(&abus->mutex);
-		*attr = NULL;
-		return JSONRPC_NO_METHOD;
-	}
 
 	if (hfind(service->attr_htab, attr_name, attr_len)) {
 		*attr = hstuff(service->attr_htab);
@@ -1708,6 +1732,11 @@ static int attr_decl_type(abus_t *abus, const char *service_name, const char *at
 	if (ret)
 		return ret;
 
+	pthread_mutex_lock(&abus->mutex);
+
+	if (attr->descr)
+		free(attr->descr);
+
 	attr->flags = flags;
 
 	attr->ref.type = json_type;
@@ -1715,6 +1744,8 @@ static int attr_decl_type(abus_t *abus, const char *service_name, const char *at
 	attr->ref.u.data = val;
 
 	attr->descr = descr ? strdup(descr) : NULL;
+
+	pthread_mutex_unlock(&abus->mutex);
 
 	if (!(flags & ABUS_RPC_RDONLY)) {
 		snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
@@ -1731,6 +1762,17 @@ static int attr_decl_type(abus_t *abus, const char *service_name, const char *at
 
 /**
   Declare an attribute of type integer in a service
+
+  Redeclaration of an existing attribute is allowed.
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to declare
+  \param[in,out] val	pointer to the variable holding the attribute value
+  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
+  \param[in] descr	string describing the event to be declared, may be NULL
+  \return   0 if successful, non nul value otherwise
+  \sa abus_undecl_attr()
  */
 int abus_decl_attr_int(abus_t *abus, const char *service_name, const char *attr_name, int *val, int flags, const char *descr)
 {
@@ -1739,6 +1781,17 @@ int abus_decl_attr_int(abus_t *abus, const char *service_name, const char *attr_
 
 /**
   Declare an attribute of type bool in a service
+
+  Redeclaration of an existing attribute is allowed.
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to declare
+  \param[in,out] val	pointer to the variable holding the attribute value
+  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
+  \param[in] descr	string describing the event to be declared, may be NULL
+  \return   0 if successful, non nul value otherwise
+  \sa abus_undecl_attr()
  */
 int abus_decl_attr_bool(abus_t *abus, const char *service_name, const char *attr_name, bool *val, int flags, const char *descr)
 {
@@ -1747,6 +1800,17 @@ int abus_decl_attr_bool(abus_t *abus, const char *service_name, const char *attr
 
 /**
   Declare an attribute of type double in a service
+
+  Redeclaration of an existing attribute is allowed.
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to declare
+  \param[in,out] val	pointer to the variable holding the attribute value
+  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
+  \param[in] descr	string describing the event to be declared, may be NULL
+  \return   0 if successful, non nul value otherwise
+  \sa abus_undecl_attr()
  */
 int abus_decl_attr_double(abus_t *abus, const char *service_name, const char *attr_name, double *val, int flags, const char *descr)
 {
@@ -1755,6 +1819,18 @@ int abus_decl_attr_double(abus_t *abus, const char *service_name, const char *at
 
 /**
   Declare an attribute of type string in a service
+
+  Redeclaration of an existing attribute is allowed.
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to declare
+  \param[in,out] val	pointer to the variable holding the attribute value
+  \param[in] n	maximum memory size of the string
+  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
+  \param[in] descr	string describing the event to be declared, may be NULL
+  \return   0 if successful, non nul value otherwise
+  \sa abus_undecl_attr()
  */
 int abus_decl_attr_str(abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t n, int flags, const char *descr)
 {
@@ -1810,7 +1886,16 @@ int abus_undecl_attr(abus_t *abus, const char *service_name, const char *attr_na
 }
 
 /**
-  Notify the value of an attribute has changed
+  Notify that the value of an attribute has changed
+
+  abus_attr_changed() will publish notification to all subscribers
+  that the value of the attribute has its value changed.
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute which value has changed
+  \return   0 if successful, non nul value otherwise
+  \sa abus_decl_attr_*(), abus_attr_subscribe_onchange()
  */
 int abus_attr_changed(abus_t *abus, const char *service_name, const char *attr_name)
 {
@@ -1946,6 +2031,13 @@ int attr_set_type(abus_t *abus, const char *service_name, const char *attr_name,
 
 /**
   Get the value of an integer attribute from a service
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to get
+  \param[out] val	pointer to the variable where to store the attribute value
+  \param[in] timeout	RPC waiting timeout in milliseconds
+  \return   0 if successful, non nul value otherwise
  */
 int abus_attr_get_int(abus_t *abus, const char *service_name, const char *attr_name, int *val, int timeout)
 {
@@ -1954,6 +2046,13 @@ int abus_attr_get_int(abus_t *abus, const char *service_name, const char *attr_n
 
 /**
   Get the value of an boolean attribute from a service
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to get
+  \param[out] val	pointer to the variable where to store the attribute value
+  \param[in] timeout	RPC waiting timeout in milliseconds
+  \return   0 if successful, non nul value otherwise
  */
 int abus_attr_get_bool(abus_t *abus, const char *service_name, const char *attr_name, bool *val, int timeout)
 {
@@ -1962,6 +2061,13 @@ int abus_attr_get_bool(abus_t *abus, const char *service_name, const char *attr_
 
 /**
   Get the value of an double float attribute from a service
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to get
+  \param[out] val	pointer to the variable where to store the attribute value
+  \param[in] timeout	RPC waiting timeout in milliseconds
+  \return   0 if successful, non nul value otherwise
  */
 int abus_attr_get_double(abus_t *abus, const char *service_name, const char *attr_name, double *val, int timeout)
 {
@@ -1970,6 +2076,14 @@ int abus_attr_get_double(abus_t *abus, const char *service_name, const char *att
 
 /**
   Get the value of an string attribute from a service
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to get
+  \param[out] val	pointer to the variable where to store the attribute value
+  \param[in] len	maximum memory size of \a val
+  \param[in] timeout	RPC waiting timeout in milliseconds
+  \return   0 if successful, non nul value otherwise
  */
 int abus_attr_get_str(abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t len, int timeout)
 {
@@ -1978,6 +2092,13 @@ int abus_attr_get_str(abus_t *abus, const char *service_name, const char *attr_n
 
 /**
   Set the value of an integer attribute in a service
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to set
+  \param[in] val	value of the attribute to set
+  \param[in] timeout	RPC waiting timeout in milliseconds
+  \return   0 if successful, non nul value otherwise
  */
 int abus_attr_set_int(abus_t *abus, const char *service_name, const char *attr_name, int val, int timeout)
 {
@@ -1986,6 +2107,13 @@ int abus_attr_set_int(abus_t *abus, const char *service_name, const char *attr_n
 
 /**
   Set the value of an boolean attribute in a service
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to set
+  \param[in] val	value of the attribute to set
+  \param[in] timeout	RPC waiting timeout in milliseconds
+  \return   0 if successful, non nul value otherwise
  */
 int abus_attr_set_bool(abus_t *abus, const char *service_name, const char *attr_name, bool val, int timeout)
 {
@@ -1994,6 +2122,13 @@ int abus_attr_set_bool(abus_t *abus, const char *service_name, const char *attr_
 
 /**
   Set the value of an double float attribute in a service
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to set
+  \param[in] val	value of the attribute to set
+  \param[in] timeout	RPC waiting timeout in milliseconds
+  \return   0 if successful, non nul value otherwise
  */
 int abus_attr_set_double(abus_t *abus, const char *service_name, const char *attr_name, double val, int timeout)
 {
@@ -2002,6 +2137,13 @@ int abus_attr_set_double(abus_t *abus, const char *service_name, const char *att
 
 /**
   Set the value of an string attribute in a service
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to set
+  \param[in] val	value of the attribute to set
+  \param[in] timeout	RPC waiting timeout in milliseconds
+  \return   0 if successful, non nul value otherwise
  */
 int abus_attr_set_str(abus_t *abus, const char *service_name, const char *attr_name, const char *val, int timeout)
 {
@@ -2160,11 +2302,13 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 				return;
 			}
 			if (*(double*)attr->ref.u.data != d) {
+				/* FIXME: this may not be atomic */
 				*(double*)attr->ref.u.data = d;
 				attr_changed = true;
 			}
 			break;
 		case JSON_STRING:
+			/* FIXME: this is not atomic */
 			ret = json_rpc_get_str(json_rpc, "value", attr->ref.u.data, attr->ref.length);
 			if (ret) {
 				json_rpc_set_error(json_rpc, ret, NULL);
