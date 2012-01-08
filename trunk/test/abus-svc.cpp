@@ -21,7 +21,7 @@
 
 #define RPC_TIMEOUT 1000 /* ms */
 #define SVC_NAME "gtestsvc"
-#define DEPSILON 1e-6
+#define DEPSILON 1e-12
 
 class AbusTest : public testing::Test {
     protected:
@@ -79,7 +79,7 @@ void AbusTest::svc_jtypes_cb(json_rpc_t *json_rpc)
 {
 	int a;
     bool b;
-    double d;
+    double d1, d2;
     char s[512];
 	int ret = 0;
 
@@ -88,7 +88,9 @@ void AbusTest::svc_jtypes_cb(json_rpc_t *json_rpc)
     if (ret == 0)
 	    ret = json_rpc_get_bool(json_rpc, "bool", &b);
     if (ret == 0)
-	    ret = json_rpc_get_double(json_rpc, "double", &d);
+	    ret = json_rpc_get_double(json_rpc, "double1", &d1);
+    if (ret == 0)
+	    ret = json_rpc_get_double(json_rpc, "double2", &d2);
     if (ret == 0)
 	    ret = json_rpc_get_str(json_rpc, "str", s, sizeof(s));
 
@@ -99,7 +101,8 @@ void AbusTest::svc_jtypes_cb(json_rpc_t *json_rpc)
 
 	EXPECT_EQ(0, json_rpc_append_int(json_rpc, "res_int", a));
 	EXPECT_EQ(0, json_rpc_append_bool(json_rpc, "res_bool", b));
-	EXPECT_EQ(0, json_rpc_append_double(json_rpc, "res_double", d));
+	EXPECT_EQ(0, json_rpc_append_double(json_rpc, "res_double1", d1));
+	EXPECT_EQ(0, json_rpc_append_double(json_rpc, "res_double2", d2));
 	EXPECT_EQ(0, json_rpc_append_str(json_rpc, "res_str", s));
 }
 
@@ -374,12 +377,14 @@ TEST_F(AbusJtypesTest, AllTypes)
 {
 	int a = INT_MAX, res_a;
     bool b = true, res_b;
-    double d = M_PI, res_d;
+    double d1 = M_PI, res_d1;
+    double d2 = 3, res_d2;
     char res_s[512];
 
 	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "int", a));
 	EXPECT_EQ(0, json_rpc_append_bool(&json_rpc_, "bool", b));
-	EXPECT_EQ(0, json_rpc_append_double(&json_rpc_, "double", d));
+	EXPECT_EQ(0, json_rpc_append_double(&json_rpc_, "double1", d1));
+	EXPECT_EQ(0, json_rpc_append_double(&json_rpc_, "double2", d2));
 	EXPECT_EQ(0, json_rpc_append_str(&json_rpc_, "str", abus_get_copyright()));
 
 	EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
@@ -387,12 +392,14 @@ TEST_F(AbusJtypesTest, AllTypes)
     EXPECT_EQ(JSON_INT, json_rpc_get_type(&json_rpc_, "res_int"));
 	EXPECT_EQ(0, json_rpc_get_int(&json_rpc_, "res_int", &res_a));
 	EXPECT_EQ(0, json_rpc_get_bool(&json_rpc_, "res_bool", &res_b));
-	EXPECT_EQ(0, json_rpc_get_double(&json_rpc_, "res_double", &res_d));
+	EXPECT_EQ(0, json_rpc_get_double(&json_rpc_, "res_double1", &res_d1));
+	EXPECT_EQ(0, json_rpc_get_double(&json_rpc_, "res_double2", &res_d2));
 	EXPECT_EQ(0, json_rpc_get_str(&json_rpc_, "res_str", res_s, sizeof(res_s)));
 
 	EXPECT_EQ(a, res_a);
 	EXPECT_EQ(b, res_b);
-	EXPECT_TRUE(d-res_d < DEPSILON);
+	EXPECT_TRUE(d1-res_d1 < DEPSILON);
+	EXPECT_TRUE(d2-res_d2 < DEPSILON);
 	EXPECT_TRUE(strncmp(res_s, abus_get_copyright(), sizeof(res_s)) == 0);
 }
 

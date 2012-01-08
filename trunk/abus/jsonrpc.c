@@ -950,11 +950,17 @@ int json_rpc_append_bool(json_rpc_t *json_rpc, const char *name, bool val)
  */
 int json_rpc_append_double(json_rpc_t *json_rpc, const char *name, double val)
 {
+	char s[24];
+
 	if (json_rpc_is_comma_needed(json_rpc))
 		json_rpc->msgbuf[json_rpc->msglen++] = ',';
 
+	snprintf(s, sizeof(s)-3, "%.16g", val);
+	if (!strchr(s, '.'))
+		strcat(s, ".0");
+
 	json_rpc->msglen += snprintf(msg_p(json_rpc), msg_rem(json_rpc),
-					"\"%s\":%f", name, val);
+					"\"%s\":%s", name, s);
 	return 0;
 }
 
