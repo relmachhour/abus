@@ -68,7 +68,7 @@ of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * This client is equivalent to the following call of abus-send:
 \code
-tools/abus-send examplesvc.sum a:i:${my_a} b:i:${my_b}
+tools/abus-send examplesvc.sum a:i=${my_a} b:i=${my_b}
 \endcode
  *
  */
@@ -142,7 +142,7 @@ tools/abus-send examplesvc.\*
 abus-send exampleattrsvc.get tree.some_int
 abus-send exampleattrsvc.get tree.
 
-abus-send exampleattrsvc.set tree.some_int:i:128
+abus-send exampleattrsvc.set tree.some_int:i=128
 
 abus-send exampleattrsvc.get ""
 \endcode
