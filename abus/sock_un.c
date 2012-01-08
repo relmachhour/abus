@@ -49,13 +49,14 @@ static void un_sock_print_message(int out, const struct sockaddr *sockaddr, cons
 int un_sock_create(void)
 {
 	struct sockaddr_un sockaddrun;
-	int sock;
+	int sock, ret;
 	int reuse_addr = 1;
 
 	sock = socket(AF_UNIX, SOCK_DGRAM, 0);
 	if (sock < 0) {
+		ret = -errno;
 		LogError("%s: failed to bind server socket: %s", __func__, strerror(errno));
-		return sock;
+		return ret;
 	}
 
 	memset(&sockaddrun, 0, sizeof(sockaddrun));
@@ -67,17 +68,19 @@ int un_sock_create(void)
 
 	if (bind(sock, (struct sockaddr *) &sockaddrun, SUN_LEN(&sockaddrun)) < 0)
 	{
+		ret = -errno;
 		LogError("%s: failed to bind server socket: %s", __func__, strerror(errno));
 		close(sock);
-		return -1;
+		return ret;
 	}
 
 	/* So that we can re-bind to it without TIME_WAIT problems */
 	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse_addr, sizeof(reuse_addr)) < 0)
 	{
+		ret = -errno;
 		LogError("%s: failed to set SO_REUSEADDR option on server socket: %s", __func__, strerror(errno));
 		close(sock);
-		return -1;
+		return ret;
 	}
 
 	return sock;
@@ -124,8 +127,9 @@ static int select_for_read(int sock, int timeout)
 
 	if (ret < 0)
 	{
+		ret = -errno;
 		LogError("%s: select fails with error: %s", __func__, strerror(errno));
-		return -1;
+		return ret;
 	}
 	if (ret == 0)
 	{
@@ -134,7 +138,7 @@ static int select_for_read(int sock, int timeout)
 	if (FD_ISSET(sock, &sete))
 	{
 		LogError("%s: error detected on sock by select", __func__);
-		return -1;
+		return -EIO;
 	}
 	return 1;
 }
@@ -158,7 +162,9 @@ int un_sock_sendto_svc(int sock, const void *buf, size_t len, const char *servic
 	ret = sendto(sock, buf, len, MSG_NOSIGNAL,
 					(const struct sockaddr *)&sockaddrun, SUN_LEN(&sockaddrun));
 	if (ret == -1) {
-		perror("un_sock_sendto(): sendto failed:");
+		ret = -errno;
+		if (errno != ECONNREFUSED)
+			LogError("%s(): sendto failed: %s", __func__, strerror(errno));
 		return ret;
 	}
 
@@ -167,10 +173,13 @@ int un_sock_sendto_svc(int sock, const void *buf, size_t len, const char *servic
 
 int un_sock_sendto_sock(int sock, const void *buf, size_t len, const struct sockaddr *dest_addr, int addrlen)
 {
+	int ret;
+
 	if (abus_msg_verbose)
 		un_sock_print_message(true, dest_addr, buf, len);
 
-	return sendto(sock, buf, len, MSG_NOSIGNAL|MSG_DONTWAIT, dest_addr, addrlen);
+	ret = sendto(sock, buf, len, MSG_NOSIGNAL|MSG_DONTWAIT, dest_addr, addrlen);
+	return ret == -1 ? -errno : ret;
 }
 
 int un_sock_transaction(const int sockarg, void *buf, size_t len, size_t bufsz, const char *service_name, int timeout)
@@ -181,15 +190,18 @@ int un_sock_transaction(const int sockarg, void *buf, size_t len, size_t bufsz, 
 	if (sockarg == -1) {
 		sock = socket(AF_UNIX, SOCK_DGRAM, 0);
 		if (sock < 0) {
+			ret = -errno;
 			LogError("%s: failed to create socket: %s", __func__, strerror(errno));
-			return sock;
+			return ret;
 		}
 	
 		/* autobind */
 		passcred = 1;
 		ret = setsockopt(sock, SOL_SOCKET, SO_PASSCRED, &passcred, sizeof(passcred));
 		if (ret != 0) {
-			perror("abus clnt setsockopt(SO_PASSCRED): ");
+			ret = -errno;
+			LogError("%s: abus clnt setsockopt(SO_PASSCRED): %s",
+					__func__, strerror(errno));
 			close(sock);
 			return ret;
 		}
@@ -206,24 +218,26 @@ int un_sock_transaction(const int sockarg, void *buf, size_t len, size_t bufsz, 
 
 	ret = select_for_read(sock, timeout);
 	if (ret == -1) {
+		ret = -errno;
 		if (sockarg == -1)
 			close(sock);
-		return -1;
+		return ret;
 	}
 	if (ret == 0) {
 		if (sockarg == -1)
 			close(sock);
-		return -2;	/* FIXME: timeout */
+		return -ETIMEDOUT;
 	}
 
 	/* recycle req buf */
 
 	len = recv(sock, buf, bufsz, 0);
 	if (len == -1) {
-		perror("abus clnt recv: ");
+		ret = -errno;
+		LogError("%s(): abus clnt recv: %s", __func__, strerror(errno));
 		if (sockarg == -1)
 			close(sock);
-		return 0;
+		return ret;
 	}
 	ret = len;
 
@@ -242,6 +256,10 @@ ssize_t un_sock_recvfrom(int sockfd, void *buf, size_t len,
 	ssize_t ret;
 
 	ret = recvfrom(sockfd, buf, len, 0, src_addr, addrlen);
+	if (ret == -1) {
+		ret = -errno;
+		return ret;
+	}
 
 	if (*addrlen < sizeof(struct sockaddr_un))
 		((char *)src_addr)[*addrlen] = '\0';

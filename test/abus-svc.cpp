@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Stephane Fillod
+ * Copyright (C) 2011-2012 Stephane Fillod
  *
  *   This library is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Library General Public License as
@@ -13,6 +13,7 @@
  */
 
 #include <limits.h>
+#include <errno.h>
 #include <math.h>
 #include "abus.h"
 
@@ -38,7 +39,7 @@ class AbusTest : public testing::Test {
 
 	        EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "sqr", this, svc_array_sqr_cb,
 					ABUS_RPC_FLAG_NONE,
-					"Compute multiplication of two integers",
+					"Compute square value of array of integers",
 					"k:i:some contant,my_array:(a:i:value to be squared,arg_index:i:index of arg for demo):array of stuff",
 					"res_k:i:same contant,res_array:(res_a:i:squared value):array of squared stuff"));
 
@@ -564,6 +565,69 @@ TEST_F(AbusAttrTest, AllTypes) {
 	   - int abus_attr_changed(abus_t *abus, const char *service_name, const char *attr_name);
 	 */
 }
+
+TEST_F(AbusTest, NoService) {
+	json_rpc_t json_rpc;
+
+	EXPECT_EQ(0, abus_request_method_init(&abus_, "no_such_"SVC_NAME, "sum", &json_rpc));
+
+	/* pass 2 parameters: "a" and "b" */
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc, "a", 2));
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc, "b", 3));
+
+	EXPECT_EQ(-ENOENT, abus_request_method_invoke(&abus_, &json_rpc, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
+
+	EXPECT_EQ(0, abus_request_method_cleanup(&abus_, &json_rpc));
+}
+
+TEST_F(AbusTest, NoMethod) {
+	json_rpc_t json_rpc;
+
+	EXPECT_EQ(0, abus_request_method_init(&abus_, SVC_NAME, "no_such_method", &json_rpc));
+
+	/* pass 2 parameters: "a" and "b" */
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc, "a", 2));
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc, "b", 3));
+
+	EXPECT_EQ(JSONRPC_NO_METHOD, abus_request_method_invoke(&abus_, &json_rpc, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
+
+	EXPECT_EQ(0, abus_request_method_cleanup(&abus_, &json_rpc));
+}
+
+TEST_F(AbusTest, MethodRedefinition) {
+	int res_value;
+
+	// declare first "sum" with another callback
+	EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "sum", this, svc_jtypes_cb,
+					ABUS_RPC_FLAG_NONE,
+					"Compute summation of two integers, but wrong callback",
+					"a:i:first operand,b:i:second operand",
+					"res_value:i:supposed summation"));
+
+	// redeclaration, but with right callback
+	EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "sum", this, svc_sum_cb,
+					ABUS_RPC_FLAG_NONE,
+					"Compute summation of two integers, with right callback this time",
+					"a:i:first operand,b:i:second operand",
+					"res_value:i:summation"));
+
+	json_rpc_t json_rpc;
+
+	EXPECT_EQ(0, abus_request_method_init(&abus_, SVC_NAME, "sum", &json_rpc));
+
+	/* pass 2 parameters: "a" and "b" */
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc, "a", 2));
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc, "b", 3));
+
+	EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
+
+	EXPECT_EQ(0, json_rpc_get_int(&json_rpc, "res_value", &res_value));
+
+	EXPECT_EQ(2+3, res_value);
+
+	EXPECT_EQ(0, abus_request_method_cleanup(&abus_, &json_rpc));
+}
+
 
 // TODO:
 // - plenty of async reqs

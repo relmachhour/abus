@@ -32,14 +32,19 @@ int main(int argc, char **argv)
 {
 	abus_t abus;
 	char s[128];
+	int ret;
 
 	abus_init(&abus);
 
 #define MYSVCNAME "examplesvc"
 #define MYEVTNAME "enter_pressed"
-	abus_decl_event(&abus, MYSVCNAME, MYEVTNAME,
+	ret = abus_decl_event(&abus, MYSVCNAME, MYEVTNAME,
 					"Event sent each time the ENTER key is press. Serves as publish/subscribe example.",
 					"typed_char:s:keys pressed before the ENTER key");
+	if (ret != 0) {
+	    abus_cleanup(&abus);
+	    return EXIT_FAILURE;
+	}
 
 	/* cheap event generator: press ENTER key on stdin
 	   Attached to the event, the chars typed in before the ENTER key

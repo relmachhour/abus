@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 {
 	abus_t abus;
 	const char *servicename = "exampleattrsvc";
-	int i;
+	int i, ret;
 
 	int my_int = 42;
 	int my_other_int = -2;
@@ -33,9 +33,13 @@ int main(int argc, char **argv)
 
 	abus_init(&abus);
 
-	abus_decl_attr_int(&abus, servicename, "tree.some_int", &my_int,
+	ret = abus_decl_attr_int(&abus, servicename, "tree.some_int", &my_int,
 					ABUS_RPC_FLAG_NONE,
 					"Some integer, for demo purpose");
+	if (ret != 0) {
+	    abus_cleanup(&abus);
+	    return EXIT_FAILURE;
+	}
 
 	abus_decl_attr_int(&abus, servicename, "tree.some_other_int", &my_other_int,
 					ABUS_RPC_FLAG_NONE,
