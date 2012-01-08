@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Stephane Fillod
+ * Copyright (C) 2011-2012 Stephane Fillod
  *
  *   This library is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Library General Public License as
@@ -126,7 +126,7 @@ int forward_rpc_stdinout(abus_t *abus)
 
 static int usage(const char *argv0, int exit_code)
 {
-	printf("usage: %s [options] SERVICE.METHOD [key:[bdis]]=value]...\n", argv0);
+	printf("usage: %s [options] SERVICE.METHOD [key:[bfisae]]=value]...\n", argv0);
     printf(
     "  -h, --help                 this help message\n"
     "  -t, --timeout=TIMEOUT      timeout in milliseconds (%d)\n"
@@ -252,12 +252,23 @@ int main(int argc, char **argv)
 
 			key = argv[optind];
 
-			type = strchr(key, ':');
-			if (key[0] == '\0' || !type) {
-				fprintf(stderr, "incomplete definition for key '%s'\n", key);
+			if (key[0] == '\0') {
+				fprintf(stderr, "incomplete definition\n");
 				usage(argv[0], EXIT_FAILURE);
 			}
-			*type++ = '\0';
+
+			if (!strcmp(key, ",")) {
+				json_rpc_append_args(json_rpc,
+							JSON_OBJECT_END, JSON_OBJECT_BEGIN, -1);
+				continue;
+			}
+
+			type = strchr(key, ':');
+			if (type)
+				*type++ = '\0';
+			val = strchr(type ? type : key, '=');
+			if (val)
+				*val++ = '\0';
 
 			if (is_set_method) {
 				json_rpc_append_args(json_rpc, JSON_OBJECT_BEGIN, -1);
@@ -267,12 +278,23 @@ int main(int argc, char **argv)
 				keya = key;
 			}
 
-			val = strchr(type, ':');
-			if (!val || val[0] == '\0') {
+			if ((!val || val[0] == '\0') &&
+					!(type && (type[0] == 'a' || type[0] == 'e'))) {
 				json_rpc_append_null(json_rpc, keya);
 				continue;
 			}
-			*val++ = '\0';
+			/* automatic type infering */
+			if (!type) {
+				long a; double d; char *valendptr = val+strlen(val);
+				if (!strcmp(val, "false") || !strcmp(val, "true"))
+					type = "b";
+				else if ((a=strtol(val, &endptr, 0),endptr) == valendptr)
+					type = "i";
+				else if ((d=strtod(val, &endptr),endptr) == valendptr)
+					type = "f";
+				else
+					type = "s";
+			}
 	
 			switch(*type) {
 			case 'i':
@@ -285,6 +307,7 @@ int main(int argc, char **argv)
 			case 'b':
 					json_rpc_append_bool(json_rpc, keya, !strcmp(val, "true"));
 					break;
+			case 'd':
 			case 'f':
 					json_rpc_append_double(json_rpc, keya, strtod(val, &endptr));
 					if (val == endptr) {
@@ -294,6 +317,15 @@ int main(int argc, char **argv)
 					break;
 			case 's':
 					json_rpc_append_str(json_rpc, keya, val);
+					break;
+			case 'a':
+					json_rpc_append_args(json_rpc,
+								JSON_KEY, keya, -1,
+								JSON_ARRAY_BEGIN, JSON_OBJECT_BEGIN, -1);
+					break;
+			case 'e':
+					json_rpc_append_args(json_rpc,
+							JSON_OBJECT_END, JSON_ARRAY_END, -1);
 					break;
 			default:
 				fprintf(stderr, "unknown type '%s' for key '%s'\n", type, key);

@@ -1,0 +1,113 @@
+.\" 
+.\" abus\-send manual page, inspired by dbus\-send.
+.\" Copyright (C) 2012 Stephane Fillod
+.\"
+.TH abus\-send 1
+.SH NAME
+abus\-send \- Send a message to a message bus
+.SH SYNOPSIS
+.PP
+.B abus\-send
+[options]... <SERVICE>.<METHOD> [key:[bfisae]]=value]...
+
+.SH DESCRIPTION
+
+The \fIabus\-send\fP command is used to send a remote procedure call
+(RPC) message to an A\-Bus message bus.
+
+.PP
+A RPC is referenced by a service name and a method name made available
+in that service.
+
+.PP
+The service path and the method name of the message to send must always
+be specified. Following arguments, if any, are the message contents
+(message arguments). These are given as optional type\-specified values
+as described below.
+
+.nf
+b:  boolean, ie. true or false
+f:  double float
+i:  integer
+s:  string
+a:  array
+e:  end of array
+.fi
+
+\fIabus\-send\fP does not permit yet containers (e.g. 
+dictionaries) or nested containers (not supported yet by A-Bus).
+
+.SH EXAMPLES
+
+.PP
+Here is a simple example invocation, and with type inferring:
+.nf
+
+  abus\-send examplesvc.sum a:i=40 b:i=2
+
+  abus\-send examplesvc.sum a=40 b=2
+
+  abus\-send examplearraysvc.sqr k=2 my_array:a a=3 , a=4 , a=5 my_array:e
+.fi
+
+.PP
+Here is how to introspect a service (make sure your shell
+does not expand the star):
+.nf
+
+	abus-send examplesvc.\\*
+.fi
+
+.PP
+In each service, there are some special methods, "get" and
+"set" to access exposed attributes. For the "get" method, only
+attribute names are expected. Attribute names ending with a
+dot will get all the attributes by the same prefix, and empty 
+attribute name will get all the attributes in the service.
+.nf
+
+	abus-send exampleattrsvc.get tree.some_int tree.some_other_int
+
+	abus-send exampleattrsvc.get tree.
+
+	abus-send exampleattrsvc.get ""
+
+	abus-send exampleattrsvc.set tree.some_int=128
+.fi
+
+.PP
+Another special method is "subscribe". Here is how to subscribe
+to an event, here an attribute change:
+.nf
+
+	abus-send exampleattrsvc.subscribe attr_changed%tree.auto_count
+.fi
+
+Note that the interface is separated from a method or signal
+name by a dot, though in the actual protocol the interface
+and the interface member are separate fields.
+
+.SH OPTIONS
+The following options are supported:
+.TP
+.I "\-t, \-\-timeout=TIMEOUT"
+Timeout in milliseconds to wait for the RPC response.
+.TP
+.I "\-h, \-\-help"
+\fIabus\-send\fP usage help message.
+.TP
+.I "\-v, \-\-verbose"
+Enable verbose mode.
+.TP
+.I "\-V, \-\-version"
+Display versio of A\-Bus and exit.
+.TP
+.I "\-y, \-\-async"
+Asynchronous query.
+
+.SH AUTHOR
+abus\-send was written by Stephane Fillod.
+
+.SH BUGS
+Please send bug reports to the A\-Bus mailing list or bug tracker,
+see http://code.google.com/p/abus/

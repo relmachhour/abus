@@ -5,6 +5,8 @@ AM_CPPFLAGS = $(INC)
 
 bin_PROGRAMS   = abus-send @ABUS_CGI@
 
+man_MANS = abus-send.1
+
 EXTRA_PROGRAMS   = abus-cgi
 
 abus_send_SOURCES  = abus-send.c
