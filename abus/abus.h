@@ -63,6 +63,7 @@ typedef struct abus_attr {
 	json_val_t ref;
 	int flags;
 	char *descr;
+	bool auto_alloc;
 } abus_attr_t;
 
 static inline int abus_method_is_threaded(const abus_method_t *method) { return method && (method->flags & ABUS_RPC_THREADED); }
@@ -74,6 +75,8 @@ typedef struct abus_service {
 
 	htab *event_htab;	// event name->abus_event_t
 	htab *attr_htab;	// attr name->abus_attr_t
+
+	pthread_mutex_t attr_mutex;	/* for get/set */
 } abus_service_t;
 
 typedef struct abus {
@@ -111,7 +114,7 @@ int abus_request_method_cleanup(abus_t *abus, json_rpc_t *json_rpc);
 /* asynchronous call, with callback upon response or timeout; callback can be threaded or not */
 int abus_request_method_invoke_async(abus_t *abus, json_rpc_t *json_rpc, int timeout, abus_callback_t callback, int flags, void *arg);
 int abus_request_method_wait_async(abus_t *abus, json_rpc_t *json_rpc, int timeout);
-/* TODO: abus_request_method_cancel_async() ? */
+/* TODO: int abus_request_method_cancel_async() ? */
 
 /* publish/subscribe */
 int abus_decl_event(abus_t *abus, const char *service_name, const char *event_name, const char *descr, const char *fmt);
