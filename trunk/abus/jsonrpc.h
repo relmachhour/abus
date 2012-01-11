@@ -66,7 +66,7 @@ typedef struct json_val {
 /** Max length of a JSON-RPC request */
 #define JSONRPC_REQ_SZ_MAX 16000
 /** Max length of a JSON-RPC response */
-#define JSONRPC_RESP_SZ_MAX 4000
+#define JSONRPC_RESP_SZ_MAX 16000
 /** Max length of a service name, limited anyway by max AF_UNIX socket address(108) */
 #define JSONRPC_SVCNAME_SZ_MAX 32
 /** Max length of a method name, limited anyway by max AF_UNIX socket address(108) */
