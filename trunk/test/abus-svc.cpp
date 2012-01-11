@@ -291,6 +291,30 @@ class AbusAttrTest : public AbusTest {
 	    char m_str[256];
 };
 
+class AbusAutoAttrTest : public AbusTest {
+    protected:
+        virtual void SetUp() {
+            AbusTest::SetUp();
+
+			// Auto-allocated attributes (i.e. no pointer)
+	        EXPECT_EQ(0, abus_decl_attr_int(&abus_, SVC_NAME, "int", NULL, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_int(&abus_, SVC_NAME, "int_ro", NULL, ABUS_RPC_RDONLY, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_bool(&abus_, SVC_NAME, "bool", NULL, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_double(&abus_, SVC_NAME, "double", NULL, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_str(&abus_, SVC_NAME, "str", NULL, 256, 0, NULL));
+        }
+        virtual void TearDown() {
+
+			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "int"));
+			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "int_ro"));
+			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "bool"));
+			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "double"));
+			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "str"));
+
+            AbusTest::TearDown();
+        }
+};
+
 TEST_F(AbusReqTest, BasicSvc) {
 	int res_value;
 
@@ -328,8 +352,9 @@ TEST_F(AbusReqTest, PlentyOfParams) {
 TEST_F(AbusReqTest, PlentyOfMethods) {
 	int res_value;
     char method_name[16];
+    json_rpc_t json_rpc_introspect;
 
-    for (int i=0; i<1024; i++) {
+    for (int i=0; i<64; i++) {
         sprintf(method_name, "sum%d", i);
 
         EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, method_name, this, svc_sum_cb,
@@ -348,6 +373,13 @@ TEST_F(AbusReqTest, PlentyOfMethods) {
     EXPECT_EQ(0, json_rpc_get_int(&json_rpc_, "res_value", &res_value));
 
 	EXPECT_EQ(2+3, res_value);
+
+    /* Huge introspection */
+    EXPECT_EQ(0, abus_request_method_init(&abus_, SVC_NAME, "*", &json_rpc_introspect));
+
+    EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc_introspect, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
+
+    EXPECT_EQ(0, abus_request_method_cleanup(&abus_, &json_rpc_introspect));
 }
 
 TEST_F(AbusReqTest, MissingArg) {
@@ -571,6 +603,47 @@ TEST_F(AbusAttrTest, AllTypes) {
 	   - multiple attributes
 	   - int abus_attr_changed(abus_t *abus, const char *service_name, const char *attr_name);
 	 */
+}
+
+// TODO: factorize with AbusAttrTest
+TEST_F(AbusAutoAttrTest, AllTypes) {
+	int a;
+    bool b;
+    double d;
+    char s[512];
+
+	// Rem: attributes were auto-allocated, initialized like in a bss
+
+	EXPECT_EQ(0, abus_attr_get_int(&abus_, SVC_NAME, "int", &a, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_get_bool(&abus_, SVC_NAME, "bool", &b, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_get_double(&abus_, SVC_NAME, "double", &d, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_get_str(&abus_, SVC_NAME, "str", s, sizeof(s), RPC_TIMEOUT));
+
+	EXPECT_EQ(a, 0);
+	EXPECT_EQ(b, false);
+	EXPECT_EQ(d, 0.0);
+	EXPECT_TRUE(strncmp("", s, sizeof(s)) == 0);
+
+	EXPECT_EQ(0, abus_attr_set_int(&abus_, SVC_NAME, "int", -1, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_set_bool(&abus_, SVC_NAME, "bool", true, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_set_double(&abus_, SVC_NAME, "double", M_E, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_set_str(&abus_, SVC_NAME, "str", abus_get_version(), RPC_TIMEOUT));
+
+	EXPECT_EQ(0, abus_attr_get_int(&abus_, SVC_NAME, "int", &a, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_get_bool(&abus_, SVC_NAME, "bool", &b, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_get_double(&abus_, SVC_NAME, "double", &d, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_get_str(&abus_, SVC_NAME, "str", s, sizeof(s), RPC_TIMEOUT));
+
+	EXPECT_EQ(a, -1);
+	EXPECT_TRUE(b);
+	EXPECT_TRUE(M_E-d < DEPSILON);
+	EXPECT_TRUE(strncmp(abus_get_version(), s, sizeof(s)) == 0);
+
+	/* inexistant attr name */
+	EXPECT_EQ(JSONRPC_NO_METHOD, abus_attr_get_int(&abus_, SVC_NAME, "no_such_int", &a, RPC_TIMEOUT));
+	EXPECT_EQ(JSONRPC_NO_METHOD, abus_attr_set_int(&abus_, SVC_NAME, "no_such_int", -2, RPC_TIMEOUT));
+
+	EXPECT_EQ(JSONRPC_INVALID_METHOD, abus_attr_set_int(&abus_, SVC_NAME, "int_ro", -3, RPC_TIMEOUT));
 }
 
 TEST_F(AbusTest, NoService) {

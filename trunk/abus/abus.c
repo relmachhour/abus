@@ -252,11 +252,15 @@ int abus_cleanup(abus_t *abus)
 					free(hkey(service->attr_htab));
 					if (attr->descr)
 						free(attr->descr);
+					if (attr->auto_alloc && attr->ref.u.data)
+						free(attr->ref.u.data);
 					free(attr);
 				}
 				while (hnext(service->attr_htab));
 				hdestroy(service->attr_htab);
 			}
+
+			pthread_mutex_destroy(&service->attr_mutex);
 
 			remove_service_path(abus, (const char*)hkey(abus->service_htab));
 			free(hkey(abus->service_htab));
@@ -428,13 +432,17 @@ static int service_lookup(abus_t *abus, const char *service_name, bool create, a
 			return ret;
 
 		service = calloc(1, sizeof(abus_service_t));
+
 		service->method_htab = hcreate(3);
 		service->event_htab = hcreate(3);
 		service->attr_htab = hcreate(3);
+		pthread_mutex_init(&service->attr_mutex, NULL);
+
 		hadd(abus->service_htab, strdup(service_name), srv_len, service);
 
 		new_attr = calloc(1, sizeof(abus_attr_t));
 		new_attr->flags = ABUS_RPC_RDONLY;
+		new_attr->auto_alloc = false;
 		new_attr->ref.type = JSON_STRING;
 		new_attr->ref.length = sizeof(abus_version);
 		new_attr->ref.u.data = (char*)abus_version;
@@ -1736,8 +1744,20 @@ static int attr_decl_type(abus_t *abus, const char *service_name, const char *at
 
 	if (attr->descr)
 		free(attr->descr);
+	if (attr->auto_alloc && attr->ref.u.data)
+		free(attr->ref.u.data);
 
 	attr->flags = flags;
+
+	if (val) {
+		attr->auto_alloc = false;
+	} else {
+		attr->auto_alloc = true;
+		val = calloc(1, len);
+		/* TODO: cleanup if alloc failed */
+		if (!val)
+			ret = -ENOMEM;
+	}
 
 	attr->ref.type = json_type;
 	attr->ref.length = len;
@@ -1757,7 +1777,7 @@ static int attr_decl_type(abus_t *abus, const char *service_name, const char *at
 			return ret;
 	}
 
-	return 0;
+	return ret;
 }
 
 /**
@@ -1768,7 +1788,7 @@ static int attr_decl_type(abus_t *abus, const char *service_name, const char *at
   \param abus	pointer to A-Bus handle
   \param[in] service_name	name of service where the attribute belongs to
   \param[in] attr_name	name of attribute to declare
-  \param[in,out] val	pointer to the variable holding the attribute value
+  \param[in,out] val	pointer to the variable holding the attribute value, NULL for auto allocation
   \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
   \param[in] descr	string describing the event to be declared, may be NULL
   \return   0 if successful, non nul value otherwise
@@ -1776,7 +1796,7 @@ static int attr_decl_type(abus_t *abus, const char *service_name, const char *at
  */
 int abus_decl_attr_int(abus_t *abus, const char *service_name, const char *attr_name, int *val, int flags, const char *descr)
 {
-	return attr_decl_type(abus, service_name, attr_name, JSON_INT, val, 0, flags, descr);
+	return attr_decl_type(abus, service_name, attr_name, JSON_INT, val, sizeof(int), flags, descr);
 }
 
 /**
@@ -1787,7 +1807,7 @@ int abus_decl_attr_int(abus_t *abus, const char *service_name, const char *attr_
   \param abus	pointer to A-Bus handle
   \param[in] service_name	name of service where the attribute belongs to
   \param[in] attr_name	name of attribute to declare
-  \param[in,out] val	pointer to the variable holding the attribute value
+  \param[in,out] val	pointer to the variable holding the attribute value, NULL for auto allocation
   \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
   \param[in] descr	string describing the event to be declared, may be NULL
   \return   0 if successful, non nul value otherwise
@@ -1795,7 +1815,7 @@ int abus_decl_attr_int(abus_t *abus, const char *service_name, const char *attr_
  */
 int abus_decl_attr_bool(abus_t *abus, const char *service_name, const char *attr_name, bool *val, int flags, const char *descr)
 {
-	return attr_decl_type(abus, service_name, attr_name, JSON_TRUE, val, 0, flags, descr);
+	return attr_decl_type(abus, service_name, attr_name, JSON_TRUE, val, sizeof(bool), flags, descr);
 }
 
 /**
@@ -1806,7 +1826,7 @@ int abus_decl_attr_bool(abus_t *abus, const char *service_name, const char *attr
   \param abus	pointer to A-Bus handle
   \param[in] service_name	name of service where the attribute belongs to
   \param[in] attr_name	name of attribute to declare
-  \param[in,out] val	pointer to the variable holding the attribute value
+  \param[in,out] val	pointer to the variable holding the attribute value, NULL for auto allocation
   \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
   \param[in] descr	string describing the event to be declared, may be NULL
   \return   0 if successful, non nul value otherwise
@@ -1814,7 +1834,7 @@ int abus_decl_attr_bool(abus_t *abus, const char *service_name, const char *attr
  */
 int abus_decl_attr_double(abus_t *abus, const char *service_name, const char *attr_name, double *val, int flags, const char *descr)
 {
-	return attr_decl_type(abus, service_name, attr_name, JSON_FLOAT, val, 0, flags, descr);
+	return attr_decl_type(abus, service_name, attr_name, JSON_FLOAT, val, sizeof(double), flags, descr);
 }
 
 /**
@@ -1825,8 +1845,8 @@ int abus_decl_attr_double(abus_t *abus, const char *service_name, const char *at
   \param abus	pointer to A-Bus handle
   \param[in] service_name	name of service where the attribute belongs to
   \param[in] attr_name	name of attribute to declare
-  \param[in,out] val	pointer to the variable holding the attribute value
-  \param[in] n	maximum memory size of the string
+  \param[in,out] val	pointer to the variable holding the attribute value, NULL for auto allocation
+  \param[in] n	maximum memory size of the string, including nul end-of-string
   \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
   \param[in] descr	string describing the event to be declared, may be NULL
   \return   0 if successful, non nul value otherwise
@@ -1864,6 +1884,8 @@ int abus_undecl_attr(abus_t *abus, const char *service_name, const char *attr_na
 
 	if (attr->descr)
 		free(attr->descr);
+	if (attr->auto_alloc && attr->ref.u.data)
+		free(attr->ref.u.data);
 
 	flags = attr->flags;
 
@@ -2198,6 +2220,7 @@ int abus_attr_unsubscribe_onchange(abus_t *abus, const char *service_name, const
 void abus_req_attr_get_cb(json_rpc_t *json_rpc, void *arg)
 {
 	abus_t *abus = (abus_t *)arg;
+	abus_service_t *service;
 	char attr_name[JSONRPC_METHNAME_SZ_MAX];
 	int ret, i, count;
 
@@ -2207,6 +2230,14 @@ void abus_req_attr_get_cb(json_rpc_t *json_rpc, void *arg)
 		return;
     }
 
+	ret = service_lookup(abus, json_rpc->service_name, false, &service);
+	if (ret < 0) {
+		json_rpc_set_error(json_rpc, ret, NULL);
+		return;
+	}
+	pthread_mutex_lock(&service->attr_mutex);
+
+
     for (i = 0; i<count; i++) {
 		/* Aim at i-th element within array "attr" */
 		json_rpc_get_point_at(json_rpc, "attr", i);
@@ -2214,15 +2245,19 @@ void abus_req_attr_get_cb(json_rpc_t *json_rpc, void *arg)
 		ret = json_rpc_get_str(json_rpc, "name", attr_name, sizeof(attr_name));
 		if (ret != 0) {
 			json_rpc_set_error(json_rpc, ret, NULL);
+			pthread_mutex_unlock(&service->attr_mutex);
 			return;
 		}
 
 		ret = attr_append(abus, json_rpc, json_rpc->service_name, attr_name);
 		if (ret != 0) {
 			json_rpc_set_error(json_rpc, ret, NULL);
+			pthread_mutex_unlock(&service->attr_mutex);
 			return;
 		}
 	}
+
+	pthread_mutex_unlock(&service->attr_mutex);
 
 	/* Aim back out of array */
 	json_rpc_get_point_at(json_rpc, NULL, 0);
@@ -2234,6 +2269,7 @@ void abus_req_attr_get_cb(json_rpc_t *json_rpc, void *arg)
 void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 {
 	abus_t *abus = (abus_t *)arg;
+	abus_service_t *service;
 	char attr_name[JSONRPC_METHNAME_SZ_MAX];
 	int i, count;
 	abus_attr_t *attr;
@@ -2248,6 +2284,13 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 		return;
     }
 
+	ret = service_lookup(abus, json_rpc->service_name, false, &service);
+	if (ret < 0) {
+		json_rpc_set_error(json_rpc, ret, NULL);
+		return;
+	}
+	pthread_mutex_lock(&service->attr_mutex);
+
     for (i = 0; i<count; i++) {
 		bool attr_changed = false;
 
@@ -2257,17 +2300,20 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 		ret = json_rpc_get_str(json_rpc, "name", attr_name, sizeof(attr_name));
 		if (ret != 0) {
 			json_rpc_set_error(json_rpc, ret, NULL);
+			pthread_mutex_unlock(&service->attr_mutex);
 			return;
 		}
 	
 		ret = attr_lookup(abus, json_rpc->service_name, attr_name, false, NULL, &attr);
 		if (ret) {
 			json_rpc_set_error(json_rpc, ret, NULL);
+			pthread_mutex_unlock(&service->attr_mutex);
 			return;
 		}
 	
 		if (attr->flags & ABUS_RPC_RDONLY) {
 			json_rpc_set_error(json_rpc, JSONRPC_INVALID_METHOD, "Cannot set read-only attribute");
+			pthread_mutex_unlock(&service->attr_mutex);
 			return;
 		}
 	
@@ -2276,6 +2322,7 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 			ret = json_rpc_get_int(json_rpc, "value", &a);
 			if (ret) {
 				json_rpc_set_error(json_rpc, ret, NULL);
+				pthread_mutex_unlock(&service->attr_mutex);
 				return;
 			}
 			if (*(int*)attr->ref.u.data != a) {
@@ -2288,6 +2335,7 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 			ret = json_rpc_get_bool(json_rpc, "value", &b);
 			if (ret) {
 				json_rpc_set_error(json_rpc, ret, NULL);
+				pthread_mutex_unlock(&service->attr_mutex);
 				return;
 			}
 			if (*(bool*)attr->ref.u.data != b) {
@@ -2299,6 +2347,7 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 			ret = json_rpc_get_double(json_rpc, "value", &d);
 			if (ret) {
 				json_rpc_set_error(json_rpc, ret, NULL);
+				pthread_mutex_unlock(&service->attr_mutex);
 				return;
 			}
 			if (*(double*)attr->ref.u.data != d) {
@@ -2312,6 +2361,7 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 			ret = json_rpc_get_str(json_rpc, "value", attr->ref.u.data, attr->ref.length);
 			if (ret) {
 				json_rpc_set_error(json_rpc, ret, NULL);
+				pthread_mutex_unlock(&service->attr_mutex);
 				return;
 			}
 			/* TODO: implement detection? */
@@ -2324,6 +2374,8 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 		if (attr_changed)
 			abus_attr_changed(abus, json_rpc->service_name, attr_name);
 	}
+
+	pthread_mutex_unlock(&service->attr_mutex);
 
 	/* Aim back out of array */
 	json_rpc_get_point_at(json_rpc, NULL, 0);
