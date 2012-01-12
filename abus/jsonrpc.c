@@ -744,6 +744,30 @@ int json_rpc_get_strn(json_rpc_t *json_rpc, const char *name, char *val, size_t 
 }
 
 /*!
+	Get a pointer to the value of a parameter of type string from a RPC
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" designating a string value
+  \param[out] pval pointer to location where to store a pointer to the string value
+  \param[out] n pointer where to store the real size of the string
+  \return	0 if successful, non nul value otherwise
+ */
+int json_rpc_get_strp(json_rpc_t *json_rpc, const char *name, const char **pval, size_t *n)
+{
+	json_val_t *json_val;
+	int ret;
+
+	ret = json_rpc_check_val_type(json_rpc, name, &json_val, JSON_STRING);
+	if (ret)
+		return ret;
+
+	*pval = (const char*)json_val->u.data;
+	*n = json_val->length;
+
+	return 0;
+}
+
+/*!
 	Get the value of a parameter of type string (nul terminated) from a RPC
 
   \param json_rpc pointer to an opaque handle of a JSON RPC
