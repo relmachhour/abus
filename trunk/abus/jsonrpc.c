@@ -45,7 +45,7 @@
 static int json_rpc_add_val(json_rpc_t *json_rpc, int type, const char *data, int length);
 static int json_rpc_add_array(json_rpc_t *json_rpc);
 static int json_rpc_add_object_to_array(json_rpc_t *json_rpc);
-static int json_rpc_parser_callback(void *userdata, int type, const char *data, uint32_t length);
+static int json_rpc_parser_callback(void *userdata, int type, const char *data, size_t length);
 
 const char *json_rpc_strerror(int errnum)
 {
@@ -143,10 +143,10 @@ void json_rpc_cleanup(json_rpc_t *json_rpc)
 		free(json_rpc->msgbuf);
 }
 
-int json_rpc_parse_msg(json_rpc_t *json_rpc, const char *buffer, uint32_t len)
+int json_rpc_parse_msg(json_rpc_t *json_rpc, const char *buffer, size_t len)
 {
 	int ret = 0;
-	uint32_t processed = len;
+	size_t processed = len;
 	json_parser parser;
 	json_config config;
 
@@ -188,7 +188,7 @@ int json_rpc_is_req(json_rpc_t *json_rpc)
 		&& json_rpc->service_name && json_rpc->method_name;
 }
 
-static int json_print_val_callback(void *dest, const char *s, uint32_t length)
+static int json_print_val_callback(void *dest, const char *s, size_t length)
 {
 	char **d = dest;
 
@@ -329,7 +329,7 @@ static enum json_rpc_key_token_e json_rpc_key_token(const char *data, size_t len
 	return TOK_UNKNOWN;
 }
 
-int json_rpc_parser_callback(void *userdata, int type, const char *data, uint32_t length)
+int json_rpc_parser_callback(void *userdata, int type, const char *data, size_t length)
 {
 	json_rpc_t *json_rpc = userdata;
 

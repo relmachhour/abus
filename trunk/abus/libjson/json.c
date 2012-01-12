@@ -59,7 +59,7 @@ enum classes {
 };
 
 /* map from character < 128 to classes. from 128 to 256 all C_OTHER */
-static uint8_t character_class[128] = {
+static const uint8_t character_class[128] = {
 	C_ERROR, C_ERROR, C_ERROR, C_ERROR, C_ERROR, C_ERROR, C_ERROR, C_ERROR,
 	C_ERROR, C_WHITE, C_NL,    C_ERROR, C_ERROR, C_WHITE, C_ERROR, C_ERROR,
 	C_ERROR, C_ERROR, C_ERROR, C_ERROR, C_ERROR, C_ERROR, C_ERROR, C_ERROR,
@@ -82,7 +82,7 @@ static uint8_t character_class[128] = {
 };
 
 /* only the first 36 ascii characters need an escape */
-static char *character_escape[36] = {
+static const char *character_escape[36] = {
 	"\\u0000", "\\u0001", "\\u0002", "\\u0003", "\\u0004", "\\u0005", "\\u0006", "\\u0007", /*  0-7  */
 	"\\b"    ,     "\\t",     "\\n", "\\u000b",     "\\f",     "\\r", "\\u000e", "\\u000f", /*  8-f  */
 	"\\u0010", "\\u0011", "\\u0012", "\\u0013", "\\u0014", "\\u0015", "\\u0016", "\\u0017", /* 10-17 */
@@ -313,7 +313,7 @@ static inline void *memory_calloc(void *(*calloc_fct)(size_t, size_t), size_t nm
 
 static int state_grow(json_parser *parser)
 {
-	uint32_t newsize = parser->stack_size * 2;
+	size_t newsize = parser->stack_size * 2;
 	void *ptr;
 
 	if (parser->config.max_nesting != 0)
@@ -350,14 +350,14 @@ static int state_pop(json_parser *parser, int mode)
 
 static int buffer_grow(json_parser *parser)
 {
-	uint32_t newsize;
+	size_t newsize;
 	void *ptr;
-	int max = parser->config.max_data;
+	size_t max = parser->config.max_data;
 
 	if (max > 0 && parser->buffer_size == max)
 		return JSON_ERROR_DATA_LIMIT;
 	newsize = parser->buffer_size * 2;
-	if (max > 0 && newsize > (uint32_t)(max))
+	if (max > 0 && newsize > max)
 		newsize = max;
 
 	ptr = parser_realloc(parser, parser->buffer, newsize * sizeof(char));
@@ -596,7 +596,7 @@ struct action_descr
 	uint8_t dobuffer;
 };
 
-static struct action_descr actions_map[] = {
+static const struct action_descr actions_map[] = {
 	{ NULL,   JSON_NONE,  STATE__V, 0 }, /* KS */
 	{ act_sp, JSON_NONE,  0,        1 }, /* SP */
 	{ act_ab, JSON_NONE,  STATE__A, 0 }, /* AB */
@@ -620,7 +620,7 @@ static struct action_descr actions_map[] = {
 
 static int do_action(json_parser *parser, int next_state)
 {
-	struct action_descr *descr = &actions_map[next_state & ~0x80];
+	const struct action_descr *descr = &actions_map[next_state & ~0x80];
 
 	if (descr->call) {
 		int ret;
@@ -701,12 +701,12 @@ int json_parser_is_done(json_parser *parser)
  * the user can supplied a valid processed pointer that will
  * be fill with the number of processed characters before returning */
 int json_parser_string(json_parser *parser, const char *s,
-                       uint32_t length, uint32_t *processed)
+                       size_t length, size_t *processed)
 {
 	int ret;
 	int next_class, next_state;
 	int buffer_policy;
-	uint32_t i;
+	size_t i;
 
 	ret = 0;
 	for (i = 0; i < length; i++) {
@@ -768,7 +768,7 @@ int json_parser_string(json_parser *parser, const char *s,
  * return 0 if everything went ok, a JSON_ERROR_* otherwise */
 int json_parser_char(json_parser *parser, unsigned char ch)
 {
-	return json_parser_string(parser, (char *) &ch, 1, NULL);
+	return json_parser_string(parser, (const char *) &ch, 1, NULL);
 }
 
 /** json_print_init initialize a printer context. always succeed */
@@ -794,16 +794,16 @@ int json_print_free(json_printer *printer)
 
 /* escape a C string to be a JSON valid string on the wire.
  * XXX: it doesn't do unicode verification. yet?. */
-static int print_string(json_printer *printer, const char *data, uint32_t length)
+static int print_string(json_printer *printer, const char *data, size_t length)
 {
 	int ret = 0;
-	uint32_t i;
+	size_t i;
 
 	ret += printer->callback(printer->userdata, "\"", 1);
 	for (i = 0; i < length; i++) {
 		unsigned char c = data[i];
 		if (c < 36) {
-			char *esc = character_escape[c];
+			const char *esc = character_escape[c];
 			ret += printer->callback(printer->userdata, esc, strlen(esc));
 		} else if (c == '\\') {
 			ret += printer->callback(printer->userdata, "\\\\", 2);
@@ -824,7 +824,7 @@ static int print_indent(json_printer *printer)
 	return ret;
 }
 
-static int json_print_mode(json_printer *printer, int type, const char *data, uint32_t length, int pretty)
+static int json_print_mode(json_printer *printer, int type, const char *data, size_t length, int pretty)
 {
 	int enterobj = printer->enter_object;
 	int ret = 0;
@@ -879,24 +879,24 @@ static int json_print_mode(json_printer *printer, int type, const char *data, ui
 }
 
 /** json_print_pretty pretty print the passed argument (type/data/length). */
-int json_print_pretty(json_printer *printer, int type, const char *data, uint32_t length)
+int json_print_pretty(json_printer *printer, int type, const char *data, size_t length)
 {
 	return json_print_mode(printer, type, data, length, 1);
 }
 
 /** json_print_raw prints without eye candy the passed argument (type/data/length). */
-int json_print_raw(json_printer *printer, int type, const char *data, uint32_t length)
+int json_print_raw(json_printer *printer, int type, const char *data, size_t length)
 {
 	return json_print_mode(printer, type, data, length, 0);
 }
 
 /** json_vprint_args takes multiple types and pass them to the printer function */
 int json_vprint_args(json_printer *printer,
-					int (*f)(json_printer *, int, const char *, uint32_t),
+					int (*f)(json_printer *, int, const char *, size_t),
                     va_list ap)
 {
-	char *data;
-	uint32_t length;
+	const char *data;
+	size_t length;
 	int type, ret, total;
 
 	total = 0;
@@ -916,8 +916,8 @@ int json_vprint_args(json_printer *printer,
 		case JSON_FLOAT:
 		case JSON_KEY:
 		case JSON_STRING:
-			data = va_arg(ap, char *);
-			length = va_arg(ap, uint32_t);
+			data = va_arg(ap, const char *);
+			length = va_arg(ap, size_t);
 			if (length == -1)
 				length = strlen(data);
 			ret = (*f)(printer, type, data, length);
@@ -932,7 +932,7 @@ int json_vprint_args(json_printer *printer,
 
 /** json_print_args takes multiple types and pass them to the printer function */
 int json_print_args(json_printer *printer,
-					int (*f)(json_printer *, int, const char *, uint32_t),
+					int (*f)(json_printer *, int, const char *, size_t),
                     ...)
 {
 	int ret;
@@ -950,7 +950,7 @@ static int dom_push(struct json_parser_dom *ctx, void *val)
 {
 	if (ctx->stack_offset == ctx->stack_size) {
 		void *ptr;
-		uint32_t newsize = ctx->stack_size * 2;
+		size_t newsize = ctx->stack_size * 2;
 		ptr = memory_realloc(ctx->user_realloc, ctx->stack, newsize);
 		if (!ptr)
 			return JSON_ERROR_NO_MEMORY;
@@ -994,7 +994,7 @@ int json_parser_dom_free(json_parser_dom *dom)
 	return 0;
 }
 
-int json_parser_dom_callback(void *userdata, int type, const char *data, uint32_t length)
+int json_parser_dom_callback(void *userdata, int type, const char *data, size_t length)
 {
 	struct json_parser_dom *ctx = userdata;
 	void *v;
