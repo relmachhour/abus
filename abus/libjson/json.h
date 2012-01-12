@@ -84,13 +84,13 @@ typedef enum
 #define LIBJSON_DEFAULT_STACK_SIZE 256
 #define LIBJSON_DEFAULT_BUFFER_SIZE 4096
 
-typedef int (*json_parser_callback)(void *userdata, int type, const char *data, uint32_t length);
-typedef int (*json_printer_callback)(void *userdata, const char *s, uint32_t length);
+typedef int (*json_parser_callback)(void *userdata, int type, const char *data, size_t length);
+typedef int (*json_printer_callback)(void *userdata, const char *s, size_t length);
 
 typedef struct {
-	uint32_t buffer_initial_size;
+	size_t buffer_initial_size;
 	uint32_t max_nesting;
-	uint32_t max_data;
+	size_t max_data;
 	int allow_c_comments;
 	int allow_yaml_comments;
 	void * (*user_calloc)(size_t nmemb, size_t size);
@@ -114,13 +114,13 @@ typedef struct json_parser {
 
 	/* state stack */
 	uint8_t *stack;
-	uint32_t stack_offset;
-	uint32_t stack_size;
+	size_t stack_offset;
+	size_t stack_size;
 
 	/* parse buffer */
 	char *buffer;
-	uint32_t buffer_size;
-	uint32_t buffer_offset;
+	size_t buffer_size;
+	size_t buffer_offset;
 } json_parser;
 
 typedef struct json_printer {
@@ -148,7 +148,7 @@ int json_parser_free(json_parser *parser);
  * the user can supplied a valid processed pointer that will
  * be fill with the number of processed characters before returning */
 int json_parser_string(json_parser *parser, const char *string,
-                       uint32_t length, uint32_t *processed);
+                       size_t length, size_t *processed);
 
 /** json_parser_char append one single char to the parser
  * return 0 if everything went ok, a JSON_ERROR_* otherwise */
@@ -165,43 +165,43 @@ int json_print_init(json_printer *printer, json_printer_callback callback, void 
 int json_print_free(json_printer *printer);
 
 /** json_print_pretty pretty print the passed argument (type/data/length). */
-int json_print_pretty(json_printer *printer, int type, const char *data, uint32_t length);
+int json_print_pretty(json_printer *printer, int type, const char *data, size_t length);
 
 /** json_print_raw prints without eye candy the passed argument (type/data/length). */
-int json_print_raw(json_printer *printer, int type, const char *data, uint32_t length);
+int json_print_raw(json_printer *printer, int type, const char *data, size_t length);
 
 /** json_print_args takes multiple types and pass them to the printer function
  * array, object and constants doesn't take a string and length argument.
  * int, float, key, string need to be followed by a pointer to char and then a length.
  * if the length argument is -1, then the strlen function will use on the string argument.
  * the function call should always be terminated by -1 */
-int json_print_args(json_printer *, int (*f)(json_printer *, int, const char *, uint32_t), ...);
+int json_print_args(json_printer *, int (*f)(json_printer *, int, const char *, size_t), ...);
 
 /** json_vprint_args is equivalent to the function json_print_args(),
  * except that it is called with a va_list instead of a variable number of arguments.
  * This function does not call the va_end macro. Because it invokes the va_arg macro,
  * the value of ap is undefined after the call.
  */
-int json_vprint_args(json_printer *, int (*f)(json_printer *, int, const char *, uint32_t), va_list ap);
+int json_vprint_args(json_printer *, int (*f)(json_printer *, int, const char *, size_t), va_list ap);
 
 /** callback from the parser_dom callback to create object and array */
 typedef void * (*json_parser_dom_create_structure)(int, int);
 
 /** callback from the parser_dom callback to create data values */
-typedef void * (*json_parser_dom_create_data)(int, const char *, uint32_t);
+typedef void * (*json_parser_dom_create_data)(int, const char *, size_t);
 
 /** callback from the parser helper callback to append a value to an object or array value
  * append(parent, key, key_length, val); */
-typedef int (*json_parser_dom_append)(void *, char *, uint32_t, void *);
+typedef int (*json_parser_dom_append)(void *, char *, size_t, void *);
 
 /** the json_parser_dom permits to create a DOM like tree easily through the
  * use of 3 callbacks where the user can choose the representation of the JSON values */
 typedef struct json_parser_dom
 {
 	/* object stack */
-	struct stack_elem { void *val; char *key; uint32_t key_length; } *stack;
-	uint32_t stack_size;
-	uint32_t stack_offset;
+	struct stack_elem { void *val; char *key; size_t key_length; } *stack;
+	size_t stack_size;
+	size_t stack_offset;
 
 	/* overridable memory allocator */
 	void * (*user_calloc)(size_t nmemb, size_t size);
@@ -225,7 +225,7 @@ int json_parser_dom_init(json_parser_dom *helper,
 int json_parser_dom_free(json_parser_dom *ctx);
 
 /** helper to parser callback that arrange parsing events into comprehensive JSON data structure */
-int json_parser_dom_callback(void *userdata, int type, const char *data, uint32_t length);
+int json_parser_dom_callback(void *userdata, int type, const char *data, size_t length);
 
 #ifdef __cplusplus
 }
