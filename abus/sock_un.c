@@ -163,7 +163,7 @@ int un_sock_sendto_svc(int sock, const void *buf, size_t len, const char *servic
 					(const struct sockaddr *)&sockaddrun, SUN_LEN(&sockaddrun));
 	if (ret == -1) {
 		ret = -errno;
-		if (errno != ECONNREFUSED)
+		if (errno != ECONNREFUSED && errno != ENOENT)
 			LogError("%s(): sendto failed: %s", __func__, strerror(errno));
 		return ret;
 	}
