@@ -31,6 +31,7 @@ static void print_basic_type(const char *prefix, const char *name, const json_va
 {
 	switch (val->type) {
 		case JSON_INT:
+		case JSON_LLINT:
 		case JSON_FLOAT:
 			printf("%s%s=%*s\n", prefix, name, val->length, val->u.data);
 			break;
@@ -126,7 +127,7 @@ int forward_rpc_stdinout(abus_t *abus)
 
 static int usage(const char *argv0, int exit_code)
 {
-	printf("usage: %s [options] SERVICE.METHOD [key:[bfisae]]=value]...\n", argv0);
+	printf("usage: %s [options] SERVICE.METHOD [key:[bfilsae]]=value]...\n", argv0);
     printf(
     "  -h, --help                 this help message\n"
     "  -t, --timeout=TIMEOUT      timeout in milliseconds (%d)\n"
@@ -285,11 +286,13 @@ int main(int argc, char **argv)
 			}
 			/* automatic type infering */
 			if (!type) {
-				long a; double d; char *valendptr = val+strlen(val);
+				long a; long long ll; double d; char *valendptr = val+strlen(val);
 				if (!strcmp(val, "false") || !strcmp(val, "true"))
 					type = "b";
 				else if ((a=strtol(val, &endptr, 0),endptr) == valendptr)
 					type = "i";
+				else if ((ll=strtoll(val, &endptr, 0),endptr) == valendptr)
+					type = "l";
 				else if ((d=strtod(val, &endptr),endptr) == valendptr)
 					type = "f";
 				else
@@ -299,6 +302,13 @@ int main(int argc, char **argv)
 			switch(*type) {
 			case 'i':
 					json_rpc_append_int(json_rpc, keya, strtol(val, &endptr, 0));
+					if (val == endptr) {
+						fprintf(stderr, "invalid format for key '%s'\n", key);
+						usage(argv[0], EXIT_FAILURE);
+					}
+					break;
+			case 'l':
+					json_rpc_append_llint(json_rpc, keya, strtoll(val, &endptr, 0));
 					if (val == endptr) {
 						fprintf(stderr, "invalid format for key '%s'\n", key);
 						usage(argv[0], EXIT_FAILURE);

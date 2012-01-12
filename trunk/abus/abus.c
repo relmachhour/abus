@@ -1647,6 +1647,9 @@ static void attr_append_type(json_rpc_t *json_rpc, const char *service_name, con
 	case JSON_INT:
 		json_rpc_append_int(json_rpc, attr_name, *(const int *)data);
 		break;
+	case JSON_LLINT:
+		json_rpc_append_llint(json_rpc, attr_name, *(const long long *)data);
+		break;
 	case JSON_FALSE:
 	case JSON_TRUE:
 		json_rpc_append_bool(json_rpc, attr_name, *(const bool *)data);
@@ -1715,6 +1718,8 @@ static char json_type2char(int json_type)
 	switch(json_type) {
 	case JSON_INT:
 		return 'i';
+	case JSON_LLINT:
+		return 'l';
 	case JSON_FALSE:
 	case JSON_TRUE:
 		return 'b';
@@ -1796,6 +1801,25 @@ static int attr_decl_type(abus_t *abus, const char *service_name, const char *at
 int abus_decl_attr_int(abus_t *abus, const char *service_name, const char *attr_name, int *val, int flags, const char *descr)
 {
 	return attr_decl_type(abus, service_name, attr_name, JSON_INT, val, sizeof(int), flags, descr);
+}
+
+/**
+  Declare an attribute of type long long integer in a service
+
+  Redeclaration of an existing attribute is allowed.
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to declare
+  \param[in,out] val	pointer to the variable holding the attribute value, NULL for auto allocation
+  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
+  \param[in] descr	string describing the event to be declared, may be NULL
+  \return   0 if successful, non nul value otherwise
+  \sa abus_undecl_attr()
+ */
+int abus_decl_attr_llint(abus_t *abus, const char *service_name, const char *attr_name, long long *val, int flags, const char *descr)
+{
+	return attr_decl_type(abus, service_name, attr_name, JSON_LLINT, val, sizeof(long long), flags, descr);
 }
 
 /**
@@ -1978,6 +2002,9 @@ int attr_get_type(abus_t *abus, const char *service_name, const char *attr_name,
 	case JSON_INT:
     	ret = json_rpc_get_int(&json_rpc, attr_name, (int *)val);
 		break;
+	case JSON_LLINT:
+    	ret = json_rpc_get_llint(&json_rpc, attr_name, (long long *)val);
+		break;
 	case JSON_TRUE:
 	case JSON_FALSE:
     	ret = json_rpc_get_bool(&json_rpc, attr_name, (bool*)val);
@@ -2023,6 +2050,9 @@ int attr_set_type(abus_t *abus, const char *service_name, const char *attr_name,
 	case JSON_INT:
     	ret = json_rpc_append_int(&json_rpc, "value", *(int *)val);
 		break;
+	case JSON_LLINT:
+    	ret = json_rpc_append_llint(&json_rpc, "value", *(long long *)val);
+		break;
 	case JSON_TRUE:
 	case JSON_FALSE:
     	ret = json_rpc_append_bool(&json_rpc, "value", *(bool*)val);
@@ -2063,6 +2093,21 @@ int attr_set_type(abus_t *abus, const char *service_name, const char *attr_name,
 int abus_attr_get_int(abus_t *abus, const char *service_name, const char *attr_name, int *val, int timeout)
 {
 	return attr_get_type(abus, service_name, attr_name, JSON_INT, val, 0, timeout);
+}
+
+/**
+  Get the value of a long long integer attribute from a service
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to get
+  \param[out] val	pointer to the variable where to store the attribute value
+  \param[in] timeout	RPC waiting timeout in milliseconds
+  \return   0 if successful, non nul value otherwise
+ */
+int abus_attr_get_llint(abus_t *abus, const char *service_name, const char *attr_name, long long *val, int timeout)
+{
+	return attr_get_type(abus, service_name, attr_name, JSON_LLINT, val, 0, timeout);
 }
 
 /**
@@ -2124,6 +2169,21 @@ int abus_attr_get_str(abus_t *abus, const char *service_name, const char *attr_n
 int abus_attr_set_int(abus_t *abus, const char *service_name, const char *attr_name, int val, int timeout)
 {
 	return attr_set_type(abus, service_name, attr_name, JSON_INT, &val, 0, timeout);
+}
+
+/**
+  Set the value of a long long integer attribute in a service
+
+  \param abus	pointer to A-Bus handle
+  \param[in] service_name	name of service where the attribute belongs to
+  \param[in] attr_name	name of attribute to set
+  \param[in] val	value of the attribute to set
+  \param[in] timeout	RPC waiting timeout in milliseconds
+  \return   0 if successful, non nul value otherwise
+ */
+int abus_attr_set_llint(abus_t *abus, const char *service_name, const char *attr_name, long long val, int timeout)
+{
+	return attr_set_type(abus, service_name, attr_name, JSON_LLINT, &val, 0, timeout);
 }
 
 /**
@@ -2276,6 +2336,7 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 	int a;
 	bool b;
 	double d;
+	long long ll;
 
     count = json_rpc_get_array_count(json_rpc, "attr");
     if (count < 0) {
@@ -2326,6 +2387,18 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 			}
 			if (*(int*)attr->ref.u.data != a) {
 				*(int*)attr->ref.u.data = a;
+				attr_changed = true;
+			}
+			break;
+		case JSON_LLINT:
+			ret = json_rpc_get_llint(json_rpc, "value", &ll);
+			if (ret) {
+				json_rpc_set_error(json_rpc, ret, NULL);
+				pthread_mutex_unlock(&service->attr_mutex);
+				return;
+			}
+			if (*(long long*)attr->ref.u.data != ll) {
+				*(long long*)attr->ref.u.data = ll;
 				attr_changed = true;
 			}
 			break;

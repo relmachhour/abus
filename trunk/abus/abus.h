@@ -127,6 +127,7 @@ int abus_event_unsubscribe(abus_t *abus, const char *service_name, const char *e
 
 /* attributes/data model service side*/
 int abus_decl_attr_int(abus_t *abus, const char *service_name, const char *attr_name, int *val, int flags, const char *descr);
+int abus_decl_attr_llint(abus_t *abus, const char *service_name, const char *attr_name, long long *val, int flags, const char *descr);
 int abus_decl_attr_bool(abus_t *abus, const char *service_name, const char *attr_name, bool *val, int flags, const char *descr);
 int abus_decl_attr_double(abus_t *abus, const char *service_name, const char *attr_name, double *val, int flags, const char *descr);
 int abus_decl_attr_str(abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t n, int flags, const char *descr);
@@ -136,11 +137,13 @@ int abus_append_attr(abus_t *abus, json_rpc_t *json_rpc, const char *service_nam
 
 /* attributes/data model client side*/
 int abus_attr_get_int(abus_t *abus, const char *service_name, const char *attr_name, int *val, int timeout);
+int abus_attr_get_llint(abus_t *abus, const char *service_name, const char *attr_name, long long *val, int timeout);
 int abus_attr_get_bool(abus_t *abus, const char *service_name, const char *attr_name, bool *val, int timeout);
 int abus_attr_get_double(abus_t *abus, const char *service_name, const char *attr_name, double *val, int timeout);
 int abus_attr_get_str(abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t n, int timeout);
 
 int abus_attr_set_int(abus_t *abus, const char *service_name, const char *attr_name, int val, int timeout);
+int abus_attr_set_llint(abus_t *abus, const char *service_name, const char *attr_name, long long val, int timeout);
 int abus_attr_set_bool(abus_t *abus, const char *service_name, const char *attr_name, bool val, int timeout);
 int abus_attr_set_double(abus_t *abus, const char *service_name, const char *attr_name, double val, int timeout);
 int abus_attr_set_str(abus_t *abus, const char *service_name, const char *attr_name, const char *val, int timeout);
