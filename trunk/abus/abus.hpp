@@ -86,6 +86,13 @@ public:
 	int get_strn(const char *name, char *val, size_t *n)
 		{ return json_rpc_get_strn(m_json_rpc, name, val, n); }
 
+	/*! Get a pointer to the value of a parameter of type string from a RPC.
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_get_strp()
+	 */
+	int get_strp(const char *name, const char **pval, size_t *n)
+		{ return json_rpc_get_strp(m_json_rpc, name, pval, n); }
+
 	/*! Get the count of element in a named array from a RPC
 		\return a nul of positive number representing the count of objects in the array, a negative value in case of error
 		\sa json_rpc_get_array_count()

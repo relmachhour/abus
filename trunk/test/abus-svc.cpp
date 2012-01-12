@@ -556,6 +556,11 @@ TEST_F(AbusEchoTest, SpecialCharStringParam) {
 	EXPECT_EQ(bufsnd_len, bufrcv_len);
 	EXPECT_EQ(bufsnd_len, res_value);
 	EXPECT_TRUE(strncmp(bufsnd, bufrcv, bufsnd_len) == 0);
+
+	size_t bufrcvp_len = 0;
+	const char *pbufrcv;
+	EXPECT_EQ(0, json_rpc_get_strp(&json_rpc_, "msg", &pbufrcv, &bufrcvp_len));
+	EXPECT_TRUE(memcmp(pbufrcv, bufrcv, bufrcvp_len) == 0);
 }
 
 TEST_F(AbusEchoTest, BigEscapedCharStringParam) {
