@@ -54,6 +54,12 @@ public:
 	 */
 	int get_int(const char *name, int *val)
 		{ return json_rpc_get_int(m_json_rpc, name, val); }
+	/*! Get the value of a parameter of type long long integer from a RPC.
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_get_llint()
+	 */
+	int get_llint(const char *name, long long *val)
+		{ return json_rpc_get_llint(m_json_rpc, name, val); }
 	/*! Get the value of a parameter of type bool from a RPC.
 		\return	0	if successful, non nul value otherwise
 		\sa json_rpc_get_bool()
@@ -99,6 +105,12 @@ public:
 	 */
 	int append_int(const char *name, int val)
 		{ return json_rpc_append_int(m_json_rpc, name, val); }
+	/*! Append to a RPC a new parameter and its value of type long long integer
+		\return	0	if successful, non nul value otherwise
+		\sa json_rpc_append_llint()
+	 */
+	int append_llint(const char *name, long long val)
+		{ return json_rpc_append_llint(m_json_rpc, name, val); }
 	/*! Append to a RPC a new parameter and its value of type boolean
 		\return	0	if successful, non nul value otherwise
 		\sa json_rpc_append_bool()
@@ -328,6 +340,9 @@ public:
 	/*! Declare a new attribute of type integer in a service */
 	int decl_attr_int(const char *service_name, const char *attr_name, int *val = NULL, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
 		{ return abus_decl_attr_int(&m_abus, service_name, attr_name, val, flags, descr); }
+	/*! Declare a new attribute of type long long integer in a service */
+	int decl_attr_llint(const char *service_name, const char *attr_name, long long *val = NULL, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
+		{ return abus_decl_attr_llint(&m_abus, service_name, attr_name, val, flags, descr); }
 	/*! Declare a new attribute of type boolean in a service */
 	int decl_attr_bool(const char *service_name, const char *attr_name, bool *val = NULL, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
 		{ return abus_decl_attr_bool(&m_abus, service_name, attr_name, val, flags, descr); }
@@ -357,6 +372,11 @@ public:
 	 */
 	int attr_get_int(const char *service_name, const char *attr_name, int *val, int timeout = -1)
 		{ return abus_attr_get_int(&m_abus, service_name, attr_name, val, timeout); }
+	/*! Get the value of an attribute of type long long integer exposed by a service
+		\return	0	if successful, non nul value otherwise
+	 */
+	int attr_get_llint(const char *service_name, const char *attr_name, long long *val, int timeout = -1)
+		{ return abus_attr_get_llint(&m_abus, service_name, attr_name, val, timeout); }
 	/*! Get the value of an attribute of type boolean exposed by a service
 		\return	0	if successful, non nul value otherwise
 	 */
@@ -379,6 +399,11 @@ public:
 	 */
 	int attr_set_int(const char *service_name, const char *attr_name, int val, int timeout = -1)
 		{ return abus_attr_set_int(&m_abus, service_name, attr_name, val, timeout); }
+	/*! Set the value of an attribute of type long long integer exposed by a service
+		\return	0	if successful, non nul value otherwise
+	 */
+	int attr_set_llint(const char *service_name, const char *attr_name, long long val, int timeout = -1)
+		{ return abus_attr_set_llint(&m_abus, service_name, attr_name, val, timeout); }
 	/*! Set the value of an attribute of type boolean exposed by a service
 		\return	0	if successful, non nul value otherwise
 	 */

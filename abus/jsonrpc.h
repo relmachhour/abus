@@ -51,6 +51,7 @@
 #define JSONRPC_SERVER_ERROR -32099
 #define JSONRPC_SERVER_ERROR_MSG "Server error"
 
+#define JSON_LLINT 32765
 #define JSON_ARRAY_HTAB 32766
 typedef struct json_val {
 	int type;
@@ -140,12 +141,14 @@ int json_rpc_set_error(json_rpc_t *json_rpc, int error_code, const char *message
 int json_rpc_get_type(json_rpc_t *json_rpc, const char *name);
 
 int json_rpc_get_int(json_rpc_t *json_rpc, const char *name, int *val);
+int json_rpc_get_llint(json_rpc_t *json_rpc, const char *name, long long *val);
 int json_rpc_get_bool(json_rpc_t *json_rpc, const char *name, bool *val);
 int json_rpc_get_double(json_rpc_t *json_rpc, const char *name, double *val);
 int json_rpc_get_str(json_rpc_t *json_rpc, const char *name, char *val, size_t n);
 int json_rpc_get_strn(json_rpc_t *json_rpc, const char *name, char *val, size_t *n);
 
 int json_rpc_append_int(json_rpc_t *json_rpc, const char *name, int val);
+int json_rpc_append_llint(json_rpc_t *json_rpc, const char *name, long long val);
 int json_rpc_append_bool(json_rpc_t *json_rpc, const char *name, bool val);
 int json_rpc_append_double(json_rpc_t *json_rpc, const char *name, double val);
 int json_rpc_append_null(json_rpc_t *json_rpc, const char *name);

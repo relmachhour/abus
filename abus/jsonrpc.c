@@ -31,6 +31,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <stdbool.h>
 
 #include "json.h"
@@ -601,7 +602,8 @@ static int json_rpc_check_val_type(json_rpc_t *json_rpc, const char *name, json_
 
 	json_val = *json_valp;
 
-	if (json_val->type != type)
+	if (json_val->type != type &&
+			!(json_val->type == JSON_INT && type == JSON_LLINT))
 		return JSONRPC_INVALID_METHOD;	/* wrong type */
 
 	if (!json_val->u.data ||
@@ -630,6 +632,32 @@ int json_rpc_get_int(json_rpc_t *json_rpc, const char *name, int *val)
 		return ret;
 
 	*val = strtol(json_val->u.data, &endptr, 10);
+
+	if (json_val->u.data == endptr)
+		return JSONRPC_PARSE_ERROR;
+
+	return 0;
+}
+
+/*!
+	Get the value of a parameter of type long long integer from a RPC
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" designating a long long integer value
+  \param[out] val pointer to location where to store the integer value
+  \return	0 if successful, non nul value otherwise
+ */
+int json_rpc_get_llint(json_rpc_t *json_rpc, const char *name, long long *val)
+{
+	json_val_t *json_val;
+	char *endptr;
+	int ret;
+
+	ret = json_rpc_check_val_type(json_rpc, name, &json_val, JSON_LLINT);
+	if (ret)
+		return ret;
+
+	*val = strtoll(json_val->u.data, &endptr, 10);
 
 	if (json_val->u.data == endptr)
 		return JSONRPC_PARSE_ERROR;
@@ -919,6 +947,24 @@ int json_rpc_append_int(json_rpc_t *json_rpc, const char *name, int val)
 
 	json_rpc->msglen += snprintf(msg_p(json_rpc), msg_rem(json_rpc),
 					"\"%s\":%d", name, val);
+	return 0;
+}
+
+/*!
+	Append to a RPC a new parameter and its value of type long long integer
+
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \param[in] name key name of a "params"/"result" that's going to designate the long long integer value
+  \param[in] val the integer value
+  \return	0 if successful, non nul value otherwise
+ */
+int json_rpc_append_llint(json_rpc_t *json_rpc, const char *name, long long val)
+{
+	if (json_rpc_is_comma_needed(json_rpc))
+		json_rpc->msgbuf[json_rpc->msglen++] = ',';
+
+	json_rpc->msglen += snprintf(msg_p(json_rpc), msg_rem(json_rpc),
+					"\"%s\":%"PRId64, name, val);
 	return 0;
 }
 

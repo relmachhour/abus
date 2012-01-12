@@ -79,12 +79,15 @@ void AbusTest::svc_jtypes_cb(json_rpc_t *json_rpc)
 {
 	int a;
     bool b;
+    long long ll;
     double d1, d2;
     char s[512];
 	int ret = 0;
 
     EXPECT_EQ(JSON_INT, json_rpc_get_type(json_rpc, "int"));
 	ret = json_rpc_get_int(json_rpc, "int", &a);
+    if (ret == 0)
+	    ret = json_rpc_get_llint(json_rpc, "llint", &ll);
     if (ret == 0)
 	    ret = json_rpc_get_bool(json_rpc, "bool", &b);
     if (ret == 0)
@@ -100,6 +103,7 @@ void AbusTest::svc_jtypes_cb(json_rpc_t *json_rpc)
     }
 
 	EXPECT_EQ(0, json_rpc_append_int(json_rpc, "res_int", a));
+	EXPECT_EQ(0, json_rpc_append_llint(json_rpc, "res_llint", ll));
 	EXPECT_EQ(0, json_rpc_append_bool(json_rpc, "res_bool", b));
 	EXPECT_EQ(0, json_rpc_append_double(json_rpc, "res_double1", d1));
 	EXPECT_EQ(0, json_rpc_append_double(json_rpc, "res_double2", d2));
@@ -264,12 +268,14 @@ class AbusAttrTest : public AbusTest {
             AbusTest::SetUp();
 
 			m_int = INT_MAX;
+			m_llint = LLONG_MAX;
 			m_bool = true;
 			m_double = M_PI;
 			strncpy(m_str, abus_get_copyright(), sizeof(m_str));
 
 	        EXPECT_EQ(0, abus_decl_attr_int(&abus_, SVC_NAME, "int", &m_int, 0, NULL));
 	        EXPECT_EQ(0, abus_decl_attr_int(&abus_, SVC_NAME, "int_ro", &m_int, ABUS_RPC_RDONLY, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_llint(&abus_, SVC_NAME, "llint", &m_llint, 0, NULL));
 	        EXPECT_EQ(0, abus_decl_attr_bool(&abus_, SVC_NAME, "bool", &m_bool, 0, NULL));
 	        EXPECT_EQ(0, abus_decl_attr_double(&abus_, SVC_NAME, "double", &m_double, 0, NULL));
 	        EXPECT_EQ(0, abus_decl_attr_str(&abus_, SVC_NAME, "str", m_str, sizeof(m_str), 0, NULL));
@@ -278,6 +284,7 @@ class AbusAttrTest : public AbusTest {
 
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "int"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "int_ro"));
+			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "llint"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "bool"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "double"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "str"));
@@ -286,6 +293,7 @@ class AbusAttrTest : public AbusTest {
         }
 
 	    int m_int;
+	    long long m_llint;
 	    bool m_bool;
 	    double m_double;
 	    char m_str[256];
@@ -299,6 +307,7 @@ class AbusAutoAttrTest : public AbusTest {
 			// Auto-allocated attributes (i.e. no pointer)
 	        EXPECT_EQ(0, abus_decl_attr_int(&abus_, SVC_NAME, "int", NULL, 0, NULL));
 	        EXPECT_EQ(0, abus_decl_attr_int(&abus_, SVC_NAME, "int_ro", NULL, ABUS_RPC_RDONLY, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_llint(&abus_, SVC_NAME, "llint", NULL, 0, NULL));
 	        EXPECT_EQ(0, abus_decl_attr_bool(&abus_, SVC_NAME, "bool", NULL, 0, NULL));
 	        EXPECT_EQ(0, abus_decl_attr_double(&abus_, SVC_NAME, "double", NULL, 0, NULL));
 	        EXPECT_EQ(0, abus_decl_attr_str(&abus_, SVC_NAME, "str", NULL, 256, 0, NULL));
@@ -307,6 +316,7 @@ class AbusAutoAttrTest : public AbusTest {
 
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "int"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "int_ro"));
+			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "llint"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "bool"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "double"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "str"));
@@ -409,11 +419,13 @@ TEST_F(AbusJtypesTest, AllTypes)
 {
 	int a = INT_MAX, res_a;
     bool b = true, res_b;
+    long long ll = LLONG_MAX, res_ll;
     double d1 = M_PI, res_d1;
     double d2 = 3, res_d2;
     char res_s[512];
 
 	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "int", a));
+	EXPECT_EQ(0, json_rpc_append_llint(&json_rpc_, "llint", ll));
 	EXPECT_EQ(0, json_rpc_append_bool(&json_rpc_, "bool", b));
 	EXPECT_EQ(0, json_rpc_append_double(&json_rpc_, "double1", d1));
 	EXPECT_EQ(0, json_rpc_append_double(&json_rpc_, "double2", d2));
@@ -423,6 +435,7 @@ TEST_F(AbusJtypesTest, AllTypes)
 
     EXPECT_EQ(JSON_INT, json_rpc_get_type(&json_rpc_, "res_int"));
 	EXPECT_EQ(0, json_rpc_get_int(&json_rpc_, "res_int", &res_a));
+	EXPECT_EQ(0, json_rpc_get_llint(&json_rpc_, "res_llint", &res_ll));
 	EXPECT_EQ(0, json_rpc_get_bool(&json_rpc_, "res_bool", &res_b));
 	EXPECT_EQ(0, json_rpc_get_double(&json_rpc_, "res_double1", &res_d1));
 	EXPECT_EQ(0, json_rpc_get_double(&json_rpc_, "res_double2", &res_d2));
@@ -430,6 +443,7 @@ TEST_F(AbusJtypesTest, AllTypes)
 
 	EXPECT_EQ(a, res_a);
 	EXPECT_EQ(b, res_b);
+	EXPECT_EQ(ll, res_ll);
 	EXPECT_TRUE(d1-res_d1 < DEPSILON);
 	EXPECT_TRUE(d2-res_d2 < DEPSILON);
 	EXPECT_TRUE(strncmp(res_s, abus_get_copyright(), sizeof(res_s)) == 0);
@@ -609,32 +623,38 @@ TEST_F(AbusAttrTest, AllTypes) {
 TEST_F(AbusAutoAttrTest, AllTypes) {
 	int a;
     bool b;
+    long long ll;
     double d;
     char s[512];
 
 	// Rem: attributes were auto-allocated, initialized like in a bss
 
 	EXPECT_EQ(0, abus_attr_get_int(&abus_, SVC_NAME, "int", &a, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_get_llint(&abus_, SVC_NAME, "llint", &ll, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_get_bool(&abus_, SVC_NAME, "bool", &b, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_get_double(&abus_, SVC_NAME, "double", &d, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_get_str(&abus_, SVC_NAME, "str", s, sizeof(s), RPC_TIMEOUT));
 
 	EXPECT_EQ(a, 0);
+	EXPECT_EQ(ll, 0LL);
 	EXPECT_EQ(b, false);
 	EXPECT_EQ(d, 0.0);
 	EXPECT_TRUE(strncmp("", s, sizeof(s)) == 0);
 
 	EXPECT_EQ(0, abus_attr_set_int(&abus_, SVC_NAME, "int", -1, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_set_llint(&abus_, SVC_NAME, "llint", -2, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_set_bool(&abus_, SVC_NAME, "bool", true, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_set_double(&abus_, SVC_NAME, "double", M_E, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_set_str(&abus_, SVC_NAME, "str", abus_get_version(), RPC_TIMEOUT));
 
 	EXPECT_EQ(0, abus_attr_get_int(&abus_, SVC_NAME, "int", &a, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_get_llint(&abus_, SVC_NAME, "llint", &ll, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_get_bool(&abus_, SVC_NAME, "bool", &b, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_get_double(&abus_, SVC_NAME, "double", &d, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_get_str(&abus_, SVC_NAME, "str", s, sizeof(s), RPC_TIMEOUT));
 
 	EXPECT_EQ(a, -1);
+	EXPECT_EQ(ll, -2LL);
 	EXPECT_TRUE(b);
 	EXPECT_TRUE(M_E-d < DEPSILON);
 	EXPECT_TRUE(strncmp(abus_get_version(), s, sizeof(s)) == 0);
