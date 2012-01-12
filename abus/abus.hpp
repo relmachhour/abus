@@ -326,13 +326,13 @@ public:
         event_unsubscribe((_service_name), (_event_name), &(_obj)->_method##Wrapper, (void *)(_obj), (_timeout))
 
 	/*! Declare a new attribute of type integer in a service */
-	int decl_attr_int(const char *service_name, const char *attr_name, int *val, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
+	int decl_attr_int(const char *service_name, const char *attr_name, int *val = NULL, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
 		{ return abus_decl_attr_int(&m_abus, service_name, attr_name, val, flags, descr); }
 	/*! Declare a new attribute of type boolean in a service */
-	int decl_attr_bool(const char *service_name, const char *attr_name, bool *val, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
+	int decl_attr_bool(const char *service_name, const char *attr_name, bool *val = NULL, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
 		{ return abus_decl_attr_bool(&m_abus, service_name, attr_name, val, flags, descr); }
 	/*! Declare a new attribute of type double in a service */
-	int decl_attr_double(const char *service_name, const char *attr_name, double *val, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
+	int decl_attr_double(const char *service_name, const char *attr_name, double *val = NULL, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
 		{ return abus_decl_attr_double(&m_abus, service_name, attr_name, val, flags, descr); }
 	/*! Declare a new attribute of type string in a service */
 	int decl_attr_str(const char *service_name, const char *attr_name, char *val, size_t n, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)

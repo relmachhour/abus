@@ -27,7 +27,6 @@ int main(int argc, char **argv)
 	int i, ret;
 
 	int my_int = 42;
-	int my_other_int = -2;
 	int my_auto_count = 0;
 
 
@@ -41,7 +40,11 @@ int main(int argc, char **argv)
 	    return EXIT_FAILURE;
 	}
 
-	abus_decl_attr_int(&abus, servicename, "tree.some_other_int", &my_other_int,
+	/* No pointer is given for some_other_int, hence it will
+	   be auto-allocated by libabus, and initialized to zero.
+	   Access must be done through get and set.
+	 */
+	abus_decl_attr_int(&abus, servicename, "tree.some_other_int", NULL,
 					ABUS_RPC_FLAG_NONE,
 					"Some other integer, still for demo purpose");
 
