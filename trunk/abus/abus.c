@@ -1198,8 +1198,7 @@ void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
 			json_rpc_append_args(json_rpc, JSON_OBJECT_BEGIN, -1);
 
 			json_rpc_append_strn(json_rpc, "name", attr_name, hkeyl(service->attr_htab));
-			/* or field "readonly" ? */
-			json_rpc_append_int(json_rpc, "flags", attr->flags);
+			json_rpc_append_bool(json_rpc, "readonly", attr->flags & ABUS_RPC_RDONLY);
 			if (attr->descr)
 				json_rpc_append_str(json_rpc, "descr", attr->descr);
 
