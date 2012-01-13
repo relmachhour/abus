@@ -188,32 +188,48 @@ int json_rpc_is_req(json_rpc_t *json_rpc)
 		&& json_rpc->service_name && json_rpc->method_name;
 }
 
-static int json_print_val_callback(void *dest, const char *s, size_t length)
+struct jsprint_cb_user {
+	char *dest;
+	size_t remaining;
+};
+
+static int json_print_val_callback(void *user, const char *s, size_t length)
 {
-	char **d = dest;
+	struct jsprint_cb_user *jsprint_user = (struct jsprint_cb_user *)user;
+	size_t n;
 
-	memcpy(*d, s, length);
-	(*d) += length;
+	n = length > jsprint_user->remaining ? jsprint_user->remaining : length;
 
-	return length;
+	memcpy(jsprint_user->dest, s, n);
+	jsprint_user->dest += n;
+	jsprint_user->remaining -= n;
+
+	return n;
 }
 
 static int json_print_val(char *s, int len, const json_val_t *val)
 {
 	json_printer print;
+	struct jsprint_cb_user jsprint_user;
 	int ret;
-	char *p = s;
 
-	ret = json_print_init(&print, json_print_val_callback, &p);
+	if (len == 0)
+		return -ENOSPC;
+
+	jsprint_user.dest = s;
+	jsprint_user.remaining = len;
+	ret = json_print_init(&print, json_print_val_callback, &jsprint_user);
 	if (ret)
 		return ret;
 
 	ret = json_print_raw(&print, val->type, val->u.data, val->length);
 
-	assert(ret >= 0 && ret < len);
-	s[ret] = '\0';
-
 	json_print_free(&print);
+
+	if (ret < 0 || ret == len)
+		return ret == len ? -ENOSPC : ret;
+
+	s[ret] = '\0';
 
 	return ret;
 }
@@ -225,7 +241,8 @@ static char *msg_p(json_rpc_t *json_rpc)
 
 static int msg_rem(json_rpc_t *json_rpc)
 {
-	return json_rpc->msgbufsz - json_rpc->msglen - 1;
+	int rem = json_rpc->msgbufsz - json_rpc->msglen - 1;
+	return rem < 0 ? 0 : rem;
 }
 
 
@@ -478,10 +495,10 @@ int json_rpc_add_val(json_rpc_t *json_rpc, int type, const char *data, int lengt
 
 	if (!hadd(p_htab, json_rpc->last_param_key,
 							strlen(json_rpc->last_param_key), (void *)json_val))
-    {
+	{
 		/* duplicate */
 		return JSON_ERROR_CALLBACK;
-    }
+	}
 
 	json_rpc->last_param_key = NULL;
 
@@ -506,10 +523,10 @@ int json_rpc_add_array(json_rpc_t *json_rpc)
 
 	if (!hadd(json_rpc->params_htab, json_rpc->last_param_key,
 							strlen(json_rpc->last_param_key), (void *)json_val))
-    {
+	{
 		/* duplicate */
 		return JSON_ERROR_CALLBACK;
-    }
+	}
 
 	json_rpc->last_array = json_val;
 	json_rpc->last_param_key = NULL;
@@ -607,7 +624,7 @@ static int json_rpc_check_val_type(json_rpc_t *json_rpc, const char *name, json_
 		return JSONRPC_INVALID_METHOD;	/* wrong type */
 
 	if (!json_val->u.data ||
-            (type != JSON_STRING && json_val->length == 0))
+				(type != JSON_STRING && json_val->length == 0))
 		return JSONRPC_INTERNAL_ERROR;
 
 	return 0;
@@ -966,7 +983,7 @@ static int json_rpc_is_comma_needed(const json_rpc_t *json_rpc)
  */
 int json_rpc_append_int(json_rpc_t *json_rpc, const char *name, int val)
 {
-	if (json_rpc_is_comma_needed(json_rpc))
+	if (json_rpc_is_comma_needed(json_rpc) && msg_rem(json_rpc) >= 1)
 		json_rpc->msgbuf[json_rpc->msglen++] = ',';
 
 	json_rpc->msglen += snprintf(msg_p(json_rpc), msg_rem(json_rpc),
@@ -984,7 +1001,7 @@ int json_rpc_append_int(json_rpc_t *json_rpc, const char *name, int val)
  */
 int json_rpc_append_llint(json_rpc_t *json_rpc, const char *name, long long val)
 {
-	if (json_rpc_is_comma_needed(json_rpc))
+	if (json_rpc_is_comma_needed(json_rpc) && msg_rem(json_rpc) >= 1)
 		json_rpc->msgbuf[json_rpc->msglen++] = ',';
 
 	json_rpc->msglen += snprintf(msg_p(json_rpc), msg_rem(json_rpc),
@@ -1002,7 +1019,7 @@ int json_rpc_append_llint(json_rpc_t *json_rpc, const char *name, long long val)
  */
 int json_rpc_append_bool(json_rpc_t *json_rpc, const char *name, bool val)
 {
-	if (json_rpc_is_comma_needed(json_rpc))
+	if (json_rpc_is_comma_needed(json_rpc) && msg_rem(json_rpc) >= 1)
 		json_rpc->msgbuf[json_rpc->msglen++] = ',';
 
 	json_rpc->msglen += snprintf(msg_p(json_rpc), msg_rem(json_rpc),
@@ -1022,7 +1039,7 @@ int json_rpc_append_double(json_rpc_t *json_rpc, const char *name, double val)
 {
 	char s[24];
 
-	if (json_rpc_is_comma_needed(json_rpc))
+	if (json_rpc_is_comma_needed(json_rpc) && msg_rem(json_rpc) >= 1)
 		json_rpc->msgbuf[json_rpc->msglen++] = ',';
 
 	snprintf(s, sizeof(s)-3, "%.16g", val);
@@ -1043,7 +1060,7 @@ int json_rpc_append_double(json_rpc_t *json_rpc, const char *name, double val)
  */
 int json_rpc_append_null(json_rpc_t *json_rpc, const char *name)
 {
-	if (json_rpc_is_comma_needed(json_rpc))
+	if (json_rpc_is_comma_needed(json_rpc) && msg_rem(json_rpc) >= 1)
 		json_rpc->msgbuf[json_rpc->msglen++] = ',';
 
 	json_rpc->msglen += snprintf(msg_p(json_rpc), msg_rem(json_rpc),
@@ -1066,8 +1083,9 @@ int json_rpc_append_null(json_rpc_t *json_rpc, const char *name)
 int json_rpc_append_strn(json_rpc_t *json_rpc, const char *name, const char *val, size_t n)
 {
 	struct json_val str_val;
+	int ret;
 
-	if (json_rpc_is_comma_needed(json_rpc))
+	if (json_rpc_is_comma_needed(json_rpc) && msg_rem(json_rpc) >= 1)
 		json_rpc->msgbuf[json_rpc->msglen++] = ',';
 
 	json_rpc->msglen += snprintf(msg_p(json_rpc), msg_rem(json_rpc),
@@ -1076,7 +1094,11 @@ int json_rpc_append_strn(json_rpc_t *json_rpc, const char *name, const char *val
 	json_val_set_string(&str_val, (char *)val, n);
 
 	/* appropriate escaping */
-	json_rpc->msglen += json_print_val(msg_p(json_rpc), msg_rem(json_rpc), &str_val);
+	ret = json_print_val(msg_p(json_rpc), msg_rem(json_rpc), &str_val);
+	if (ret < 0)
+		return ret;
+
+	json_rpc->msglen += ret;
 
 	return 0;
 }
@@ -1104,14 +1126,21 @@ int json_rpc_append_strn(json_rpc_t *json_rpc, const char *name, const char *val
 int json_rpc_append_vargs(json_rpc_t *json_rpc, va_list ap)
 {
 	json_printer printer;
-	int ret, len;
+	struct jsprint_cb_user jsprint_user;
+	int ret, rem;
 	char *p;
 	int prev_c;
 	
 	p = msg_p(json_rpc);
-	len = msg_rem(json_rpc);
+	rem = msg_rem(json_rpc);
 
-	ret = json_print_init(&printer, json_print_val_callback, &p);
+	if (rem == 0)
+		return -ENOSPC;
+
+	jsprint_user.dest = p;
+	jsprint_user.remaining = rem;
+
+	ret = json_print_init(&printer, json_print_val_callback, &jsprint_user);
 	if (ret)
 		return ret;
 
@@ -1121,15 +1150,21 @@ int json_rpc_append_vargs(json_rpc_t *json_rpc, va_list ap)
 		prev_c = -1;
 
 	printer.enter_object = prev_c == '{' || prev_c == '[';
-   	printer.afterkey = prev_c == ':';
+	printer.afterkey = prev_c == ':';
 
 	ret = json_vprint_args(&printer, json_print_raw, ap);
 
-	assert(ret >= 0 && ret < len);
-	p[0] = '\0';
-	json_rpc->msglen += ret;
-
 	json_print_free(&printer);
+
+	if (ret == rem) {
+		json_rpc->msglen += ret;
+		return -ENOSPC;
+	}
+	if (ret < 0)
+		return ret;
+
+	p[ret] = '\0';
+	json_rpc->msglen += ret;
 
 	return 0;
 }
