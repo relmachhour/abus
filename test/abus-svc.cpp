@@ -52,7 +52,9 @@ class AbusTest : public testing::Test {
         virtual void TearDown() {
 	        EXPECT_EQ(0, abus_cleanup(&abus_));
         }
+
 	abus_t abus_;
+	static const int m_method_count = 4;
 
     abus_decl_method_member(AbusTest, svc_sum_cb) ;
     abus_decl_method_member(AbusTest, svc_jtypes_cb) ;
@@ -363,8 +365,9 @@ TEST_F(AbusReqTest, PlentyOfMethods) {
 	int res_value;
     char method_name[16];
     json_rpc_t json_rpc_introspect;
+    const int plenty_count = 64;
 
-    for (int i=0; i<64; i++) {
+    for (int i=0; i<plenty_count; i++) {
         sprintf(method_name, "sum%d", i);
 
         EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, method_name, this, svc_sum_cb,
@@ -388,6 +391,7 @@ TEST_F(AbusReqTest, PlentyOfMethods) {
     EXPECT_EQ(0, abus_request_method_init(&abus_, SVC_NAME, "*", &json_rpc_introspect));
 
     EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc_introspect, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
+    EXPECT_EQ(plenty_count+m_method_count, json_rpc_get_array_count(&json_rpc_introspect, "methods"));
 
     EXPECT_EQ(0, abus_request_method_cleanup(&abus_, &json_rpc_introspect));
 }
