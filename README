@@ -1,0 +1,20 @@
+A-Bus - a lightweight message bus system
+
+How to install from svn
+1) Install autotools, libtool, pkg-config, build-essential
+   For test framework: libgtest-dev >= 1.6.0
+      and pass --enable-test to configure script
+   For test FastCGI gateway: libfcgi-dev
+      and pass --enable-fcgi to configure script
+
+2) In main dir start
+    a) autoreconf -i --force
+    b) ./configure --prefix=/usr/local --enable-examples --enable-maintainer-mode
+    c) make
+    d) make install
+
+How to build tar package:
+=> Same as svn build, but skip 2.a) and maintainer-mode not necessary
+
+Project: http://code.google.com/p/exfat/
+Mailing list: http://groups.google.com/group/abus-discuss
