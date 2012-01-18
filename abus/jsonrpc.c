@@ -125,6 +125,7 @@ void json_rpc_cleanup(json_rpc_t *json_rpc)
 				while (hnext(h));
 				hdestroy(h);
 			}
+			free(val->u.htab_array);
 		} else if (val->u.data)
 			free(val->u.data);
 		free(val);
@@ -351,7 +352,7 @@ int json_rpc_parser_callback(void *userdata, int type, const char *data, size_t 
 	json_rpc_t *json_rpc = userdata;
 
 #if 0
-	LogDebug("atom: %d %*s\n", type, length, data);
+	LogDebug("atom: %d %.*s\n", type, length, data);
 #endif
 
 	switch (type) {
@@ -441,6 +442,9 @@ int json_rpc_parser_callback(void *userdata, int type, const char *data, size_t 
 	case JSON_FALSE:
 
 		if (!json_rpc->param_state && json_rpc->last_key_token == TOK_ID) {
+			/* TODO: double check response's id matches the request */
+			json_val_free(&json_rpc->id);
+
 			json_rpc->id.type = type;
 			json_rpc->id.length = length;
 			json_rpc->id.u.data = data ? strndup(data, length) : NULL;

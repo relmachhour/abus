@@ -298,7 +298,7 @@ class AbusAttrTest : public AbusTest {
 	    long long m_llint;
 	    bool m_bool;
 	    double m_double;
-	    char m_str[256];
+	    char m_str[512];
 };
 
 class AbusAutoAttrTest : public AbusTest {

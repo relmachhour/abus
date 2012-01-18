@@ -305,6 +305,16 @@ static int abus_resp_send(json_rpc_t *json_rpc)
 }
 
 
+static void thread_routine_free(void *arg)
+{
+	void **p = (void **)arg;
+
+	if (*p != NULL) {
+		free(*p);
+		*p = NULL;
+	}
+}
+
 /*
  \internal
  */
@@ -320,8 +330,11 @@ void *abus_thread_routine(void *arg)
 
 	buffer = malloc(JSONRPC_REQ_SZ_MAX);
 	if (!buffer) {
+		LogError("%s: allocation failed: %s", __func__, strerror(errno));
 		pthread_exit(NULL);
 	}
+
+	pthread_cleanup_push(thread_routine_free, &buffer);
 
 	while (1) {
 		struct sockaddr_un sock_src_addr;
@@ -344,10 +357,10 @@ void *abus_thread_routine(void *arg)
 			}
 			free(json_rpc);
 		}
-
 	}
 
-	free(buffer);
+	pthread_cleanup_pop(1);
+
 	return NULL;
 }
 
@@ -1299,6 +1312,7 @@ int abus_undecl_event(abus_t *abus, const char *service_name, const char *event_
 		free(hstuff(event->subscriber_htab));
 	}
 	while (hnext(event->subscriber_htab));
+	hdestroy(event->subscriber_htab);
 
 	if (event->descr)
 		free(event->descr);
@@ -1641,28 +1655,24 @@ static int attr_lookup(abus_t *abus, const char *service_name, const char *attr_
 }
 
 
-static void attr_append_type(json_rpc_t *json_rpc, const char *service_name, const char *attr_name, int type, const void *data)
+static int attr_append_type(json_rpc_t *json_rpc, const char *attr_name, int type, const void *data)
 {
 	switch(type) {
 	case JSON_INT:
-		json_rpc_append_int(json_rpc, attr_name, *(const int *)data);
-		break;
+		return json_rpc_append_int(json_rpc, attr_name, *(const int *)data);
 	case JSON_LLINT:
-		json_rpc_append_llint(json_rpc, attr_name, *(const long long *)data);
-		break;
+		return json_rpc_append_llint(json_rpc, attr_name, *(const long long *)data);
 	case JSON_FALSE:
 	case JSON_TRUE:
-		json_rpc_append_bool(json_rpc, attr_name, *(const bool *)data);
-		break;
+		return json_rpc_append_bool(json_rpc, attr_name, *(const bool *)data);
 	case JSON_FLOAT:
-		json_rpc_append_double(json_rpc, attr_name, *(const double *)data);
-		break;
+		return json_rpc_append_double(json_rpc, attr_name, *(const double *)data);
 	case JSON_STRING:
-		json_rpc_append_str(json_rpc, attr_name, data);
-		break;
+		return json_rpc_append_str(json_rpc, attr_name, data);
 	default:
-		json_rpc_set_error(json_rpc, JSONRPC_INTERNAL_ERROR, NULL);
+		return json_rpc_set_error(json_rpc, JSONRPC_INTERNAL_ERROR, NULL);
 	}
+	return -EINVAL;
 }
 
 static int attr_append(abus_t *abus, json_rpc_t *json_rpc, const char *service_name, const char *attr_name)
@@ -1672,10 +1682,8 @@ static int attr_append(abus_t *abus, json_rpc_t *json_rpc, const char *service_n
 	int ret, attr_name_len;
 
 	ret = attr_lookup(abus, service_name, attr_name, false, &service, &attr);
-	if (ret == 0) {
-		attr_append_type(json_rpc, service_name, attr_name, attr->ref.type, attr->ref.u.data);
-		return 0;
-	}
+	if (ret == 0)
+		return attr_append_type(json_rpc, attr_name, attr->ref.type, attr->ref.u.data);
 
 	attr_name_len = strlen(attr_name);
 	if (attr_name_len > 0 && attr_name[attr_name_len-1] != '.') {
@@ -1690,7 +1698,9 @@ static int attr_append(abus_t *abus, json_rpc_t *json_rpc, const char *service_n
 
 		if (!strncmp(key, attr_name, attr_name_len)) {
 			attr = hstuff(service->attr_htab);
-			attr_append_type(json_rpc, service_name, key, attr->ref.type, attr->ref.u.data);
+			ret = attr_append_type(json_rpc, key, attr->ref.type, attr->ref.u.data);
+			if (ret)
+				return ret;
 		}
 	}
 	while (hnext(service->attr_htab));
