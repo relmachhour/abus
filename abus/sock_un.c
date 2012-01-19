@@ -66,19 +66,19 @@ int un_sock_create(void)
 	snprintf(sockaddrun.sun_path, sizeof(sockaddrun.sun_path)-1,
 					"%s/_%d", abus_prefix, getpid());
 
-	if (bind(sock, (struct sockaddr *) &sockaddrun, SUN_LEN(&sockaddrun)) < 0)
-	{
-		ret = -errno;
-		LogError("%s: failed to bind server socket: %s", __func__, strerror(errno));
-		close(sock);
-		return ret;
-	}
-
 	/* So that we can re-bind to it without TIME_WAIT problems */
 	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse_addr, sizeof(reuse_addr)) < 0)
 	{
 		ret = -errno;
 		LogError("%s: failed to set SO_REUSEADDR option on server socket: %s", __func__, strerror(errno));
+		close(sock);
+		return ret;
+	}
+
+	if (bind(sock, (struct sockaddr *) &sockaddrun, SUN_LEN(&sockaddrun)) < 0)
+	{
+		ret = -errno;
+		LogError("%s: failed to bind server socket: %s", __func__, strerror(errno));
 		close(sock);
 		return ret;
 	}
