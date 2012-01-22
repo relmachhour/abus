@@ -570,16 +570,29 @@ static int event_lookup(abus_t *abus, const char *service_name, const char *even
 
 static void abus_call_callback(abus_method_t *method, json_rpc_t *json_rpc)
 {
-	if (!method->callback)
-		return;
+	if (method->callback) {
+		if (abus_method_is_excl(method))
+			pthread_mutex_lock(&method->excl_mutex);
 
-	if (abus_method_is_excl(method))
-		pthread_mutex_lock(&method->excl_mutex);
+		method->callback(json_rpc, method->arg);
 
-	method->callback(json_rpc, method->arg);
+		if (abus_method_is_excl(method))
+			pthread_mutex_unlock(&method->excl_mutex);
+	}
 
-	if (abus_method_is_excl(method))
-		pthread_mutex_lock(&method->excl_mutex);
+	if (method->flags & ABUS_RPC_ASYNC) {
+		json_rpc_t *req_json_rpc;
+
+		req_json_rpc = json_rpc->async_req_context;
+
+		pthread_mutex_lock(&req_json_rpc->mutex);
+		/* mark as executed through req_json_rpc->cb_context */
+		req_json_rpc->cb_context = NULL;
+		pthread_cond_broadcast(&req_json_rpc->cond);
+		/* release resp_handler helper */
+		free(method);
+		pthread_mutex_unlock(&req_json_rpc->mutex);
+	}
 }
 
 /*
@@ -591,7 +604,6 @@ static void *abus_threaded_rpc_routine(void *arg)
 	abus_method_t *method = (abus_method_t *)json_rpc->cb_context;
     int ret;
 
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	pthread_detach(pthread_self());
 
 	abus_call_callback(method, json_rpc);
@@ -611,11 +623,11 @@ static void *abus_threaded_rpc_routine(void *arg)
 	return NULL;
 }
 
-/* internal to libabus
+/* \internal to libabus
  * json_rpc is to be malloc'ed for ABUS_RPC_THREADED
  * TODO: there might be more than one call for subscribed events..
  */
-static int abus_service_rpc(abus_t *abus, json_rpc_t *json_rpc, abus_method_t *method)
+static int abus_do_rpc(abus_t *abus, json_rpc_t *json_rpc, abus_method_t *method)
 {
 	if (abus_method_is_threaded(method)) {
 		pthread_t th;
@@ -784,7 +796,7 @@ static int abus_req_track(abus_t *abus, json_rpc_t *json_rpc)
 	pthread_mutex_lock(&abus->mutex);
 
 	if (!abus->outstanding_req_htab)
-		abus->outstanding_req_htab = hcreate(2);
+		abus->outstanding_req_htab = hcreate(1);
 
 	/* no strndup() for key, since it shares the json_rpc memory */
 	hadd(abus->outstanding_req_htab, json_rpc->id.u.data, json_rpc->id.length, json_rpc);
@@ -823,13 +835,16 @@ static json_rpc_t *abus_req_untrack(abus_t *abus, const json_val_t *id_val)
   \param abus	pointer to A-Bus handle
   \param json_rpc pointer to an opaque handle of a JSON RPC
   \param[in] timeout waiting timeout in milliseconds
-  \return   0 if successful, non nul value otherwise
+  \return   0 if successful or reponse already received, non nul value otherwise
   \sa abus_request_method_invoke_async()
  */
 int abus_request_method_wait_async(abus_t *abus, json_rpc_t *json_rpc, int timeout)
 {
 	int ret;
 	struct timespec ts;
+
+	if (!json_rpc->cb_context)
+		return 0;
 
 	pthread_mutex_lock(&json_rpc->mutex);
 
@@ -843,13 +858,48 @@ int abus_request_method_wait_async(abus_t *abus, json_rpc_t *json_rpc, int timeo
 	}
 
 	ret = 0;
-	/* FIXME */
-	while (! (json_rpc->error_code) && ret == 0)
+	while (json_rpc->cb_context && ret == 0)
 			ret = pthread_cond_timedwait(&json_rpc->cond, &json_rpc->mutex, &ts);
+
 	pthread_mutex_unlock(&json_rpc->mutex);
 
 	if (ret != 0)
-		return ret;
+		return -ret;
+
+	return 0;
+}
+
+/*!
+	Cancel an asynchronous method request
+
+  \param abus	pointer to A-Bus handle
+  \param json_rpc pointer to an opaque handle of a JSON RPC
+  \return   0 if successful, non nul value otherwise
+  \sa abus_request_method_invoke_async()
+ */
+int abus_request_method_cancel_async(abus_t *abus, json_rpc_t *json_rpc)
+{
+	json_rpc_t *json_rpc_found;
+	abus_method_t *resp_handler = json_rpc->cb_context;
+
+	if (json_val_is_undef(&json_rpc->id) ||
+			(resp_handler && !(resp_handler->flags & ABUS_RPC_ASYNC)))
+		return -ENXIO;
+
+	json_rpc_found = abus_req_untrack(abus, &json_rpc->id);
+
+	if (json_rpc_found != json_rpc)
+		return -ENXIO;
+
+	pthread_mutex_lock(&json_rpc->mutex);
+	if (json_rpc->cb_context) {
+		free(json_rpc->cb_context);
+		json_rpc->cb_context = NULL;
+	    /* bust any abus_request_method_wait_async() waiting */
+		pthread_cond_broadcast(&json_rpc->cond);
+	}
+	/* TODO return code if nothing to cancel ? */
+	pthread_mutex_unlock(&json_rpc->mutex);
 
 	return 0;
 }
@@ -865,7 +915,7 @@ int abus_request_method_wait_async(abus_t *abus, json_rpc_t *json_rpc, int timeo
   \param[in] arg			opaque pointer value to be passed to callback. may be NULL.
   \return   0 if successful, non nul value otherwise
 
-  \sa abus_request_method_wait_async()
+  \sa abus_request_method_wait_async(), abus_request_method_cancel_async()
   \todo implement timeout callback
 */
 int abus_request_method_invoke_async(abus_t *abus, json_rpc_t *json_rpc, int timeout, abus_callback_t callback, int flags, void *arg)
@@ -881,7 +931,7 @@ int abus_request_method_invoke_async(abus_t *abus, json_rpc_t *json_rpc, int tim
 
 	resp_handler = calloc(1, sizeof(abus_method_t));
 	resp_handler->callback = callback;
-	resp_handler->flags = flags;
+	resp_handler->flags = (flags & ~ABUS_RPC_EXCL) | ABUS_RPC_ASYNC;
 	resp_handler->arg = arg;
 
 	json_rpc->cb_context = resp_handler;
@@ -951,9 +1001,10 @@ int abus_request_method_invoke(abus_t *abus, json_rpc_t *json_rpc, int flags, in
  */
 int abus_request_method_cleanup(abus_t *abus, json_rpc_t *json_rpc)
 {
-	json_rpc_cleanup(json_rpc);
+	/* potentially */
+	abus_request_method_cancel_async(abus, json_rpc);
 
-	/* TODO: abus_req_untrack() in case of async req ? */
+	json_rpc_cleanup(json_rpc);
 
 	return 0;
 }
@@ -968,10 +1019,8 @@ int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json
 	if (ret)
 		return ret;
 
-	if (sock_src_addr) {
-		memcpy(&json_rpc->sock_src_addr, sock_src_addr, sock_addrlen);
-		json_rpc->sock_addrlen = sock_addrlen;
-	}
+	memcpy(&json_rpc->sock_src_addr, sock_src_addr, sock_addrlen);
+	json_rpc->sock_addrlen = sock_addrlen;
 
 	json_rpc->sock = abus->sock;
 
@@ -984,7 +1033,7 @@ int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json
 	if (!json_rpc->error_code && json_rpc->service_name && json_rpc->method_name)
 	{
 		/* this is a request */
-		/* TODO: event & more than on cb possible */
+		/* TODO: more than one cb possible */
 
 		ret = method_lookup(abus, json_rpc->service_name, json_rpc->method_name, false, NULL, &method);
 		if (ret)
@@ -994,31 +1043,34 @@ int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json
 	
 		if (json_rpc->error_code == 0) {
 	
-			ret = abus_service_rpc(abus, json_rpc, method);
+			ret = abus_do_rpc(abus, json_rpc, method);
 	
-			/* no response for notification */
+			/* no response for notification or threaded methods */
+			if (abus_method_is_threaded(method))
+				return ret;
+
 			if (json_val_is_undef(&json_rpc->id)) {
 				json_rpc->msglen = 0;
 				json_rpc_cleanup(json_rpc);
-				return 0;
+				return ret;
 			}
 		}
 	}
 	else if (!json_val_is_undef(&json_rpc->id))
 	{
 		/* this is an async response */
-		/* TODO: threaded response */
 		json_rpc_t *req_json_rpc;
 
 		req_json_rpc = abus_req_untrack(abus, &json_rpc->id);
 	
 		if (req_json_rpc) {
 			method = req_json_rpc->cb_context;
+			json_rpc->async_req_context = req_json_rpc;
 
-			abus_service_rpc(abus, json_rpc, method);
-			json_rpc = req_json_rpc;
+			return abus_do_rpc(abus, json_rpc, method);
 		}
 
+		/* do not send anything */
 		json_rpc->msglen = 0;
 		json_rpc_cleanup(json_rpc);
 

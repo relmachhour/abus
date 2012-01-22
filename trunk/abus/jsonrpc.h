@@ -101,6 +101,7 @@ typedef struct json_rpc {
 	htab *pointed_htab;	/* array alias */
 	int sock;
 	void *cb_context;	/* method or response handler */
+	void *async_req_context;	/* async req in response rpc */
 	const char *evt_service_name;	/* event only */
 
 	pthread_cond_t cond;

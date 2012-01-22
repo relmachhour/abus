@@ -34,6 +34,7 @@ typedef void (*abus_callback_t)(json_rpc_t *json_rpc, void *arg);
 #define ABUS_RPC_EXCL		0x02
 #define ABUS_RPC_RDONLY		0x04
 #define ABUS_RPC_WITHOUTVAL	0x08
+#define ABUS_RPC_ASYNC		0x40	/* internal use */
 /* TODO flags:
 	VISIBILITY: process, network, default: host ?
 	NO_REPLY?
@@ -114,7 +115,7 @@ int abus_request_method_cleanup(abus_t *abus, json_rpc_t *json_rpc);
 /* asynchronous call, with callback upon response or timeout; callback can be threaded or not */
 int abus_request_method_invoke_async(abus_t *abus, json_rpc_t *json_rpc, int timeout, abus_callback_t callback, int flags, void *arg);
 int abus_request_method_wait_async(abus_t *abus, json_rpc_t *json_rpc, int timeout);
-/* TODO: int abus_request_method_cancel_async() ? */
+int abus_request_method_cancel_async(abus_t *abus, json_rpc_t *json_rpc);
 
 /* publish/subscribe */
 int abus_decl_event(abus_t *abus, const char *service_name, const char *event_name, const char *descr, const char *fmt);
@@ -172,6 +173,9 @@ int abus_forward_rpc(abus_t *abus, char *buffer, int *buflen, int flags, int tim
 /* To be used instead of abus_decl_method() */
 #define abus_decl_method_cxx(_abus, _service_name, _method_name, _obj, _method, _flags, descr, fmt, res_fmt) \
 		abus_decl_method((_abus), (_service_name), (_method_name), &(_obj)->_method##Wrapper, (_flags), (void *)(_obj), descr, fmt, res_fmt)
+
+#define abus_request_method_invoke_async_cxx(_abus, _json_rpc, _timeout, _obj, _method, _flags) \
+		abus_request_method_invoke_async((_abus), (_json_rpc), (_timeout), &(_obj)->_method##Wrapper, (_flags), (void *)(_obj))
 
 #endif	/* __cplusplus */
 
