@@ -15,6 +15,7 @@
 #include <limits.h>
 #include <errno.h>
 #include <math.h>
+#include <unistd.h>
 #include "abus.h"
 
 #include <gtest/gtest.h>
@@ -22,6 +23,11 @@
 #define RPC_TIMEOUT 1000 /* ms */
 #define SVC_NAME "gtestsvc"
 #define DEPSILON 1e-12
+
+static int msleep(int ms)
+{
+    return usleep(ms*1000);
+}
 
 class AbusTest : public testing::Test {
     protected:
@@ -50,6 +56,14 @@ class AbusTest : public testing::Test {
 					"msg:s:echoed message,msg_len:i:message length"));
         }
         virtual void TearDown() {
+			EXPECT_EQ(0, abus_undecl_method(&abus_, SVC_NAME, "sum"));
+			EXPECT_EQ(0, abus_undecl_method(&abus_, SVC_NAME, "jtypes"));
+			EXPECT_EQ(0, abus_undecl_method(&abus_, SVC_NAME, "sqr"));
+			// double undeclare
+			EXPECT_EQ(JSONRPC_NO_METHOD, abus_undecl_method(&abus_, SVC_NAME, "sqr"));
+			// no undeclare, to be catched by abus_cleanup()
+			//EXPECT_EQ(0, abus_undecl_method(&abus_, SVC_NAME, "echo"));
+
 	        EXPECT_EQ(0, abus_cleanup(&abus_));
         }
 
@@ -199,6 +213,7 @@ void AbusTest::svc_echo_cb(json_rpc_t *json_rpc)
 class AbusReqTest : public AbusTest {
     protected:
         virtual void SetUp() {
+            m_res_value = 0;
             AbusTest::SetUp();
 
 	        EXPECT_EQ(0, abus_request_method_init(&abus_, SVC_NAME, "sum", &json_rpc_));
@@ -210,8 +225,25 @@ class AbusReqTest : public AbusTest {
             AbusTest::TearDown();
         }
 
+        abus_decl_method_member(AbusReqTest, async_resp_cb);
+        abus_decl_method_member(AbusReqTest, svc_slow_sum_cb) ;
+        int m_res_value;
+
 	    json_rpc_t json_rpc_;
 };
+
+void AbusReqTest::async_resp_cb(json_rpc_t *json_rpc)
+{
+    EXPECT_EQ(0, json_rpc_get_int(json_rpc, "res_value", &m_res_value));
+}
+
+void AbusReqTest::svc_slow_sum_cb(json_rpc_t *json_rpc)
+{
+	// Give time to do abus_request_method_cancel_async()
+	msleep(400);
+
+	svc_sum_cb(json_rpc);
+}
 
 class AbusJtypesTest : public AbusTest {
     protected:
@@ -289,7 +321,10 @@ class AbusAttrTest : public AbusTest {
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "llint"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "bool"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "double"));
-			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "str"));
+			// double undeclare
+			EXPECT_EQ(JSONRPC_NO_METHOD, abus_undecl_attr(&abus_, SVC_NAME, "double"));
+			// no undeclare, to be catched by abus_cleanup()
+			// EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "str"));
 
             AbusTest::TearDown();
         }
@@ -328,7 +363,6 @@ class AbusAutoAttrTest : public AbusTest {
 };
 
 TEST_F(AbusReqTest, BasicSvc) {
-	int res_value;
 
 	/* pass 2 parameters: "a" and "b" */
 	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", 2));
@@ -336,13 +370,12 @@ TEST_F(AbusReqTest, BasicSvc) {
 
 	EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
 
-    EXPECT_EQ(0, json_rpc_get_int(&json_rpc_, "res_value", &res_value));
+    EXPECT_EQ(0, json_rpc_get_int(&json_rpc_, "res_value", &m_res_value));
 
-	EXPECT_EQ(2+3, res_value);
+	EXPECT_EQ(2+3, m_res_value);
 }
 
 TEST_F(AbusReqTest, PlentyOfParams) {
-	int res_value;
     char parm_name[16];
 
     for (int i=0; i<1024; i++) {
@@ -356,13 +389,12 @@ TEST_F(AbusReqTest, PlentyOfParams) {
 
 	EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
 
-    EXPECT_EQ(0, json_rpc_get_int(&json_rpc_, "res_value", &res_value));
+    EXPECT_EQ(0, json_rpc_get_int(&json_rpc_, "res_value", &m_res_value));
 
-	EXPECT_EQ(2+3, res_value);
+	EXPECT_EQ(2+3, m_res_value);
 }
 
 TEST_F(AbusReqTest, PlentyOfMethods) {
-	int res_value;
     char method_name[16];
     json_rpc_t json_rpc_introspect;
     const int plenty_count = 64;
@@ -383,9 +415,9 @@ TEST_F(AbusReqTest, PlentyOfMethods) {
 
 	EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
 
-    EXPECT_EQ(0, json_rpc_get_int(&json_rpc_, "res_value", &res_value));
+    EXPECT_EQ(0, json_rpc_get_int(&json_rpc_, "res_value", &m_res_value));
 
-	EXPECT_EQ(2+3, res_value);
+	EXPECT_EQ(2+3, m_res_value);
 
     /* Huge introspection */
     EXPECT_EQ(0, abus_request_method_init(&abus_, SVC_NAME, "*", &json_rpc_introspect));
@@ -397,18 +429,16 @@ TEST_F(AbusReqTest, PlentyOfMethods) {
 }
 
 TEST_F(AbusReqTest, MissingArg) {
-	int res_value;
 
 	/* pass only 1 parameter: "a", make "b" missing */
 	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", 2));
 
 	EXPECT_EQ(JSONRPC_INVALID_METHOD, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
 
-    EXPECT_EQ(JSONRPC_INVALID_METHOD, json_rpc_get_int(&json_rpc_, "res_value", &res_value));
+    EXPECT_EQ(JSONRPC_INVALID_METHOD, json_rpc_get_int(&json_rpc_, "res_value", &m_res_value));
 }
 
 TEST_F(AbusReqTest, InvalidType) {
-	int res_value;
 
 	/* pass 2 parameters: "a", and mis-typed "b" */
 	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", 2));
@@ -416,7 +446,75 @@ TEST_F(AbusReqTest, InvalidType) {
 
 	EXPECT_EQ(JSONRPC_INVALID_METHOD, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
 
-    EXPECT_EQ(JSONRPC_INVALID_METHOD, json_rpc_get_int(&json_rpc_, "res_value", &res_value));
+    EXPECT_EQ(JSONRPC_INVALID_METHOD, json_rpc_get_int(&json_rpc_, "res_value", &m_res_value));
+}
+
+TEST_F(AbusReqTest, AsyncRequest) {
+
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", -2));
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "b", 6));
+
+	EXPECT_EQ(0, abus_request_method_invoke_async_cxx(&abus_, &json_rpc_, RPC_TIMEOUT, this, async_resp_cb, ABUS_RPC_FLAG_NONE));
+	EXPECT_EQ(0, abus_request_method_wait_async(&abus_, &json_rpc_, RPC_TIMEOUT));
+
+	EXPECT_EQ(-2+6, m_res_value);
+}
+
+TEST_F(AbusReqTest, AsyncRequestLateWait) {
+
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", -2));
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "b", 6));
+
+	EXPECT_EQ(0, abus_request_method_invoke_async_cxx(&abus_, &json_rpc_, RPC_TIMEOUT, this, async_resp_cb, ABUS_RPC_FLAG_NONE));
+	msleep(300);
+	// Expect the response callback to be executed by then
+	EXPECT_EQ(0, abus_request_method_wait_async(&abus_, &json_rpc_, RPC_TIMEOUT));
+
+	EXPECT_EQ(-2+6, m_res_value);
+}
+
+TEST_F(AbusReqTest, AsyncReqThreadedResp) {
+
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", -20));
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "b", 60));
+
+	EXPECT_EQ(0, abus_request_method_invoke_async_cxx(&abus_, &json_rpc_, RPC_TIMEOUT, this, async_resp_cb, ABUS_RPC_THREADED));
+	EXPECT_EQ(0, abus_request_method_wait_async(&abus_, &json_rpc_, RPC_TIMEOUT));
+
+	EXPECT_EQ(-20+60, m_res_value);
+}
+
+TEST_F(AbusReqTest, LateCancelAsyncReq) {
+
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", -200));
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "b", 600));
+
+	EXPECT_EQ(0, abus_request_method_invoke_async_cxx(&abus_, &json_rpc_, RPC_TIMEOUT, this, async_resp_cb, ABUS_RPC_FLAG_NONE));
+	msleep(500);
+	EXPECT_EQ(-ENXIO, abus_request_method_cancel_async(&abus_, &json_rpc_));
+
+	EXPECT_EQ(-200+600, m_res_value);
+}
+
+TEST_F(AbusReqTest, CancelAsyncReq) {
+
+	// redeclare with a sloooww handler
+	EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "sum", this, svc_slow_sum_cb,
+					ABUS_RPC_FLAG_NONE,
+					"Compute slow summation of two integers",
+					"a:i:first operand,b:i:second operand",
+					"res_value:i:summation"));
+
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", 200));
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "b", -600));
+
+	EXPECT_EQ(0, abus_request_method_invoke_async_cxx(&abus_, &json_rpc_, RPC_TIMEOUT, this, async_resp_cb, ABUS_RPC_FLAG_NONE));
+	EXPECT_EQ(0, abus_request_method_cancel_async(&abus_, &json_rpc_));
+	EXPECT_EQ(0, abus_request_method_wait_async(&abus_, &json_rpc_, RPC_TIMEOUT));
+	msleep(500);
+
+	// no result
+	EXPECT_EQ(0, m_res_value);
 }
 
 TEST_F(AbusJtypesTest, AllTypes)
@@ -455,7 +553,7 @@ TEST_F(AbusJtypesTest, AllTypes)
 
 TEST_F(AbusArrayTest, SqrArray)
 {
-	int count, i, res_value;
+	int count, i, res_value = 0;
     const int array_count = 199;
 
 	/* pass 2 parameters: "k" and "my_array" */
@@ -505,7 +603,7 @@ TEST_F(AbusArrayTest, SqrArray)
 }
 
 TEST_F(AbusEchoTest, BasicEchoSvc) {
-	int res_value;
+	int res_value = -1;
 
 	/* pass 2 parameters: "a" and "b" */
 	EXPECT_EQ(0, json_rpc_append_str(&json_rpc_, "msg", "test"));
@@ -518,7 +616,7 @@ TEST_F(AbusEchoTest, BasicEchoSvc) {
 }
 
 TEST_F(AbusEchoTest, EmptyStringParam) {
-	int res_value;
+	int res_value = -1;
 
 	EXPECT_EQ(0, json_rpc_append_str(&json_rpc_, "msg", ""));
 
@@ -530,7 +628,7 @@ TEST_F(AbusEchoTest, EmptyStringParam) {
 }
 
 TEST_F(AbusEchoTest, SpecialCharStringParam) {
-	int res_value;
+	int res_value = -1;
 	size_t bufsnd_len, bufrcv_len;
     char bufsnd[512] = "FIXME", bufrcv[512];
     const int ascii_count = 127;
@@ -568,7 +666,7 @@ TEST_F(AbusEchoTest, SpecialCharStringParam) {
 }
 
 TEST_F(AbusEchoTest, BigEscapedCharStringParam) {
-	int res_value, bufsnd_len;
+	int res_value=-1, bufsnd_len;
     char bufsnd[JSONRPC_RESP_SZ_MAX/2], bufrcv[JSONRPC_RESP_SZ_MAX/2];
 
     // to-be-escaped char
@@ -703,8 +801,7 @@ TEST_F(AbusTest, NoMethod) {
 	EXPECT_EQ(0, abus_request_method_cleanup(&abus_, &json_rpc));
 }
 
-TEST_F(AbusTest, MethodRedefinition) {
-	int res_value;
+TEST_F(AbusReqTest, MethodRedefinition) {
 
 	// declare first "sum" with another callback
 	EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "sum", this, svc_jtypes_cb,
@@ -720,27 +817,60 @@ TEST_F(AbusTest, MethodRedefinition) {
 					"a:i:first operand,b:i:second operand",
 					"res_value:i:summation"));
 
-	json_rpc_t json_rpc;
-
-	EXPECT_EQ(0, abus_request_method_init(&abus_, SVC_NAME, "sum", &json_rpc));
-
 	/* pass 2 parameters: "a" and "b" */
-	EXPECT_EQ(0, json_rpc_append_int(&json_rpc, "a", 2));
-	EXPECT_EQ(0, json_rpc_append_int(&json_rpc, "b", 3));
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", 2));
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "b", 3));
 
-	EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
 
-	EXPECT_EQ(0, json_rpc_get_int(&json_rpc, "res_value", &res_value));
+	EXPECT_EQ(0, json_rpc_get_int(&json_rpc_, "res_value", &m_res_value));
 
-	EXPECT_EQ(2+3, res_value);
-
-	EXPECT_EQ(0, abus_request_method_cleanup(&abus_, &json_rpc));
+	EXPECT_EQ(2+3, m_res_value);
 }
 
+TEST_F(AbusReqTest, ThreadedMethod) {
+
+	// redeclare threaded
+	EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "sum", this, svc_sum_cb,
+					ABUS_RPC_THREADED,
+					"Compute summation of two integers, threaded callback",
+					"a:i:first operand,b:i:second operand",
+					"res_value:i:summation"));
+
+	/* pass 2 parameters: "a" and "b" */
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", 20));
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "b", 30));
+
+	EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
+
+	EXPECT_EQ(0, json_rpc_get_int(&json_rpc_, "res_value", &m_res_value));
+
+	EXPECT_EQ(20+30, m_res_value);
+}
+
+TEST_F(AbusReqTest, ThreadedExclMethod) {
+
+	// redeclare threaded/Excl
+	EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "sum", this, svc_sum_cb,
+					ABUS_RPC_THREADED|ABUS_RPC_EXCL,
+					"Compute summation of two integers, threaded/Excl callback",
+					"a:i:first operand,b:i:second operand",
+					"res_value:i:summation"));
+
+	/* pass 2 parameters: "a" and "b" */
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", 200));
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "b", 300));
+
+	EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
+
+	EXPECT_EQ(0, json_rpc_get_int(&json_rpc_, "res_value", &m_res_value));
+
+	EXPECT_EQ(200+300, m_res_value);
+}
 
 // TODO:
-// - plenty of async reqs
-// - http://code.google.com/p/abus/wiki/CornerCases (abus_undecl_method, ..)
+// - plenty of async reqs (and with ABUS_RPC_EXCL)
+// - http://code.google.com/p/abus/wiki/CornerCases
 // - events, abus.hpp, introspect
 // - test all flags
 

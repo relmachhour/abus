@@ -83,6 +83,7 @@ void json_val_free(json_val_t *json_val)
 		free(json_val->u.data);
 		json_val->u.data = NULL;
 	}
+	json_val->type = JSON_NONE;
 }
 
 int json_rpc_init(json_rpc_t *json_rpc)
@@ -95,11 +96,20 @@ int json_rpc_init(json_rpc_t *json_rpc)
 	json_rpc->parsing_status = PARSING_UNKNOWN;
 	json_rpc->params_htab = hcreate(3);
 
+	pthread_mutex_init(&json_rpc->mutex, NULL);
+	pthread_cond_init(&json_rpc->cond, NULL);
+
 	return 0;
 }
 
 void json_rpc_cleanup(json_rpc_t *json_rpc)
 {
+	if (!json_rpc->params_htab)
+		return;
+
+	pthread_cond_destroy(&json_rpc->cond);
+	pthread_mutex_destroy(&json_rpc->mutex);
+
 	if (hfirst(json_rpc->params_htab)) do
 	{
 		json_val_t *val;
@@ -132,6 +142,7 @@ void json_rpc_cleanup(json_rpc_t *json_rpc)
 	}
 	while (hnext(json_rpc->params_htab));
 	hdestroy(json_rpc->params_htab);
+	json_rpc->params_htab = NULL;
 
 	if (json_rpc->service_name)
 		free(json_rpc->service_name);

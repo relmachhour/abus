@@ -202,9 +202,13 @@ public:
 	int invokeAsync(int flags, int timeout, abus_callback_t callback, void *arg)
 		{ return abus_request_method_invoke_async(m_abus, m_json_rpc, timeout, callback, flags, arg); }
 
-	/*! Wait of the asynchronously invoked RPC to complete */
+	/*! Wait for the asynchronously invoked RPC to complete */
 	int waitAsync(int timeout)
 		{ return abus_request_method_wait_async(m_abus, m_json_rpc, timeout); }
+
+	/*! Cancel the asynchronously invoked RPC */
+	int cancelAsync(void)
+		{ return abus_request_method_cancel_async(m_abus, m_json_rpc); }
 
 	/*! Append to a RPC an attribute
 		\return	0	if successful, non nul value otherwise
