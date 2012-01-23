@@ -154,6 +154,7 @@ int abus_init(abus_t *abus)
  */
 static int abus_launch_thread_ondemand(abus_t *abus)
 {
+	pthread_attr_t attr;
 	int ret;
 
 	/* launched already ? */
@@ -164,15 +165,19 @@ static int abus_launch_thread_ondemand(abus_t *abus)
 	if (abus->sock < 0)
 		return abus->sock;
 
-	/*
-	 TODO: a special for client-only synchronous usage, without a-bus thread ?
-	 */
-	ret = pthread_create(&abus->srv_thread, NULL, &abus_thread_routine, abus);
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+
+	ret = pthread_create(&abus->srv_thread, &attr, &abus_thread_routine, abus);
 	if (ret != 0)
 	{
 		LogError("%s: pthread_create() failed: %s", __func__, strerror(ret));
+		pthread_attr_destroy(&attr);
 		return -ret;
 	}
+
+	pthread_attr_destroy(&attr);
+
 	return 0;
 }
 
@@ -326,7 +331,6 @@ void *abus_thread_routine(void *arg)
 	json_rpc_t *json_rpc;
 
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-	pthread_detach(pthread_self());
 
 	buffer = malloc(JSONRPC_REQ_SZ_MAX);
 	if (!buffer) {
@@ -604,8 +608,6 @@ static void *abus_threaded_rpc_routine(void *arg)
 	abus_method_t *method = (abus_method_t *)json_rpc->cb_context;
     int ret;
 
-	pthread_detach(pthread_self());
-
 	abus_call_callback(method, json_rpc);
 
 	if (json_rpc->service_name && json_rpc->method_name &&
@@ -630,17 +632,24 @@ static void *abus_threaded_rpc_routine(void *arg)
 static int abus_do_rpc(abus_t *abus, json_rpc_t *json_rpc, abus_method_t *method)
 {
 	if (abus_method_is_threaded(method)) {
+		pthread_attr_t attr;
 		pthread_t th;
 		int ret;
 
 		json_rpc->cb_context = method;
 
-		ret = pthread_create(&th, NULL, &abus_threaded_rpc_routine, json_rpc);
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+
+		ret = pthread_create(&th, &attr, &abus_threaded_rpc_routine, json_rpc);
 		if (ret != 0)
 		{
 			LogError("%s: pthread_create() failed: %s", __func__, strerror(ret));
+			pthread_attr_destroy(&attr);
 			return -ret;
 		}
+
+		pthread_attr_destroy(&attr);
 	} else {
 		abus_call_callback(method, json_rpc);
 	}
