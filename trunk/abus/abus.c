@@ -193,10 +193,14 @@ static int abus_launch_thread_ondemand(abus_t *abus)
  */
 int abus_cleanup(abus_t *abus)
 {
-	/* TODO: stop abus thread */
-	pthread_cancel(abus->srv_thread);
+	if (abus->sock != -1) {
+		/* stop abus thread */
+		pthread_cancel(abus->srv_thread);
 
-	un_sock_close(abus->sock);
+		un_sock_close(abus->sock);
+
+		abus->sock = -1;
+	}
 
 	/* delete service method_htab */
 	if (abus->service_htab) {
