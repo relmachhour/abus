@@ -113,14 +113,19 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 {
         abus_t abus;
         <span class="keywordtype">char</span> s[128];
+        <span class="keywordtype">int</span> ret;
 
         <a name="a0"></a><a class="code" href="group__abus.html#gae6978d51da337838da12bca1c2c27659" title="Initialize for A-Bus operation.">abus_init</a>(&amp;abus);
 
 <span class="preprocessor">#define MYSVCNAME &quot;examplesvc&quot;</span>
 <span class="preprocessor"></span><span class="preprocessor">#define MYEVTNAME &quot;enter_pressed&quot;</span>
-<span class="preprocessor"></span>        <a name="a1"></a><a class="code" href="group__abus.html#ga49fee4614741a85a70c4fb6de11af9d8" title="Decalare an A-Bus event.">abus_decl_event</a>(&amp;abus, MYSVCNAME, MYEVTNAME,
+<span class="preprocessor"></span>        ret = <a name="a1"></a><a class="code" href="group__abus.html#ga49fee4614741a85a70c4fb6de11af9d8" title="Decalare an A-Bus event.">abus_decl_event</a>(&amp;abus, MYSVCNAME, MYEVTNAME,
                                         <span class="stringliteral">&quot;Event sent each time the ENTER key is press. Serves as publish/subscribe example.&quot;</span>,
                                         <span class="stringliteral">&quot;typed_char:s:keys pressed before the ENTER key&quot;</span>);
+        <span class="keywordflow">if</span> (ret != 0) {
+            <a name="a2"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+            <span class="keywordflow">return</span> EXIT_FAILURE;
+        }
 
         <span class="comment">/* cheap event generator: press ENTER key on stdin</span>
 <span class="comment">           Attached to the event, the chars typed in before the ENTER key</span>
@@ -130,13 +135,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
                 json_rpc_t json_rpc;
 
                 chomp(s);
-                <a name="a2"></a><a class="code" href="group__abus.html#gaf752f471ab94e0c086f0c931c521f95f" title="Initialize a new RPC to be published by a service.">abus_request_event_init</a>(&amp;abus, MYSVCNAME, MYEVTNAME, &amp;json_rpc);
+                <a name="a3"></a><a class="code" href="group__abus.html#gaf752f471ab94e0c086f0c931c521f95f" title="Initialize a new RPC to be published by a service.">abus_request_event_init</a>(&amp;abus, MYSVCNAME, MYEVTNAME, &amp;json_rpc);
                 json_rpc_append_str(&amp;json_rpc, <span class="stringliteral">&quot;typed_char&quot;</span>, s);
-                <a name="a3"></a><a class="code" href="group__abus.html#ga460695254c43fd31a2c0ad17abeb213c" title="Publish (i.e.">abus_request_event_publish</a>(&amp;abus, &amp;json_rpc, 0);
-                <a name="a4"></a><a class="code" href="group__abus.html#gab4fa1a2fcf76113395ee4f2d2b701f1a" title="Release ressources associated with a past event RPC.">abus_request_event_cleanup</a>(&amp;abus, &amp;json_rpc);
+                <a name="a4"></a><a class="code" href="group__abus.html#ga460695254c43fd31a2c0ad17abeb213c" title="Publish (i.e.">abus_request_event_publish</a>(&amp;abus, &amp;json_rpc, 0);
+                <a name="a5"></a><a class="code" href="group__abus.html#gab4fa1a2fcf76113395ee4f2d2b701f1a" title="Release ressources associated with a past event RPC.">abus_request_event_cleanup</a>(&amp;abus, &amp;json_rpc);
         }
 
-        <a name="a5"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+        <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
 
         <span class="keywordflow">return</span> EXIT_SUCCESS;
 }
@@ -146,7 +151,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Tue Jan 3 2012 19:13:10 for A-Bus Library by&#160;
+      <li class="footer">Generated on Tue Jan 31 2012 12:40:22 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

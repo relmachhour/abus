@@ -101,6 +101,8 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize for request method, client side.  <a href="#gacd0f9150830116ff3525cf6c7e05478f"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaefbdffce700658ec7b8ec72ed6911cae">abus_request_method_wait_async</a> (abus_t *abus, json_rpc_t *json_rpc, int timeout)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for an asynchronous method request.  <a href="#gaefbdffce700658ec7b8ec72ed6911cae"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga7db4e3e3bb45d805362783b2de676d5d">abus_request_method_cancel_async</a> (abus_t *abus, json_rpc_t *json_rpc)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Cancel an asynchronous method request.  <a href="#ga7db4e3e3bb45d805362783b2de676d5d"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gacb221ecd41f014b38bb3a4055111e39d">abus_request_method_invoke_async</a> (abus_t *abus, json_rpc_t *json_rpc, int timeout, abus_callback_t callback, int flags, void *arg)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Asynchronous invocation of a RPC.  <a href="#gacb221ecd41f014b38bb3a4055111e39d"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gae11f19e9033b6537259a125f4b8c9b21">abus_request_method_invoke</a> (abus_t *abus, json_rpc_t *json_rpc, int flags, int timeout)</td></tr>
@@ -125,47 +127,40 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Unregister callback for event notification and send unsubscription to service.  <a href="#gaa04d46deeba36cd917dfaf8531ca2dde"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaa0f2e43c6181c19796f6473d91a79351">abus_append_attr</a> (abus_t *abus, json_rpc_t *json_rpc, const char *service_name, const char *attr_name)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Append to a RPC a new parameter and its value from a declared attribute.  <a href="#gaa0f2e43c6181c19796f6473d91a79351"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gac05c38811d56e11b1b9fe5b5ab32a0f4"></a><!-- doxytag: member="abus::abus_decl_attr_int" ref="gac05c38811d56e11b1b9fe5b5ab32a0f4" args="(abus_t *abus, const char *service_name, const char *attr_name, int *val, int flags, const char *descr)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gac05c38811d56e11b1b9fe5b5ab32a0f4">abus_decl_attr_int</a> (abus_t *abus, const char *service_name, const char *attr_name, int *val, int flags, const char *descr)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare an attribute of type integer in a service. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga92bfe8373ec328f77a96e45fd9729023"></a><!-- doxytag: member="abus::abus_decl_attr_bool" ref="ga92bfe8373ec328f77a96e45fd9729023" args="(abus_t *abus, const char *service_name, const char *attr_name, bool *val, int flags, const char *descr)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga92bfe8373ec328f77a96e45fd9729023">abus_decl_attr_bool</a> (abus_t *abus, const char *service_name, const char *attr_name, bool *val, int flags, const char *descr)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare an attribute of type bool in a service. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga32cf5b53d95a933fe061c25fbabd7eeb"></a><!-- doxytag: member="abus::abus_decl_attr_double" ref="ga32cf5b53d95a933fe061c25fbabd7eeb" args="(abus_t *abus, const char *service_name, const char *attr_name, double *val, int flags, const char *descr)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga32cf5b53d95a933fe061c25fbabd7eeb">abus_decl_attr_double</a> (abus_t *abus, const char *service_name, const char *attr_name, double *val, int flags, const char *descr)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare an attribute of type double in a service. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga25b1de6be0b418484f0e1bee1e164e38"></a><!-- doxytag: member="abus::abus_decl_attr_str" ref="ga25b1de6be0b418484f0e1bee1e164e38" args="(abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t n, int flags, const char *descr)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga25b1de6be0b418484f0e1bee1e164e38">abus_decl_attr_str</a> (abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t n, int flags, const char *descr)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare an attribute of type string in a service. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gac05c38811d56e11b1b9fe5b5ab32a0f4">abus_decl_attr_int</a> (abus_t *abus, const char *service_name, const char *attr_name, int *val, int flags, const char *descr)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare an attribute of type integer in a service.  <a href="#gac05c38811d56e11b1b9fe5b5ab32a0f4"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga75b5b9c9e600647a9a41d880b7e15d44">abus_decl_attr_llint</a> (abus_t *abus, const char *service_name, const char *attr_name, long long *val, int flags, const char *descr)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare an attribute of type long long integer in a service.  <a href="#ga75b5b9c9e600647a9a41d880b7e15d44"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga92bfe8373ec328f77a96e45fd9729023">abus_decl_attr_bool</a> (abus_t *abus, const char *service_name, const char *attr_name, bool *val, int flags, const char *descr)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare an attribute of type bool in a service.  <a href="#ga92bfe8373ec328f77a96e45fd9729023"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga32cf5b53d95a933fe061c25fbabd7eeb">abus_decl_attr_double</a> (abus_t *abus, const char *service_name, const char *attr_name, double *val, int flags, const char *descr)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare an attribute of type double in a service.  <a href="#ga32cf5b53d95a933fe061c25fbabd7eeb"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga25b1de6be0b418484f0e1bee1e164e38">abus_decl_attr_str</a> (abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t n, int flags, const char *descr)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare an attribute of type string in a service.  <a href="#ga25b1de6be0b418484f0e1bee1e164e38"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga15efae51978fada3be4df54c1a266320">abus_undecl_attr</a> (abus_t *abus, const char *service_name, const char *attr_name)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Undeclare an A-Bus attribute.  <a href="#ga15efae51978fada3be4df54c1a266320"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga51fd73ca0d236c813589036a8d1b72a2"></a><!-- doxytag: member="abus::abus_attr_changed" ref="ga51fd73ca0d236c813589036a8d1b72a2" args="(abus_t *abus, const char *service_name, const char *attr_name)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga51fd73ca0d236c813589036a8d1b72a2">abus_attr_changed</a> (abus_t *abus, const char *service_name, const char *attr_name)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Notify the value of an attribute has changed. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga9491b55fcd9384d8151aa348369c6f33"></a><!-- doxytag: member="abus::abus_attr_get_int" ref="ga9491b55fcd9384d8151aa348369c6f33" args="(abus_t *abus, const char *service_name, const char *attr_name, int *val, int timeout)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga9491b55fcd9384d8151aa348369c6f33">abus_attr_get_int</a> (abus_t *abus, const char *service_name, const char *attr_name, int *val, int timeout)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of an integer attribute from a service. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga1758f4037abde07d3132d53959e64c4e"></a><!-- doxytag: member="abus::abus_attr_get_bool" ref="ga1758f4037abde07d3132d53959e64c4e" args="(abus_t *abus, const char *service_name, const char *attr_name, bool *val, int timeout)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga1758f4037abde07d3132d53959e64c4e">abus_attr_get_bool</a> (abus_t *abus, const char *service_name, const char *attr_name, bool *val, int timeout)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of an boolean attribute from a service. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga8b07df28a6d5d15fc2fcb6e5ab717b4d"></a><!-- doxytag: member="abus::abus_attr_get_double" ref="ga8b07df28a6d5d15fc2fcb6e5ab717b4d" args="(abus_t *abus, const char *service_name, const char *attr_name, double *val, int timeout)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga8b07df28a6d5d15fc2fcb6e5ab717b4d">abus_attr_get_double</a> (abus_t *abus, const char *service_name, const char *attr_name, double *val, int timeout)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of an double float attribute from a service. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaffb8f89dfeb4f383f4ac7eb4d76dc18a"></a><!-- doxytag: member="abus::abus_attr_get_str" ref="gaffb8f89dfeb4f383f4ac7eb4d76dc18a" args="(abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t len, int timeout)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaffb8f89dfeb4f383f4ac7eb4d76dc18a">abus_attr_get_str</a> (abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t len, int timeout)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of an string attribute from a service. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga631f6a06af0a568c5c29f1af6d5d7d7d"></a><!-- doxytag: member="abus::abus_attr_set_int" ref="ga631f6a06af0a568c5c29f1af6d5d7d7d" args="(abus_t *abus, const char *service_name, const char *attr_name, int val, int timeout)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga631f6a06af0a568c5c29f1af6d5d7d7d">abus_attr_set_int</a> (abus_t *abus, const char *service_name, const char *attr_name, int val, int timeout)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of an integer attribute in a service. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga44074a1aa0bead1689f0012d2b4f95fa"></a><!-- doxytag: member="abus::abus_attr_set_bool" ref="ga44074a1aa0bead1689f0012d2b4f95fa" args="(abus_t *abus, const char *service_name, const char *attr_name, bool val, int timeout)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga44074a1aa0bead1689f0012d2b4f95fa">abus_attr_set_bool</a> (abus_t *abus, const char *service_name, const char *attr_name, bool val, int timeout)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of an boolean attribute in a service. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga5334307db5786ce3c83780787d6e75dd"></a><!-- doxytag: member="abus::abus_attr_set_double" ref="ga5334307db5786ce3c83780787d6e75dd" args="(abus_t *abus, const char *service_name, const char *attr_name, double val, int timeout)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga5334307db5786ce3c83780787d6e75dd">abus_attr_set_double</a> (abus_t *abus, const char *service_name, const char *attr_name, double val, int timeout)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of an double float attribute in a service. <br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga7172d25486164f70c9a036c0d4ef0e2d"></a><!-- doxytag: member="abus::abus_attr_set_str" ref="ga7172d25486164f70c9a036c0d4ef0e2d" args="(abus_t *abus, const char *service_name, const char *attr_name, const char *val, int timeout)" -->
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga7172d25486164f70c9a036c0d4ef0e2d">abus_attr_set_str</a> (abus_t *abus, const char *service_name, const char *attr_name, const char *val, int timeout)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of an string attribute in a service. <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga51fd73ca0d236c813589036a8d1b72a2">abus_attr_changed</a> (abus_t *abus, const char *service_name, const char *attr_name)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Notify that the value of an attribute has changed.  <a href="#ga51fd73ca0d236c813589036a8d1b72a2"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga9491b55fcd9384d8151aa348369c6f33">abus_attr_get_int</a> (abus_t *abus, const char *service_name, const char *attr_name, int *val, int timeout)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of an integer attribute from a service.  <a href="#ga9491b55fcd9384d8151aa348369c6f33"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaf6d92f75005f5abe1dbed071dbdffa1e">abus_attr_get_llint</a> (abus_t *abus, const char *service_name, const char *attr_name, long long *val, int timeout)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a long long integer attribute from a service.  <a href="#gaf6d92f75005f5abe1dbed071dbdffa1e"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga1758f4037abde07d3132d53959e64c4e">abus_attr_get_bool</a> (abus_t *abus, const char *service_name, const char *attr_name, bool *val, int timeout)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of an boolean attribute from a service.  <a href="#ga1758f4037abde07d3132d53959e64c4e"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga8b07df28a6d5d15fc2fcb6e5ab717b4d">abus_attr_get_double</a> (abus_t *abus, const char *service_name, const char *attr_name, double *val, int timeout)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of an double float attribute from a service.  <a href="#ga8b07df28a6d5d15fc2fcb6e5ab717b4d"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaffb8f89dfeb4f383f4ac7eb4d76dc18a">abus_attr_get_str</a> (abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t len, int timeout)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of an string attribute from a service.  <a href="#gaffb8f89dfeb4f383f4ac7eb4d76dc18a"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga631f6a06af0a568c5c29f1af6d5d7d7d">abus_attr_set_int</a> (abus_t *abus, const char *service_name, const char *attr_name, int val, int timeout)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of an integer attribute in a service.  <a href="#ga631f6a06af0a568c5c29f1af6d5d7d7d"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaa11a204a8c6ca67627232093c9b7cac1">abus_attr_set_llint</a> (abus_t *abus, const char *service_name, const char *attr_name, long long val, int timeout)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of a long long integer attribute in a service.  <a href="#gaa11a204a8c6ca67627232093c9b7cac1"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga44074a1aa0bead1689f0012d2b4f95fa">abus_attr_set_bool</a> (abus_t *abus, const char *service_name, const char *attr_name, bool val, int timeout)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of an boolean attribute in a service.  <a href="#ga44074a1aa0bead1689f0012d2b4f95fa"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga5334307db5786ce3c83780787d6e75dd">abus_attr_set_double</a> (abus_t *abus, const char *service_name, const char *attr_name, double val, int timeout)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of an double float attribute in a service.  <a href="#ga5334307db5786ce3c83780787d6e75dd"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga7172d25486164f70c9a036c0d4ef0e2d">abus_attr_set_str</a> (abus_t *abus, const char *service_name, const char *attr_name, const char *val, int timeout)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of an string attribute in a service.  <a href="#ga7172d25486164f70c9a036c0d4ef0e2d"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga0cb189ce9ecc328cf0369725ffbbee3a">abus_attr_subscribe_onchange</a> (abus_t *abus, const char *service_name, const char *attr_name, abus_callback_t callback, int flags, void *arg, int timeout)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Subscribe to changes of the values of attributes in a service.  <a href="#ga0cb189ce9ecc328cf0369725ffbbee3a"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaa9ef541e1dde4c866f65406998ea5b26">abus_attr_unsubscribe_onchange</a> (abus_t *abus, const char *service_name, const char *attr_name, abus_callback_t callback, void *arg, int timeout)</td></tr>
@@ -174,12 +169,16 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the JSON RPC type of a paramter.  <a href="#ga3357cd9cc36c9554c0cf0cfbf2d97b1d"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490">json_rpc_get_int</a> (json_rpc_t *json_rpc, const char *name, int *val)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a parameter of type integer from a RPC.  <a href="#gaa3ade1d3f1b3a1c00fa519f4d1c9b490"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga7d6eece6436d308b300cf0c01d47e5d7">json_rpc_get_llint</a> (json_rpc_t *json_rpc, const char *name, long long *val)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a parameter of type long long integer from a RPC.  <a href="#ga7d6eece6436d308b300cf0c01d47e5d7"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga1ffe2527dd20e8683f90c0ee36913723">json_rpc_get_bool</a> (json_rpc_t *json_rpc, const char *name, bool *val)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a parameter of type boolean from a RPC.  <a href="#ga1ffe2527dd20e8683f90c0ee36913723"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaa2667fc3c2c89ee172cf3d2a88e98761">json_rpc_get_double</a> (json_rpc_t *json_rpc, const char *name, double *val)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a parameter of type double float from a RPC.  <a href="#gaa2667fc3c2c89ee172cf3d2a88e98761"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga07761e685a5f94ea04afd81af4b341f1">json_rpc_get_strn</a> (json_rpc_t *json_rpc, const char *name, char *val, size_t *n)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a parameter of type string from a RPC.  <a href="#ga07761e685a5f94ea04afd81af4b341f1"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga19a74e67cf034b399c9f113c31a931a8">json_rpc_get_strp</a> (json_rpc_t *json_rpc, const char *name, const char **pval, size_t *n)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a pointer to the value of a parameter of type string from a RPC.  <a href="#ga19a74e67cf034b399c9f113c31a931a8"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga86dff6d7ab2a107fe481a22e713bd0f7">json_rpc_get_str</a> (json_rpc_t *json_rpc, const char *name, char *val, size_t n)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a parameter of type string (nul terminated) from a RPC.  <a href="#ga86dff6d7ab2a107fe481a22e713bd0f7"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga7bbbd24ff202dce02334cefbc21d7928">json_rpc_get_array_count</a> (json_rpc_t *json_rpc, const char *name)</td></tr>
@@ -190,6 +189,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the error code and message in a RPC before response.  <a href="#gaabb59255346696234a3940cfd07197d5"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3">json_rpc_append_int</a> (json_rpc_t *json_rpc, const char *name, int val)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Append to a RPC a new parameter and its value of type integer.  <a href="#gae2a95cc825a12654ab72df6a0169b0a3"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gadc520e7d4202a7ab4d7b9bfd519b274e">json_rpc_append_llint</a> (json_rpc_t *json_rpc, const char *name, long long val)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Append to a RPC a new parameter and its value of type long long integer.  <a href="#gadc520e7d4202a7ab4d7b9bfd519b274e"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gafe1fc67b45e60521255ccc6fe3bbe3df">json_rpc_append_bool</a> (json_rpc_t *json_rpc, const char *name, bool val)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Append to a RPC a new parameter and its value of type boolean.  <a href="#gafe1fc67b45e60521255ccc6fe3bbe3df"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gac904d3f10cd852cc15a21aa4e8c68b0c">json_rpc_append_double</a> (json_rpc_t *json_rpc, const char *name, double val)</td></tr>
@@ -298,7 +299,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a6">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a9">example-clnt-array.c</a>, <a class="el" href="example-clnt-attr_8c-example.html#a2">example-clnt-attr.c</a>, <a class="el" href="example-service_8c-example.html#a5">example-service.c</a>, <a class="el" href="example-servicexx_8cpp-example.html#a4">example-servicexx.cpp</a>, <a class="el" href="example-svc-array_8c-example.html#a8">example-svc-array.c</a>, <a class="el" href="example-svc-attr_8c-example.html#a2">example-svc-attr.c</a>, and <a class="el" href="example-svc-event_8c-example.html#a5">example-svc-event.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a6">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a9">example-clnt-array.c</a>, <a class="el" href="example-clnt-attr_8c-example.html#a2">example-clnt-attr.c</a>, <a class="el" href="example-service_8c-example.html#a5">example-service.c</a>, <a class="el" href="example-servicexx_8cpp-example.html#a4">example-servicexx.cpp</a>, <a class="el" href="example-svc-array_8c-example.html#a8">example-svc-array.c</a>, <a class="el" href="example-svc-attr_8c-example.html#a2">example-svc-attr.c</a>, and <a class="el" href="example-svc-event_8c-example.html#a2">example-svc-event.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -370,6 +371,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 <div class="memdoc">
 
 <p>Decalare an A-Bus method. </p>
+<p>Redeclaration of an existing method is allowed.</p>
 <p>Rem: there's no need to call <a class="el" href="group__abus.html#ga1d2c5a2ca5147f5991d1a78f801f5fdf" title="Undeclare an A-Bus method.">abus_undecl_method()</a> before calling <a class="el" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup()</a>.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
@@ -386,7 +388,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd>Allow redeclaration? </dd></dl>
 <dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga1d2c5a2ca5147f5991d1a78f801f5fdf" title="Undeclare an A-Bus method.">abus_undecl_method()</a> </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-service_8c-example.html#a4">example-service.c</a>, and <a class="el" href="example-svc-array_8c-example.html#a7">example-svc-array.c</a>.</dd>
 </dl>
@@ -530,6 +531,44 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
   </table>
   </dd>
 </dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful or reponse already received, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gacb221ecd41f014b38bb3a4055111e39d" title="Asynchronous invocation of a RPC.">abus_request_method_invoke_async()</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga7db4e3e3bb45d805362783b2de676d5d"></a><!-- doxytag: member="abus.c::abus_request_method_cancel_async" ref="ga7db4e3e3bb45d805362783b2de676d5d" args="(abus_t *abus, json_rpc_t *json_rpc)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_request_method_cancel_async </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">json_rpc_t *&#160;</td>
+          <td class="paramname"><em>json_rpc</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Cancel an asynchronous method request. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramname">json_rpc</td><td>pointer to an opaque handle of a JSON RPC </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
 <dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gacb221ecd41f014b38bb3a4055111e39d" title="Asynchronous invocation of a RPC.">abus_request_method_invoke_async()</a> </dd></dl>
 
@@ -597,8 +636,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise</dd></dl>
-<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gaefbdffce700658ec7b8ec72ed6911cae" title="Wait for an asynchronous method request.">abus_request_method_wait_async()</a> </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd>implement timeout callback </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gaefbdffce700658ec7b8ec72ed6911cae" title="Wait for an asynchronous method request.">abus_request_method_wait_async()</a>, <a class="el" href="group__abus.html#ga7db4e3e3bb45d805362783b2de676d5d" title="Cancel an asynchronous method request.">abus_request_method_cancel_async()</a> </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd>implement timeout callback </dd></dl>
 
 </div>
 </div>
@@ -797,6 +836,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 <div class="memdoc">
 
 <p>Decalare an A-Bus event. </p>
+<p>Redeclaration of an existing event is allowed.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
@@ -808,9 +848,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd><p class="startdd">Allow redeclaration? </p>
-<p class="enddd"><a class="el" href="group__abus.html#gabf700ba3a702b6e667863d3a37d48af0" title="Undeclare an A-Bus event.">abus_undecl_event()</a> </p>
-</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd><a class="el" href="group__abus.html#gabf700ba3a702b6e667863d3a37d48af0" title="Undeclare an A-Bus event.">abus_undecl_event()</a> </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-event_8c-example.html#a1">example-svc-event.c</a>.</dd>
 </dl>
 </div>
@@ -909,7 +947,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
 <dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gab4fa1a2fcf76113395ee4f2d2b701f1a" title="Release ressources associated with a past event RPC.">abus_request_event_cleanup()</a> </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-event_8c-example.html#a2">example-svc-event.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-event_8c-example.html#a3">example-svc-event.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -957,7 +995,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
 <dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gaf752f471ab94e0c086f0c931c521f95f" title="Initialize a new RPC to be published by a service.">abus_request_event_init()</a> </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-event_8c-example.html#a3">example-svc-event.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-event_8c-example.html#a4">example-svc-event.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -996,7 +1034,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
 <dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gaf752f471ab94e0c086f0c931c521f95f" title="Initialize a new RPC to be published by a service.">abus_request_event_init()</a> </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-event_8c-example.html#a4">example-svc-event.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-event_8c-example.html#a5">example-svc-event.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -1189,6 +1227,349 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 
 </div>
 </div>
+<a class="anchor" id="gac05c38811d56e11b1b9fe5b5ab32a0f4"></a><!-- doxytag: member="abus.c::abus_decl_attr_int" ref="gac05c38811d56e11b1b9fe5b5ab32a0f4" args="(abus_t *abus, const char *service_name, const char *attr_name, int *val, int flags, const char *descr)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_decl_attr_int </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flags</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>descr</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Declare an attribute of type integer in a service. </p>
+<p>Redeclaration of an existing attribute is allowed.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to declare </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">val</td><td>pointer to the variable holding the attribute value, NULL for auto allocation </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">descr</td><td>string describing the event to be declared, may be NULL </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga15efae51978fada3be4df54c1a266320" title="Undeclare an A-Bus attribute.">abus_undecl_attr()</a> </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-attr_8c-example.html#a1">example-svc-attr.c</a>.</dd>
+</dl>
+</div>
+</div>
+<a class="anchor" id="ga75b5b9c9e600647a9a41d880b7e15d44"></a><!-- doxytag: member="abus.c::abus_decl_attr_llint" ref="ga75b5b9c9e600647a9a41d880b7e15d44" args="(abus_t *abus, const char *service_name, const char *attr_name, long long *val, int flags, const char *descr)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_decl_attr_llint </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long long *&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flags</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>descr</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Declare an attribute of type long long integer in a service. </p>
+<p>Redeclaration of an existing attribute is allowed.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to declare </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">val</td><td>pointer to the variable holding the attribute value, NULL for auto allocation </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">descr</td><td>string describing the event to be declared, may be NULL </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga15efae51978fada3be4df54c1a266320" title="Undeclare an A-Bus attribute.">abus_undecl_attr()</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga92bfe8373ec328f77a96e45fd9729023"></a><!-- doxytag: member="abus.c::abus_decl_attr_bool" ref="ga92bfe8373ec328f77a96e45fd9729023" args="(abus_t *abus, const char *service_name, const char *attr_name, bool *val, int flags, const char *descr)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_decl_attr_bool </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool *&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flags</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>descr</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Declare an attribute of type bool in a service. </p>
+<p>Redeclaration of an existing attribute is allowed.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to declare </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">val</td><td>pointer to the variable holding the attribute value, NULL for auto allocation </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">descr</td><td>string describing the event to be declared, may be NULL </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga15efae51978fada3be4df54c1a266320" title="Undeclare an A-Bus attribute.">abus_undecl_attr()</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga32cf5b53d95a933fe061c25fbabd7eeb"></a><!-- doxytag: member="abus.c::abus_decl_attr_double" ref="ga32cf5b53d95a933fe061c25fbabd7eeb" args="(abus_t *abus, const char *service_name, const char *attr_name, double *val, int flags, const char *descr)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_decl_attr_double </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flags</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>descr</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Declare an attribute of type double in a service. </p>
+<p>Redeclaration of an existing attribute is allowed.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to declare </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">val</td><td>pointer to the variable holding the attribute value, NULL for auto allocation </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">descr</td><td>string describing the event to be declared, may be NULL </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga15efae51978fada3be4df54c1a266320" title="Undeclare an A-Bus attribute.">abus_undecl_attr()</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga25b1de6be0b418484f0e1bee1e164e38"></a><!-- doxytag: member="abus.c::abus_decl_attr_str" ref="ga25b1de6be0b418484f0e1bee1e164e38" args="(abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t n, int flags, const char *descr)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_decl_attr_str </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flags</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>descr</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Declare an attribute of type string in a service. </p>
+<p>Redeclaration of an existing attribute is allowed.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to declare </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">val</td><td>pointer to the variable holding the attribute value, NULL for auto allocation </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>maximum memory size of the string, including nul end-of-string </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">descr</td><td>string describing the event to be declared, may be NULL </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga15efae51978fada3be4df54c1a266320" title="Undeclare an A-Bus attribute.">abus_undecl_attr()</a> </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ga15efae51978fada3be4df54c1a266320"></a><!-- doxytag: member="abus.c::abus_undecl_attr" ref="ga15efae51978fada3be4df54c1a266320" args="(abus_t *abus, const char *service_name, const char *attr_name)" -->
 <div class="memitem">
 <div class="memproto">
@@ -1231,6 +1612,642 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
 <dl class="see"><dt><b>See also:</b></dt><dd>abus_decl_attr_*() </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga51fd73ca0d236c813589036a8d1b72a2"></a><!-- doxytag: member="abus.c::abus_attr_changed" ref="ga51fd73ca0d236c813589036a8d1b72a2" args="(abus_t *abus, const char *service_name, const char *attr_name)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_attr_changed </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Notify that the value of an attribute has changed. </p>
+<p><a class="el" href="group__abus.html#ga51fd73ca0d236c813589036a8d1b72a2" title="Notify that the value of an attribute has changed.">abus_attr_changed()</a> will publish notification to all subscribers that the value of the attribute has its value changed.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute which value has changed </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd>abus_decl_attr_*(), <a class="el" href="group__abus.html#ga0cb189ce9ecc328cf0369725ffbbee3a" title="Subscribe to changes of the values of attributes in a service.">abus_attr_subscribe_onchange()</a> </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-attr_8c-example.html#a3">example-svc-attr.c</a>.</dd>
+</dl>
+</div>
+</div>
+<a class="anchor" id="ga9491b55fcd9384d8151aa348369c6f33"></a><!-- doxytag: member="abus.c::abus_attr_get_int" ref="ga9491b55fcd9384d8151aa348369c6f33" args="(abus_t *abus, const char *service_name, const char *attr_name, int *val, int timeout)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_attr_get_int </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Get the value of an integer attribute from a service. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to get </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">val</td><td>pointer to the variable where to store the attribute value </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>RPC waiting timeout in milliseconds </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-clnt-attr_8c-example.html#a1">example-clnt-attr.c</a>.</dd>
+</dl>
+</div>
+</div>
+<a class="anchor" id="gaf6d92f75005f5abe1dbed071dbdffa1e"></a><!-- doxytag: member="abus.c::abus_attr_get_llint" ref="gaf6d92f75005f5abe1dbed071dbdffa1e" args="(abus_t *abus, const char *service_name, const char *attr_name, long long *val, int timeout)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_attr_get_llint </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long long *&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Get the value of a long long integer attribute from a service. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to get </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">val</td><td>pointer to the variable where to store the attribute value </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>RPC waiting timeout in milliseconds </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga1758f4037abde07d3132d53959e64c4e"></a><!-- doxytag: member="abus.c::abus_attr_get_bool" ref="ga1758f4037abde07d3132d53959e64c4e" args="(abus_t *abus, const char *service_name, const char *attr_name, bool *val, int timeout)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_attr_get_bool </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool *&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Get the value of an boolean attribute from a service. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to get </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">val</td><td>pointer to the variable where to store the attribute value </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>RPC waiting timeout in milliseconds </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga8b07df28a6d5d15fc2fcb6e5ab717b4d"></a><!-- doxytag: member="abus.c::abus_attr_get_double" ref="ga8b07df28a6d5d15fc2fcb6e5ab717b4d" args="(abus_t *abus, const char *service_name, const char *attr_name, double *val, int timeout)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_attr_get_double </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Get the value of an double float attribute from a service. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to get </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">val</td><td>pointer to the variable where to store the attribute value </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>RPC waiting timeout in milliseconds </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gaffb8f89dfeb4f383f4ac7eb4d76dc18a"></a><!-- doxytag: member="abus.c::abus_attr_get_str" ref="gaffb8f89dfeb4f383f4ac7eb4d76dc18a" args="(abus_t *abus, const char *service_name, const char *attr_name, char *val, size_t len, int timeout)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_attr_get_str </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>len</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Get the value of an string attribute from a service. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to get </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">val</td><td>pointer to the variable where to store the attribute value </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>maximum memory size of <em>val</em> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>RPC waiting timeout in milliseconds </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga631f6a06af0a568c5c29f1af6d5d7d7d"></a><!-- doxytag: member="abus.c::abus_attr_set_int" ref="ga631f6a06af0a568c5c29f1af6d5d7d7d" args="(abus_t *abus, const char *service_name, const char *attr_name, int val, int timeout)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_attr_set_int </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Set the value of an integer attribute in a service. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to set </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">val</td><td>value of the attribute to set </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>RPC waiting timeout in milliseconds </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-clnt-attr_8c-example.html#a3">example-clnt-attr.c</a>.</dd>
+</dl>
+</div>
+</div>
+<a class="anchor" id="gaa11a204a8c6ca67627232093c9b7cac1"></a><!-- doxytag: member="abus.c::abus_attr_set_llint" ref="gaa11a204a8c6ca67627232093c9b7cac1" args="(abus_t *abus, const char *service_name, const char *attr_name, long long val, int timeout)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_attr_set_llint </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long long&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Set the value of a long long integer attribute in a service. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to set </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">val</td><td>value of the attribute to set </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>RPC waiting timeout in milliseconds </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga44074a1aa0bead1689f0012d2b4f95fa"></a><!-- doxytag: member="abus.c::abus_attr_set_bool" ref="ga44074a1aa0bead1689f0012d2b4f95fa" args="(abus_t *abus, const char *service_name, const char *attr_name, bool val, int timeout)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_attr_set_bool </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Set the value of an boolean attribute in a service. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to set </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">val</td><td>value of the attribute to set </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>RPC waiting timeout in milliseconds </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga5334307db5786ce3c83780787d6e75dd"></a><!-- doxytag: member="abus.c::abus_attr_set_double" ref="ga5334307db5786ce3c83780787d6e75dd" args="(abus_t *abus, const char *service_name, const char *attr_name, double val, int timeout)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_attr_set_double </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Set the value of an double float attribute in a service. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to set </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">val</td><td>value of the attribute to set </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>RPC waiting timeout in milliseconds </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga7172d25486164f70c9a036c0d4ef0e2d"></a><!-- doxytag: member="abus.c::abus_attr_set_str" ref="ga7172d25486164f70c9a036c0d4ef0e2d" args="(abus_t *abus, const char *service_name, const char *attr_name, const char *val, int timeout)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_attr_set_str </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>service_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>attr_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Set the value of an string attribute in a service. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to set </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">val</td><td>value of the attribute to set </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>RPC waiting timeout in milliseconds </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
 
 </div>
 </div>
@@ -1453,6 +2470,50 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 </dl>
 </div>
 </div>
+<a class="anchor" id="ga7d6eece6436d308b300cf0c01d47e5d7"></a><!-- doxytag: member="jsonrpc.c::json_rpc_get_llint" ref="ga7d6eece6436d308b300cf0c01d47e5d7" args="(json_rpc_t *json_rpc, const char *name, long long *val)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int json_rpc_get_llint </td>
+          <td>(</td>
+          <td class="paramtype">json_rpc_t *&#160;</td>
+          <td class="paramname"><em>json_rpc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long long *&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Get the value of a parameter of type long long integer from a RPC. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">json_rpc</td><td>pointer to an opaque handle of a JSON RPC </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>key name of a "params"/"result" designating a long long integer value </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">val</td><td>pointer to location where to store the integer value </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ga1ffe2527dd20e8683f90c0ee36913723"></a><!-- doxytag: member="jsonrpc.c::json_rpc_get_bool" ref="ga1ffe2527dd20e8683f90c0ee36913723" args="(json_rpc_t *json_rpc, const char *name, bool *val)" -->
 <div class="memitem">
 <div class="memproto">
@@ -1585,6 +2646,57 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
     <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>key name of a "params"/"result" designating a string value </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">val</td><td>pointer to location where to store the string value </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">n</td><td>pointer to maximum size of the location where to store the string, real size upon return </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga19a74e67cf034b399c9f113c31a931a8"></a><!-- doxytag: member="jsonrpc.c::json_rpc_get_strp" ref="ga19a74e67cf034b399c9f113c31a931a8" args="(json_rpc_t *json_rpc, const char *name, const char **pval, size_t *n)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int json_rpc_get_strp </td>
+          <td>(</td>
+          <td class="paramtype">json_rpc_t *&#160;</td>
+          <td class="paramname"><em>json_rpc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char **&#160;</td>
+          <td class="paramname"><em>pval</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>n</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Get a pointer to the value of a parameter of type string from a RPC. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">json_rpc</td><td>pointer to an opaque handle of a JSON RPC </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>key name of a "params"/"result" designating a string value </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pval</td><td>pointer to location where to store a pointer to the string value </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">n</td><td>pointer where to store the real size of the string </td></tr>
   </table>
   </dd>
 </dl>
@@ -1816,6 +2928,50 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a2">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a2">example-clnt-array.c</a>, <a class="el" href="example-service_8c-example.html#a2">example-service.c</a>, <a class="el" href="example-servicexx_8cpp-example.html#a2">example-servicexx.cpp</a>, and <a class="el" href="example-svc-array_8c-example.html#a4">example-svc-array.c</a>.</dd>
 </dl>
+</div>
+</div>
+<a class="anchor" id="gadc520e7d4202a7ab4d7b9bfd519b274e"></a><!-- doxytag: member="jsonrpc.c::json_rpc_append_llint" ref="gadc520e7d4202a7ab4d7b9bfd519b274e" args="(json_rpc_t *json_rpc, const char *name, long long val)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int json_rpc_append_llint </td>
+          <td>(</td>
+          <td class="paramtype">json_rpc_t *&#160;</td>
+          <td class="paramname"><em>json_rpc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long long&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Append to a RPC a new parameter and its value of type long long integer. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">json_rpc</td><td>pointer to an opaque handle of a JSON RPC </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>key name of a "params"/"result" that's going to designate the long long integer value </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">val</td><td>the integer value </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="gafe1fc67b45e60521255ccc6fe3bbe3df"></a><!-- doxytag: member="jsonrpc.c::json_rpc_append_bool" ref="gafe1fc67b45e60521255ccc6fe3bbe3df" args="(json_rpc_t *json_rpc, const char *name, bool val)" -->
@@ -2074,7 +3230,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Tue Jan 3 2012 19:13:10 for A-Bus Library by&#160;
+      <li class="footer">Generated on Tue Jan 31 2012 12:40:22 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

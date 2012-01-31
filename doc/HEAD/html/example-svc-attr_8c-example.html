@@ -82,7 +82,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="fragment"><pre class="fragment">abus-send exampleattrsvc.get tree.some_int
 abus-send exampleattrsvc.get tree.
 
-abus-send exampleattrsvc.set tree.some_int:i:128
+abus-send exampleattrsvc.set tree.some_int:i=128
 
 abus-send exampleattrsvc.get <span class="stringliteral">&quot;&quot;</span>
 </pre></div><p> Here is how to play with event emitted upon attribute change (one event every 5 seconds): </p>
@@ -113,20 +113,27 @@ abus-send exampleattrsvc.get <span class="stringliteral">&quot;&quot;</span>
 {
         abus_t abus;
         <span class="keyword">const</span> <span class="keywordtype">char</span> *servicename = <span class="stringliteral">&quot;exampleattrsvc&quot;</span>;
-        <span class="keywordtype">int</span> i;
+        <span class="keywordtype">int</span> i, ret;
 
         <span class="keywordtype">int</span> my_int = 42;
-        <span class="keywordtype">int</span> my_other_int = -2;
         <span class="keywordtype">int</span> my_auto_count = 0;
 
 
         <a name="a0"></a><a class="code" href="group__abus.html#gae6978d51da337838da12bca1c2c27659" title="Initialize for A-Bus operation.">abus_init</a>(&amp;abus);
 
-        <a name="a1"></a><a class="code" href="group__abus.html#gac05c38811d56e11b1b9fe5b5ab32a0f4" title="Declare an attribute of type integer in a service.">abus_decl_attr_int</a>(&amp;abus, servicename, <span class="stringliteral">&quot;tree.some_int&quot;</span>, &amp;my_int,
+        ret = <a name="a1"></a><a class="code" href="group__abus.html#gac05c38811d56e11b1b9fe5b5ab32a0f4" title="Declare an attribute of type integer in a service.">abus_decl_attr_int</a>(&amp;abus, servicename, <span class="stringliteral">&quot;tree.some_int&quot;</span>, &amp;my_int,
                                         ABUS_RPC_FLAG_NONE,
                                         <span class="stringliteral">&quot;Some integer, for demo purpose&quot;</span>);
+        <span class="keywordflow">if</span> (ret != 0) {
+            <a name="a2"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+            <span class="keywordflow">return</span> EXIT_FAILURE;
+        }
 
-        <a class="code" href="group__abus.html#gac05c38811d56e11b1b9fe5b5ab32a0f4" title="Declare an attribute of type integer in a service.">abus_decl_attr_int</a>(&amp;abus, servicename, <span class="stringliteral">&quot;tree.some_other_int&quot;</span>, &amp;my_other_int,
+        <span class="comment">/* No pointer is given for some_other_int, hence it will</span>
+<span class="comment">           be auto-allocated by libabus, and initialized to zero.</span>
+<span class="comment">           Access must be done through get and set.</span>
+<span class="comment">         */</span>
+        <a class="code" href="group__abus.html#gac05c38811d56e11b1b9fe5b5ab32a0f4" title="Declare an attribute of type integer in a service.">abus_decl_attr_int</a>(&amp;abus, servicename, <span class="stringliteral">&quot;tree.some_other_int&quot;</span>, NULL,
                                         ABUS_RPC_FLAG_NONE,
                                         <span class="stringliteral">&quot;Some other integer, still for demo purpose&quot;</span>);
 
@@ -140,10 +147,10 @@ abus-send exampleattrsvc.get <span class="stringliteral">&quot;&quot;</span>
 
                 my_auto_count++;
                 <span class="comment">/* trigger event notification */</span>
-                <a name="a2"></a><a class="code" href="group__abus.html#ga51fd73ca0d236c813589036a8d1b72a2" title="Notify the value of an attribute has changed.">abus_attr_changed</a>(&amp;abus, servicename, <span class="stringliteral">&quot;tree.auto_count&quot;</span>);
+                <a name="a3"></a><a class="code" href="group__abus.html#ga51fd73ca0d236c813589036a8d1b72a2" title="Notify that the value of an attribute has changed.">abus_attr_changed</a>(&amp;abus, servicename, <span class="stringliteral">&quot;tree.auto_count&quot;</span>);
         }
 
-        <a name="a3"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+        <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
 
         <span class="keywordflow">return</span> EXIT_SUCCESS;
 }
@@ -153,7 +160,7 @@ abus-send exampleattrsvc.get <span class="stringliteral">&quot;&quot;</span>
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Wed Jan 4 2012 15:31:43 for A-Bus Library by&#160;
+      <li class="footer">Generated on Tue Jan 31 2012 12:40:22 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

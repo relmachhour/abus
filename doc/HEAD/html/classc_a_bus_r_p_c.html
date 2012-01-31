@@ -117,6 +117,8 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="c
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the JSON type of a parameter from a RPC.  <a href="#a11b9783243241f5cd1a5ebb6ed642179"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus_r_p_c.html#a241ddfdba364495154737d48b29ed0ab">get_int</a> (const char *name, int *val)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a parameter of type integer from a RPC.  <a href="#a241ddfdba364495154737d48b29ed0ab"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus_r_p_c.html#ad9701aed7bf264b3c05fe5b3e543e0cf">get_llint</a> (const char *name, long long *val)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a parameter of type long long integer from a RPC.  <a href="#ad9701aed7bf264b3c05fe5b3e543e0cf"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus_r_p_c.html#a412a5bc1980e6be4453a83532512486e">get_bool</a> (const char *name, bool *val)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a parameter of type bool from a RPC.  <a href="#a412a5bc1980e6be4453a83532512486e"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus_r_p_c.html#a26989d171a5ab402a146b15aa7ae7beb">get_double</a> (const char *name, double *val)</td></tr>
@@ -125,12 +127,16 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="c
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a parameter of type string (nul terminated) from a RPC.  <a href="#a5fef77ff89c02f548d3f3088d07f1945"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus_r_p_c.html#a63f856540d41075d6b052e40bb844cf7">get_strn</a> (const char *name, char *val, size_t *n)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a parameter of type string from a RPC.  <a href="#a63f856540d41075d6b052e40bb844cf7"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus_r_p_c.html#a8b6382b26799e46c4a121a7b5210438f">get_strp</a> (const char *name, const char **pval, size_t *n)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a pointer to the value of a parameter of type string from a RPC.  <a href="#a8b6382b26799e46c4a121a7b5210438f"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus_r_p_c.html#ac95bdfcaf718e1704f60ea1c56b53082">get_array_count</a> (const char *name)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the count of element in a named array from a RPC.  <a href="#ac95bdfcaf718e1704f60ea1c56b53082"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus_r_p_c.html#a3d79bfebcaba09f33f6fac8375b8135e">get_point_at</a> (const char *name, int idx)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Aim the json_rpc_get_{int,bool,..} functions at an object within an array from a RPC.  <a href="#a3d79bfebcaba09f33f6fac8375b8135e"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus_r_p_c.html#ad032bff042a56fbd40258ac3df2a2912">append_int</a> (const char *name, int val)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Append to a RPC a new parameter and its value of type integer.  <a href="#ad032bff042a56fbd40258ac3df2a2912"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus_r_p_c.html#aacaa40d621c65b08db8fa6c1257e4ac7">append_llint</a> (const char *name, long long val)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Append to a RPC a new parameter and its value of type long long integer.  <a href="#aacaa40d621c65b08db8fa6c1257e4ac7"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus_r_p_c.html#a0b6ea8d4d8f7415924710c6e8a08b8d3">append_bool</a> (const char *name, bool val)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Append to a RPC a new parameter and its value of type boolean.  <a href="#a0b6ea8d4d8f7415924710c6e8a08b8d3"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classc_a_bus_r_p_c.html#a0d9d7412311ea5daf17e9d9a28f5583c">append_double</a> (const char *name, double val)</td></tr>
@@ -203,6 +209,37 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="c
 <dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int()</a> </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-clientpp_8cpp-example.html#a5">example-clientpp.cpp</a>, and <a class="el" href="example-servicepp_8cpp-example.html#a2">example-servicepp.cpp</a>.</dd>
 </dl>
+</div>
+</div>
+<a class="anchor" id="ad9701aed7bf264b3c05fe5b3e543e0cf"></a><!-- doxytag: member="cABusRPC::get_llint" ref="ad9701aed7bf264b3c05fe5b3e543e0cf" args="(const char *name, long long *val)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int cABusRPC::get_llint </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long long *&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Get the value of a parameter of type long long integer from a RPC. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga7d6eece6436d308b300cf0c01d47e5d7" title="Get the value of a parameter of type long long integer from a RPC.">json_rpc_get_llint()</a> </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="a412a5bc1980e6be4453a83532512486e"></a><!-- doxytag: member="cABusRPC::get_bool" ref="a412a5bc1980e6be4453a83532512486e" args="(const char *name, bool *val)" -->
@@ -341,6 +378,43 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="c
 
 </div>
 </div>
+<a class="anchor" id="a8b6382b26799e46c4a121a7b5210438f"></a><!-- doxytag: member="cABusRPC::get_strp" ref="a8b6382b26799e46c4a121a7b5210438f" args="(const char *name, const char **pval, size_t *n)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int cABusRPC::get_strp </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char **&#160;</td>
+          <td class="paramname"><em>pval</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>n</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Get a pointer to the value of a parameter of type string from a RPC. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga19a74e67cf034b399c9f113c31a931a8" title="Get a pointer to the value of a parameter of type string from a RPC.">json_rpc_get_strp()</a> </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ac95bdfcaf718e1704f60ea1c56b53082"></a><!-- doxytag: member="cABusRPC::get_array_count" ref="ac95bdfcaf718e1704f60ea1c56b53082" args="(const char *name)" -->
 <div class="memitem">
 <div class="memproto">
@@ -423,6 +497,37 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="c
 <dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int()</a> </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-clientpp_8cpp-example.html#a3">example-clientpp.cpp</a>, and <a class="el" href="example-servicepp_8cpp-example.html#a4">example-servicepp.cpp</a>.</dd>
 </dl>
+</div>
+</div>
+<a class="anchor" id="aacaa40d621c65b08db8fa6c1257e4ac7"></a><!-- doxytag: member="cABusRPC::append_llint" ref="aacaa40d621c65b08db8fa6c1257e4ac7" args="(const char *name, long long val)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int cABusRPC::append_llint </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long long&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Append to a RPC a new parameter and its value of type long long integer. </p>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gadc520e7d4202a7ab4d7b9bfd519b274e" title="Append to a RPC a new parameter and its value of type long long integer.">json_rpc_append_llint()</a> </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="a0b6ea8d4d8f7415924710c6e8a08b8d3"></a><!-- doxytag: member="cABusRPC::append_bool" ref="a0b6ea8d4d8f7415924710c6e8a08b8d3" args="(const char *name, bool val)" -->
@@ -647,7 +752,7 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="c
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="classc_a_bus_r_p_c.html">cABusRPC</a>      </li>
-      <li class="footer">Generated on Tue Jan 3 2012 19:13:10 for A-Bus Library by&#160;
+      <li class="footer">Generated on Tue Jan 31 2012 12:40:22 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

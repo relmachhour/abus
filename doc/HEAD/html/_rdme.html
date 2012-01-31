@@ -77,12 +77,32 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <h1>README (general) </h1>  </div>
 </div>
 <div class="contents">
-<div class="textblock"><div class="fragment"><pre class="fragment"></pre></div> </div></div>
+<div class="textblock"><div class="fragment"><pre class="fragment">A-Bus - a lightweight message bus system
+
+How to install from svn
+1) Install autotools, libtool, pkg-config, build-essential
+   For test framework: libgtest-dev &gt;= 1.6.0
+      and pass --enable-test to configure script
+   For test FastCGI gateway: libfcgi-dev
+      and pass --enable-fcgi to configure script
+
+2) In main dir start
+    a) autoreconf -i --force
+    b) ./configure --prefix=/usr/local --enable-examples --enable-maintainer-mode
+    c) make
+    d) make install
+
+How to build tar package:
+=&gt; Same as svn build, but skip 2.a) and maintainer-mode not necessary
+
+Project: http://code.google.com/p/exfat/
+Mailing list: http://groups.google.com/group/abus-discuss
+</pre></div> </div></div>
 </div>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="main.html">A-Bus API Reference</a>      </li>
-      <li class="footer">Generated on Tue Jan 3 2012 19:13:10 for A-Bus Library by&#160;
+      <li class="footer">Generated on Tue Jan 31 2012 12:40:22 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>
