@@ -8,4 +8,4 @@ Description: Library supporting A-Bus interprocess messaging system
 URL: @PACKAGE_URL@
 Version: @VERSION@
 Libs: -L${libdir} -labus
-Cflags: -I${includedir}
+Cflags: -I${includedir}/abus
