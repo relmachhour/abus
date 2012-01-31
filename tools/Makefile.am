@@ -5,9 +5,7 @@ AM_CPPFLAGS = $(INC)
 
 bin_PROGRAMS   = abus-send @ABUS_CGI@
 
-man_MANS = abus-send.1
-
-EXTRA_DIST   = $(man_MANS)
+dist_man1_MANS = abus-send.1
 
 EXTRA_PROGRAMS   = abus-cgi
 
