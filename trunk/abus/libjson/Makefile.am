@@ -1,18 +1,19 @@
 
-abusincludedir=$(includedir)/abus
+abusincludedir      = $(includedir)/abus
 
-noinst_LTLIBRARIES = libjson.la
+noinst_LTLIBRARIES  = libjson.la
 
-libjson_la_SOURCES = json.c
+libjson_la_SOURCES  = json.c jsonwrp.c
 
 abusinclude_HEADERS = json.h
 
-EXTRA_PROGRAMS = jsonlint
+EXTRA_PROGRAMS      = jsonlint
 
-jsonlint_SOURCES = jsonlint.c
-jsonlint_LDADD = libjson.la
+jsonlint_SOURCES    = jsonlint.c
 
-EXTRA_DIST = README.md documentation
+jsonlint_LDADD      = libjson.la
+
+EXTRA_DIST          = README.md documentation
 
 # TODO: tests/
 
