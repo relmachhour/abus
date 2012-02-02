@@ -31,8 +31,6 @@ AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 AM_PROG_CC_C_O
 
-AM_SILENT_RULES([yes])
-
 AC_CONFIG_HEADERS([abus_config.h])
 
 AC_DEFINE([_GNU_SOURCE],[1],[Use GNU C library extensions (e.g. stdndup).])
