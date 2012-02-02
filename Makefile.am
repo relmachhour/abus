@@ -1,5 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
+AM_MAKEFLAGS= --no-print-directory
+
 SUBDIRS = m4 abus tools examples test doc
 
 EXTRA_DIST = LICENSE abus.pc.in AUTHORS
