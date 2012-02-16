@@ -22,7 +22,7 @@
 
 #define RPC_TIMEOUT 1000 /* ms */
 #define SVC_NAME "gtestsvc"
-#define DEPSILON 1e-12
+#define DABSERROR 1e-12
 
 static int msleep(int ms)
 {
@@ -546,9 +546,9 @@ TEST_F(AbusJtypesTest, AllTypes)
 	EXPECT_EQ(a, res_a);
 	EXPECT_EQ(b, res_b);
 	EXPECT_EQ(ll, res_ll);
-	EXPECT_TRUE(d1-res_d1 < DEPSILON);
-	EXPECT_TRUE(d2-res_d2 < DEPSILON);
-	EXPECT_TRUE(strncmp(res_s, abus_get_copyright(), sizeof(res_s)) == 0);
+	EXPECT_NEAR(d1, res_d1, DABSERROR);
+	EXPECT_NEAR(d2, res_d2, DABSERROR);
+	EXPECT_STREQ(res_s, abus_get_copyright());
 }
 
 TEST_F(AbusArrayTest, SqrArray)
@@ -698,8 +698,8 @@ TEST_F(AbusAttrTest, AllTypes) {
 
 	EXPECT_EQ(a, m_int);
 	EXPECT_EQ(b, m_bool);
-	EXPECT_TRUE(d-m_double < DEPSILON);
-	EXPECT_TRUE(strncmp(m_str, s, sizeof(s)) == 0);
+	EXPECT_NEAR(d, m_double, DABSERROR);
+	EXPECT_STREQ(m_str, s);
 
 	EXPECT_EQ(0, abus_attr_set_int(&abus_, SVC_NAME, "int", -1, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_set_bool(&abus_, SVC_NAME, "bool", false, RPC_TIMEOUT));
@@ -708,8 +708,8 @@ TEST_F(AbusAttrTest, AllTypes) {
 
 	EXPECT_EQ(-1, m_int);
 	EXPECT_FALSE(m_bool);
-	EXPECT_TRUE(M_E-m_double < DEPSILON);
-	EXPECT_TRUE(strncmp(m_str, abus_get_version(), sizeof(m_str)) == 0);
+	EXPECT_NEAR(M_E, m_double, DABSERROR);
+	EXPECT_STREQ(m_str, abus_get_version());
 
 	/* inexistant attr name */
 	EXPECT_EQ(JSONRPC_NO_METHOD, abus_attr_get_int(&abus_, SVC_NAME, "no_such_int", &a, RPC_TIMEOUT));
@@ -746,7 +746,7 @@ TEST_F(AbusAutoAttrTest, AllTypes) {
 	EXPECT_EQ(ll, 0LL);
 	EXPECT_EQ(b, false);
 	EXPECT_EQ(d, 0.0);
-	EXPECT_TRUE(strncmp("", s, sizeof(s)) == 0);
+	EXPECT_STREQ("", s);
 
 	EXPECT_EQ(0, abus_attr_set_int(&abus_, SVC_NAME, "int", -1, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_set_llint(&abus_, SVC_NAME, "llint", -2, RPC_TIMEOUT));
@@ -763,8 +763,8 @@ TEST_F(AbusAutoAttrTest, AllTypes) {
 	EXPECT_EQ(a, -1);
 	EXPECT_EQ(ll, -2LL);
 	EXPECT_TRUE(b);
-	EXPECT_TRUE(M_E-d < DEPSILON);
-	EXPECT_TRUE(strncmp(abus_get_version(), s, sizeof(s)) == 0);
+	EXPECT_NEAR(M_E, d, DABSERROR);
+	EXPECT_STREQ(abus_get_version(), s);
 
 	/* inexistant attr name */
 	EXPECT_EQ(JSONRPC_NO_METHOD, abus_attr_get_int(&abus_, SVC_NAME, "no_such_int", &a, RPC_TIMEOUT));
