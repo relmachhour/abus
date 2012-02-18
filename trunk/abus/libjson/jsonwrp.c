@@ -230,7 +230,7 @@ static int _do_tree(json_config *config, const char *filename, json_dom_val_t** 
 
 	input = open_filename(filename, "r");
 	if (!input)
-		return 2;
+		return -errno;
 
 	ret = json_parser_dom_init(&dom, tree_create_structure, tree_create_data, tree_append);
 	if (ret)
@@ -244,6 +244,7 @@ static int _do_tree(json_config *config, const char *filename, json_dom_val_t** 
 	if (ret)
 	{
 		json_dbg_error("error: initializing parser failed: [code=%d] %s\n", ret, json_strerror(ret));
+		json_parser_dom_free(&dom);
 		close_filename(filename, input);
 		return ret;
 	}
@@ -252,24 +253,27 @@ static int _do_tree(json_config *config, const char *filename, json_dom_val_t** 
 	if (ret)
 	{
 		json_dbg_error("line %d, col %d: [code=%d] %s\n", lines, col, ret, json_strerror(ret));
+		json_parser_dom_free(&dom);
 		json_parser_free(&parser);
 		close_filename(filename, input);
-		return 1;
+		return ret;
 	}
 
 	ret = json_parser_is_done(&parser);
 	if (!ret)
 	{
 		json_dbg_error("syntax error\n");
+		json_parser_dom_free(&dom);
 		json_parser_free(&parser);
 		close_filename(filename, input);
-		return 1;
+		return ret;
 	}
 
 	if (root_structure)
 		*root_structure = dom.root_structure;
 
 	/* cleanup */
+	json_parser_dom_free(&dom);
 	json_parser_free(&parser);
 	close_filename(filename, input);
 	return 0;
@@ -311,8 +315,46 @@ json_dom_val_t* json_config_open(const char* szJsonFilename)
  */
 void json_config_cleanup(json_dom_val_t* element)
 {
-	if (NULL != element)
-		free(element);
+	int i;
+
+	if (NULL == element)
+		return;
+
+	switch (element->type)
+	{
+		case JSON_OBJECT_BEGIN:
+			for (i = 0; i < element->length; i++) {
+				free(element->u.object[i]->key);
+				json_config_cleanup(element->u.object[i]->val);
+				free(element->u.object[i]);
+			}
+			free(element->u.object);
+			break;
+
+		case JSON_ARRAY_BEGIN:
+			for (i = 0; i < element->length; i++) {
+				json_config_cleanup(element->u.array[i]);
+				free(element->u.array[i]);
+			}
+			free(element->u.array);
+			break;
+
+		case JSON_FALSE:
+		case JSON_TRUE:
+		case JSON_NULL:
+			//break;
+
+		case JSON_INT:
+		case JSON_STRING:
+		case JSON_FLOAT:
+			free(element->u.data);
+			break;
+		default:
+			json_dbg_error("%s unknown type %d", __func__, element->type);
+			break;
+	}
+
+	free(element);
 }
 
 // ----------------------------------------------------------------------------
