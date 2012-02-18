@@ -22,9 +22,15 @@ endif
 # ------------------------------------------------------------------
 #                             Assertion
 # ------------------------------------------------------------------
-abus_test_SOURCES  = abus-tor.cpp abus-svc.cpp
+abus_test_SOURCES  = \
+					 abus-tor.cpp \
+					 abus-svc.cpp \
+					 abus-attr.cpp \
+					 AbusTest.cpp \
+					 AbusTest.hpp
 
 abus_test_CPPFLAGS = $(INC) $(GTEST_CFLAGS) \
+					-O1		\
 					-g		\
 					-Wall	\
 					-Wextra
