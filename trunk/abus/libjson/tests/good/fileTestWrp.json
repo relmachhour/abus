@@ -4,5 +4,7 @@
         "ipaddress":"192.168.0.5",
         "gateway":"192.168.0.1"
     },
+    "expert_mode": true,
+    "pi": 3.14,
     "id": 0
 }

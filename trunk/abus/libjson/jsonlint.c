@@ -23,24 +23,7 @@
 
 char *indent_string = NULL;
 
-char *string_of_errors[] =
-{
-	[JSON_ERROR_NO_MEMORY] = "out of memory",
-	[JSON_ERROR_BAD_CHAR] = "bad character",
-	[JSON_ERROR_POP_EMPTY] = "stack empty",
-	[JSON_ERROR_POP_UNEXPECTED_MODE] = "pop unexpected mode",
-	[JSON_ERROR_NESTING_LIMIT] = "nesting limit",
-	[JSON_ERROR_DATA_LIMIT] = "data limit",
-	[JSON_ERROR_COMMENT_NOT_ALLOWED] = "comment not allowed by config",
-	[JSON_ERROR_UNEXPECTED_CHAR] = "unexpected char",
-	[JSON_ERROR_UNICODE_MISSING_LOW_SURROGATE] = "missing unicode low surrogate",
-	[JSON_ERROR_UNICODE_UNEXPECTED_LOW_SURROGATE] = "unexpected unicode low surrogate",
-	[JSON_ERROR_COMMA_OUT_OF_STRUCTURE] = "error comma out of structure",
-	[JSON_ERROR_CALLBACK] = "error in a callback",
-	[JSON_ERROR_UTF8]     = "utf8 validation error"
-};
-
-static int printchannel(void *userdata, const char *data, uint32_t length)
+static int printchannel(void *userdata, const char *data, size_t length)
 {
 	FILE *channel = userdata;
 	int ret;
@@ -49,7 +32,7 @@ static int printchannel(void *userdata, const char *data, uint32_t length)
 	return 0;
 }
 
-static int prettyprint(void *userdata, int type, const char *data, uint32_t length)
+static int prettyprint(void *userdata, int type, const char *data, size_t length)
 {
 	json_printer *printer = userdata;
 	
@@ -81,13 +64,13 @@ int process_file(json_parser *parser, FILE *input, int *retlines, int *retcols)
 {
 	char buffer[4096];
 	int ret = 0;
-	int32_t read;
+	size_t read;
 	int lines, col, i;
 
 	lines = 1;
 	col = 0;
 	while (1) {
-		uint32_t processed;
+		size_t processed;
 		read = fread(buffer, 1, 4096, input);
 		if (read <= 0)
 			break;
@@ -116,18 +99,26 @@ static int do_verify(json_config *config, const char *filename)
 	/* initialize the parser structure. we don't need a callback in verify */
 	ret = json_parser_init(&parser, config, NULL, NULL);
 	if (ret) {
-		fprintf(stderr, "error: initializing parser failed (code=%d): %s\n", ret, string_of_errors[ret]);
+		fprintf(stderr, "error: initializing parser failed (code=%d): %s\n", ret, json_strerror(ret));
+		close_filename(filename, input);
 		return ret;
 	}
 
 	ret = process_file(&parser, input, NULL, NULL);
-	if (ret)
+	if (ret) {
+		json_parser_free(&parser);
+		close_filename(filename, input);
 		return 1;
+	}
 
 	ret = json_parser_is_done(&parser);
-	if (!ret)
+	if (!ret) {
+		json_parser_free(&parser);
+		close_filename(filename, input);
 		return 1;
-	
+	}
+
+	json_parser_free(&parser);
 	close_filename(filename, input);
 	return 0;
 }
@@ -146,23 +137,29 @@ static int do_parse(json_config *config, const char *filename)
 	/* initialize the parser structure. we don't need a callback in verify */
 	ret = json_parser_init(&parser, config, NULL, NULL);
 	if (ret) {
-		fprintf(stderr, "error: initializing parser failed (code=%d): %s\n", ret, string_of_errors[ret]);
+		fprintf(stderr, "error: initializing parser failed (code=%d): %s\n", ret, json_strerror(ret));
+		close_filename(filename, input);
 		return ret;
 	}
 
 	ret = process_file(&parser, input, &lines, &col);
 	if (ret) {
 		fprintf(stderr, "line %d, col %d: [code=%d] %s\n",
-		        lines, col, ret, string_of_errors[ret]);
+		        lines, col, ret, json_strerror(ret));
+		json_parser_free(&parser);
+		close_filename(filename, input);
 		return 1;
 	}
 
 	ret = json_parser_is_done(&parser);
 	if (!ret) {
 		fprintf(stderr, "syntax error\n");
+		json_parser_free(&parser);
+		close_filename(filename, input);
 		return 1;
 	}
 	
+	json_parser_free(&parser);
 	close_filename(filename, input);
 	return 0;
 }
@@ -180,13 +177,17 @@ static int do_format(json_config *config, const char *filename, const char *outp
 		return 2;
 
 	output = open_filename(outputfile, "a+", 0);
-	if (!output)
+	if (!output) {
+		close_filename(filename, input);
 		return 2;
+	}
 
 	/* initialize printer and parser structures */
 	ret = json_print_init(&printer, printchannel, stdout);
 	if (ret) {
-		fprintf(stderr, "error: initializing printer failed: [code=%d] %s\n", ret, string_of_errors[ret]);
+		fprintf(stderr, "error: initializing printer failed: [code=%d] %s\n", ret, json_strerror(ret));
+		close_filename(filename, input);
+		close_filename(filename, output);
 		return ret;
 	}
 	if (indent_string)
@@ -194,20 +195,31 @@ static int do_format(json_config *config, const char *filename, const char *outp
 
 	ret = json_parser_init(&parser, config, &prettyprint, &printer);
 	if (ret) {
-		fprintf(stderr, "error: initializing parser failed: [code=%d] %s\n", ret, string_of_errors[ret]);
+		fprintf(stderr, "error: initializing parser failed: [code=%d] %s\n", ret, json_strerror(ret));
+		json_print_free(&printer);
+		close_filename(filename, input);
+		close_filename(filename, output);
 		return ret;
 	}
 
 	ret = process_file(&parser, input, &lines, &col);
 	if (ret) {
 		fprintf(stderr, "line %d, col %d: [code=%d] %s\n",
-		        lines, col, ret, string_of_errors[ret]);
+		        lines, col, ret, json_strerror(ret));
+		json_parser_free(&parser);
+		json_print_free(&printer);
+		close_filename(filename, input);
+		close_filename(filename, output);
 		return 1;
 	}
 
 	ret = json_parser_is_done(&parser);
 	if (!ret) {
 		fprintf(stderr, "syntax error\n");
+		json_parser_free(&parser);
+		json_print_free(&printer);
+		close_filename(filename, input);
+		close_filename(filename, output);
 		return 1;
 	}
 
@@ -216,13 +228,14 @@ static int do_format(json_config *config, const char *filename, const char *outp
 	json_print_free(&printer);
 	fwrite("\n", 1, 1, stdout);
 	close_filename(filename, input);
+	close_filename(filename, output);
 	return 0;
 }
 
 
 struct json_val_elem {
 	char *key;
-	uint32_t key_length;
+	size_t key_length;
 	struct json_val *val;
 };
 
@@ -254,7 +267,7 @@ static void *tree_create_structure(int nesting, int is_object)
 	return v;
 }
 
-static char *memalloc_copy_length(const char *src, uint32_t n)
+static char *memalloc_copy_length(const char *src, size_t n)
 {
 	char *dest;
 
@@ -264,7 +277,7 @@ static char *memalloc_copy_length(const char *src, uint32_t n)
 	return dest;
 }
 
-static void *tree_create_data(int type, const char *data, uint32_t length)
+static void *tree_create_data(int type, const char *data, size_t length)
 {
 	json_val_t *v;
 
@@ -281,7 +294,7 @@ static void *tree_create_data(int type, const char *data, uint32_t length)
 	return v;
 }
 
-static int tree_append(void *structure, char *key, uint32_t key_length, void *obj)
+static int tree_append(void *structure, char *key, size_t key_length, void *obj)
 {
 	json_val_t *parent = structure;
 	if (key) {
@@ -292,7 +305,7 @@ static int tree_append(void *structure, char *key, uint32_t key_length, void *ob
 			if (!parent->u.object)
 				return 1;
 		} else {
-			uint32_t newsize = parent->length + 1 + 1; /* +1 for null */
+			size_t newsize = parent->length + 1 + 1; /* +1 for null */
 			void *newptr;
 
 			newptr = realloc(parent->u.object, newsize * sizeof(json_val_t *));
@@ -316,7 +329,7 @@ static int tree_append(void *structure, char *key, uint32_t key_length, void *ob
 			if (!parent->u.array)
 				return 1;
 		} else {
-			uint32_t newsize = parent->length + 1 + 1; /* +1 for null */
+			size_t newsize = parent->length + 1 + 1; /* +1 for null */
 			void *newptr;
 
 			newptr = realloc(parent->u.object, newsize * sizeof(json_val_t *));
@@ -344,27 +357,33 @@ static int do_tree(json_config *config, const char *filename, json_val_t **root_
 
 	ret = json_parser_dom_init(&dom, tree_create_structure, tree_create_data, tree_append);
 	if (ret) {
-		fprintf(stderr, "error: initializing helper failed: [code=%d] %s\n", ret, string_of_errors[ret]);
+		fprintf(stderr, "error: initializing helper failed: [code=%d] %s\n", ret, json_strerror(ret));
+		close_filename(filename, input);
 		return ret;
 	}
 
 	ret = json_parser_init(&parser, config, json_parser_dom_callback, &dom);
 	if (ret) {
-		fprintf(stderr, "error: initializing parser failed: [code=%d] %s\n", ret, string_of_errors[ret]);
+		fprintf(stderr, "error: initializing parser failed: [code=%d] %s\n", ret, json_strerror(ret));
+		close_filename(filename, input);
 		return ret;
 	}
 
 	ret = process_file(&parser, input, &lines, &col);
 	if (ret) {
 		fprintf(stderr, "line %d, col %d: [code=%d] %s\n",
-		        lines, col, ret, string_of_errors[ret]);
+		        lines, col, ret, json_strerror(ret));
 
+		json_parser_free(&parser);
+		close_filename(filename, input);
 		return 1;
 	}
 
 	ret = json_parser_is_done(&parser);
 	if (!ret) {
 		fprintf(stderr, "syntax error\n");
+		json_parser_free(&parser);
+		close_filename(filename, input);
 		return 1;
 	}
 
@@ -510,7 +529,7 @@ int main(int argc, char **argv)
 			break;
 			}
 		case 'o':
-			output = strdup(optarg);
+			output = optarg;
 			break;
 		default:
 			break;

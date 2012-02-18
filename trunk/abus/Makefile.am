@@ -17,3 +17,7 @@ abusinclude_HEADERS = abus.h jsonrpc.h abus.hpp
 
 SUBDIRS = hashtab libjson
 
+cppcheck:
+	cppcheck -q -I $(top_builddir) $(INC) $(top_srcdir)/abus/
+
+.PHONY: cppcheck
