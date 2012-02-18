@@ -1512,8 +1512,10 @@ int abus_request_event_cleanup(abus_t *abus, json_rpc_t *json_rpc)
   \param[in] callback	function to be called upon event publication or subscribe timeout.
   \param[in] flags		ABUS_RPC flags
   \param[in] arg		opaque pointer value to be passed to \a callback. may be NULL.
-  \param[in] timeout	receive timeout of subscribe request in milliseconds
+  \param[in] timeout	A request has to be sent to the service to subscribe from.
+                        This is the receive timeout of that subscribe request, in milliseconds.
   \return   0 if successful, non nul value otherwise
+  \todo support for more than one subscribe in a process to the same event
  */
 int abus_event_subscribe(abus_t *abus, const char *service_name, const char *event_name, abus_callback_t callback, int flags, void *arg, int timeout)
 {
@@ -1558,9 +1560,11 @@ int abus_event_subscribe(abus_t *abus, const char *service_name, const char *eve
   \param abus	pointer to A-Bus handle
   \param[in] service_name	name of service where the event belongs to
   \param[in] event_name	name of event to unsubscribe from
-  \param[in] callback	function to be called upon event publication or subscribe timeout.
-  \param[in] arg		opaque pointer value to be passed to \a callback. may be NULL.
-  \param[in] timeout	receive timeout of unsubscribe request in milliseconds
+  \param[in] callback	function pointer that was passed to the abus_event_subscribe() call,
+                        because more than one callback may be subscribe to the same event.
+  \param[in] arg		opaque pointer value that was pass to the abus_event_subscribe() call.
+  \param[in] timeout	A request has to be sent to the service to unsubscribe from.
+                        This is the receive timeout of that unsubscribe request, in milliseconds.
   \return   0 if successful, non nul value otherwise
  */
 int abus_event_unsubscribe(abus_t *abus, const char *service_name, const char *event_name, abus_callback_t callback, void *arg, int timeout)
