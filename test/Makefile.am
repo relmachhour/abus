@@ -27,7 +27,8 @@ abus_test_SOURCES  = \
 					 abus-svc.cpp \
 					 abus-attr.cpp \
 					 AbusTest.cpp \
-					 AbusTest.hpp
+					 AbusTest.hpp \
+					 json-config.cpp
 
 abus_test_CPPFLAGS = $(INC) $(GTEST_CFLAGS) \
 					-O1		\
