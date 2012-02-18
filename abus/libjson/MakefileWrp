@@ -18,7 +18,7 @@ all:
 	ls
 
 test: wrpTest
-	./wrpTest ./fileTest.json
+	./wrpTest ./tests/good/fileTestWrp.json
 	
 debug: wrpTest
 	ddd ./wrpTest

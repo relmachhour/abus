@@ -35,7 +35,7 @@ private:
 
 void CExamplesvc::svc_sum_cb(cABusRPC *svc_rpc)
 {
-	int a, b;
+	int a, b = 0;
 	int ret;
 
 	ret  = svc_rpc->get_int("a", &a);
@@ -54,7 +54,7 @@ void CExamplesvc::svc_sum_cb(cABusRPC *svc_rpc)
 
 void CExamplesvc::svc_mult_cb(cABusRPC *svc_rpc)
 {
-	int a, b;
+	int a, b = 0;
 	int ret;
 
 	ret  = svc_rpc->get_int("a", &a);

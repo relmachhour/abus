@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 
 	/* Aim back out of array */
 
-	json_rpc_get_point_at(&json_rpc, NULL, i);
+	json_rpc_get_point_at(&json_rpc, NULL, 0);
 
 	ret = json_rpc_get_int(&json_rpc, "res_k", &res_value);
 	if (ret == 0)

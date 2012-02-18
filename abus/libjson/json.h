@@ -90,7 +90,7 @@ typedef int (*json_printer_callback)(void *userdata, const char *s, size_t lengt
 
 typedef struct {
 	size_t buffer_initial_size;
-	uint32_t max_nesting;
+	unsigned max_nesting;
 	size_t max_data;
 	int allow_c_comments;
 	int allow_yaml_comments;
@@ -228,17 +228,20 @@ int json_parser_dom_free(json_parser_dom *ctx);
 /** helper to parser callback that arrange parsing events into comprehensive JSON data structure */
 int json_parser_dom_callback(void *userdata, int type, const char *data, size_t length);
 
+/** Error string associated with json_error */
+const char* json_strerror(int errnum);
+
 // -------------------------------------------------------------------------------------
 // @brief  Wrapper used for extracting data from a single json file
 // @author Thierry GAYET
 // @date   January 2012                
 // -------------------------------------------------------------------------------------
 
-struct json_val_elem
+struct json_dom_val_elem
 {
-	char*						key;
-	uint32_t 					key_length;
-	struct json_dom_val*		val;
+	char				*key;
+	size_t				key_length;
+	struct json_dom_val *val;
 };
 
 typedef struct json_dom_val
@@ -247,120 +250,24 @@ typedef struct json_dom_val
 	int 						length;
 	union
 	{
-		char*					data;
-		struct json_dom_val**		array;
-		struct json_val_elem**	object;
+		char					*data;
+		struct json_dom_val		**array;
+		struct json_dom_val_elem	**object;
 	} u;
 } json_dom_val_t;
 
-/**
- * @brief  Function that load and analyse a json file
- * @param  path + json file to parse
- * @return dom like of the json file
- */
-json_dom_val_t* json_config_open(const char* szJsonFilename);
-
-/**
- * @brief  Function that clean a json file
- * @param  json object
- * @return none
- */
-void json_config_cleanup(json_dom_val_t* element);
-
-/**
- * @brief  Function that locate a main directory
- * @param  pointer to the main json dom
- * @return pointer to the element that contain
- */
-json_dom_val_t* json_config_lookup(json_dom_val_t* element, const char* szDirectoryNane);
-
-/*
- * @brief Extract the integer value from a data
- *
- * @param current item
- * @param pointer to the integer value expected
- *
- * @return integer value
- */
-int json_config_get_int(json_dom_val_t* element, int* val);
-
-/*
- * @brief Extract the integer value from a data
- *
- * @param pointer to the dom
- * @param directory name
- * @param attribute's name
- * @paral the integer value expected
- *
- * @return return code
- */
-int json_config_get_direct_int(json_dom_val_t* root, const char* directoryName, const char* attributeName, int* val);
-
-/*
- * @brief Extract the boolean value from a data
- *
- * @param current item
- * @param pointer to the boolean value expected
- *
- * @return boolean value
- */
-int json_config_get_bool(json_dom_val_t* element, bool* val);
-
-/*
- * @brief Extract the boolean value from a data
- *
- * @param pointer to the dom
- * @param directory name
- * @param attribute's name
- * @paral the boolean value expected
- *
- * @return return code
- */
-bool json_config_get_direct_bool(json_dom_val_t* root, const char* directoryName, const char* attributeName, bool* val);
-
-/*
- * @brief Extract the string value from a data
- *
- * @param current item
- * @param pointer to the string value expected
- *
- * @return string value
- */
-int json_config_get_string(json_dom_val_t* element, char** val);
-
-/*
- * @brief Extract the string value from a data
- *
- * @param pointer to the dom
- * @param directory name
- * @param attribute's name
- * @paral the string value expected
- *
- * @return return code
- */
-int json_config_get_direct_string(json_dom_val_t* root, const char* directoryName, const char* attributeName, char** val);
-
-/*
- * @brief Extract the double value from a data
- *
- * @param current item
- * @param pointer to the double value expected
- *
- * @return return code
- */
-int json_config_get_double(json_dom_val_t* element, double* val);
-
-/*
- * @brief Extract the double value from a data
- *
- * @param pointer to the dom
- * @param directory name
- * @param attribute's name
- * @paral the double value expected
- *
- * @return return code
- */
-int json_config_get_direct_double(json_dom_val_t* root, const char* directoryName, const char* attributeName, double* val);
+json_dom_val_t *json_config_open(const char *szJsonFilename);
+void json_config_cleanup(json_dom_val_t *element);
+json_dom_val_t *json_config_lookup(json_dom_val_t *element, const char *name);
+int json_config_get_int(json_dom_val_t *element, int *val);
+int json_config_get_direct_int(json_dom_val_t *root, const char *directoryName, const char *itemName, int *val);
+int json_config_get_bool(json_dom_val_t *element, bool *val);
+int json_config_get_direct_bool(json_dom_val_t *root, const char *directoryName, const char *itemName, bool *val);
+int json_config_get_string(json_dom_val_t *element, char **val);
+int json_config_get_direct_string(json_dom_val_t *root, const char *directoryName, const char *itemName, char **val);
+int json_config_get_direct_strp(json_dom_val_t *root, const char *directoryName, const char *itemName, const char* *val, size_t *n);
+int json_config_get_double(json_dom_val_t *element, double *val);
+int json_config_get_direct_double(json_dom_val_t *root, const char *directoryName, const char *itemName, double *val);
 
 #ifdef __cplusplus
 }

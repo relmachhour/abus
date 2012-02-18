@@ -13,7 +13,8 @@ EXTRA_PROGRAMS   = \
 		example-svc-event \
 		example-clientpp \
  		example-servicepp \
-		example-servicexx
+		example-servicexx \
+		example-json-config
 
 if HAVE_EXAMPLES
 bin_PROGRAMS = $(EXTRA_PROGRAMS)

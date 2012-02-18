@@ -16,3 +16,7 @@ abus_send_LDADD    = $(top_builddir)/abus/libabus.la
 abus_cgi_SOURCES  = abus-cgi.c
 abus_cgi_LDADD    = $(top_builddir)/abus/libabus.la -lfcgi
 
+cppcheck:
+	cppcheck -q -I $(top_builddir) $(INC) $(top_srcdir)/tools
+
+.PHONY: cppcheck

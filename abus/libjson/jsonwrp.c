@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2011-2012
+ * Copyright (C) 2012 Stephane Fillod
+ * Derived from code Copyright (C) 2009-2011 Vincent Hanquez <vincent@snarc.org>
  *
  *   This library is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Library General Public License as
@@ -54,30 +56,19 @@ object end
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
-#include <locale.h>
-#include <getopt.h>
 #include <errno.h>
 #include <stdbool.h>
 
 #include "json.h"
 
-static char* string_of_errors[] =
-{
-	[JSON_ERROR_NO_MEMORY]							= "out of memory",
-	[JSON_ERROR_BAD_CHAR]							= "bad character",
-	[JSON_ERROR_POP_EMPTY]							= "stack empty",
-	[JSON_ERROR_POP_UNEXPECTED_MODE]				= "pop unexpected mode",
-	[JSON_ERROR_NESTING_LIMIT]						= "nesting limit",
-	[JSON_ERROR_DATA_LIMIT]							= "data limit",
-	[JSON_ERROR_COMMENT_NOT_ALLOWED]				= "comment not allowed by config",
-	[JSON_ERROR_UNEXPECTED_CHAR]					= "unexpected char",
-	[JSON_ERROR_UNICODE_MISSING_LOW_SURROGATE]		= "missing unicode low surrogate",
-	[JSON_ERROR_UNICODE_UNEXPECTED_LOW_SURROGATE]	= "unexpected unicode low surrogate",
-	[JSON_ERROR_COMMA_OUT_OF_STRUCTURE] 			= "error comma out of structure",
-	[JSON_ERROR_CALLBACK]							= "error in a callback",
-	[JSON_ERROR_UTF8]								= "utf8 validation error"
-};
+#ifdef _JSON_DBG
+#define json_dbg_error(a...) printf(a)
+#define json_dbg_trace(a...) fprintf(stderr, a)
+#else
+#define json_dbg_error(a...) do { } while (0)
+#define json_dbg_trace(a...) do { } while (0)
+#endif
+
 
 static void* tree_create_structure(int nesting, int is_object)
 {
@@ -98,9 +89,9 @@ static void* tree_create_structure(int nesting, int is_object)
 	}
 
 	return v;
-} /* tree_create_structure */
+}
 
-static char* memalloc_copy_length(const char *src, uint32_t n)
+static char* memalloc_copy_length(const char *src, size_t n)
 {
 	char *dest;
 
@@ -108,9 +99,9 @@ static char* memalloc_copy_length(const char *src, uint32_t n)
 	if (dest)
 		memcpy(dest, src, n);
 	return dest;
-} /* memalloc_copy_length */
+}
 
-static void* tree_create_data(int type, const char *data, uint32_t length)
+static void* tree_create_data(int type, const char *data, size_t length)
 {
 	json_dom_val_t* v = NULL;
 
@@ -125,15 +116,15 @@ static void* tree_create_data(int type, const char *data, uint32_t length)
 		}
 	}
 	return v;
-} /* tree_create_data */
+}
 
-static int tree_append(void *structure, char *key, uint32_t key_length, void *obj)
+static int tree_append(void *structure, char *key, size_t key_length, void *obj)
 {
 	json_dom_val_t *parent = structure;
 
 	if (key)
 	{
-		struct json_val_elem *objelem;
+		struct json_dom_val_elem *objelem;
 
 		if (parent->length == 0)
 		{
@@ -141,18 +132,18 @@ static int tree_append(void *structure, char *key, uint32_t key_length, void *ob
 			if (!parent->u.object)
 				return 1;
 		} else {
-			uint32_t newsize = parent->length + 1 + 1; /* +1 for null */
+			size_t newsize = parent->length + 1 + 1; /* +1 for null */
 			void *newptr;
 
 			newptr = realloc(parent->u.object, newsize * sizeof(json_dom_val_t *));
 			if (!newptr)
-				return -1;
+				return -ENOMEM;
 			parent->u.object = newptr;
 		}
 
-		objelem = malloc(sizeof(struct json_val_elem));
+		objelem = malloc(sizeof(struct json_dom_val_elem));
 		if (!objelem)
-			return -1;
+			return -ENOMEM;
 
 		objelem->key = memalloc_copy_length(key, key_length);
 		objelem->key_length = key_length;
@@ -163,35 +154,33 @@ static int tree_append(void *structure, char *key, uint32_t key_length, void *ob
 		if (parent->length == 0) {
 			parent->u.array = calloc(1 + 1, sizeof(json_dom_val_t *)); /* +1 for null */
 			if (!parent->u.array)
-				return 1;
+				return -ENOMEM;
 		} else {
-			uint32_t newsize = parent->length + 1 + 1; /* +1 for null */
+			size_t newsize = parent->length + 1 + 1; /* +1 for null */
 			void *newptr;
 
 			newptr = realloc(parent->u.object, newsize * sizeof(json_dom_val_t *));
 			if (!newptr)
-				return -1;
+				return -ENOMEM;
 			parent->u.array = newptr;
 		}
 		parent->u.array[parent->length++] = obj;
 		parent->u.array[parent->length] = NULL;
 	}
 	return 0;
-} /* tree_append */
+}
 
-static FILE *open_filename(const char *filename, const char *opt, int is_input)
+static FILE *open_filename(const char *filename, const char *opt)
 {
 	FILE *input;
 	if (strcmp(filename, "-") == 0)
 	{
-		input = (is_input) ? stdin : stdout;
+		input = stdin;
 	} else {
 		input = fopen(filename, opt);
 		if (!input)
 		{
-#ifdef _JSON_DBG
-			fprintf(stderr, "error: cannot open %s: %s", filename, strerror(errno));
-#endif
+			json_dbg_error("error: cannot open %s: %s", filename, strerror(errno));
 			return NULL;
 		}
 	}
@@ -208,13 +197,13 @@ static int process_file(json_parser *parser, FILE *input, int *retlines, int *re
 {
 	char buffer[4096];
 	int ret = 0;
-	int32_t read;
+	size_t read;
 	int lines, col, i;
 
 	lines = 1;
 	col   = 0;
 	while (1) {
-		uint32_t processed;
+		size_t processed;
 		read = fread(buffer, 1, 4096, input);
 		if (read <= 0)
 			break;
@@ -239,43 +228,41 @@ static int _do_tree(json_config *config, const char *filename, json_dom_val_t** 
 	int ret;
 	int col, lines;
 
-	input = open_filename(filename, "r", 1);
+	input = open_filename(filename, "r");
 	if (!input)
 		return 2;
 
 	ret = json_parser_dom_init(&dom, tree_create_structure, tree_create_data, tree_append);
 	if (ret)
 	{
-#ifdef _JSON_DBG
-		fprintf(stderr, "error: initializing helper failed: [code=%d] %s\n", ret, string_of_errors[ret]);
-#endif
+		json_dbg_error("error: initializing helper failed: [code=%d] %s\n", ret, json_strerror(ret));
+		close_filename(filename, input);
 		return ret;
 	}
 
 	ret = json_parser_init(&parser, config, json_parser_dom_callback, &dom);
 	if (ret)
 	{
-#ifdef _JSON_DBG
-		fprintf(stderr, "error: initializing parser failed: [code=%d] %s\n", ret, string_of_errors[ret]);
-#endif
+		json_dbg_error("error: initializing parser failed: [code=%d] %s\n", ret, json_strerror(ret));
+		close_filename(filename, input);
 		return ret;
 	}
 
 	ret = process_file(&parser, input, &lines, &col);
 	if (ret)
 	{
-#ifdef _JSON_DBG
-		fprintf(stderr, "line %d, col %d: [code=%d] %s\n", lines, col, ret, string_of_errors[ret]);
-#endif
+		json_dbg_error("line %d, col %d: [code=%d] %s\n", lines, col, ret, json_strerror(ret));
+		json_parser_free(&parser);
+		close_filename(filename, input);
 		return 1;
 	}
 
 	ret = json_parser_is_done(&parser);
 	if (!ret)
 	{
-#ifdef _JSON_DBG
-		fprintf(stderr, "syntax error\n");
-#endif
+		json_dbg_error("syntax error\n");
+		json_parser_free(&parser);
+		close_filename(filename, input);
 		return 1;
 	}
 
@@ -299,7 +286,6 @@ json_dom_val_t* json_config_open(const char* szJsonFilename)
 {
 	json_dom_val_t*	root_structure = NULL;
 	json_config config;
-	int         ret            = 0;
 
 	/*
 	 * Initialize the json configuration
@@ -316,7 +302,7 @@ json_dom_val_t* json_config_open(const char* szJsonFilename)
 	_do_tree(&config, szJsonFilename, &root_structure);
 
 	return(root_structure);
-} /* json_config_init */
+}
 
 /**
  * @brief  Function that clean a json file
@@ -326,11 +312,8 @@ json_dom_val_t* json_config_open(const char* szJsonFilename)
 void json_config_cleanup(json_dom_val_t* element)
 {
 	if (NULL != element)
-	{
 		free(element);
-		element = NULL;
-	} /* IF */
-} /* json_config_cleanup */
+}
 
 // ----------------------------------------------------------------------------
 
@@ -338,14 +321,15 @@ void json_config_cleanup(json_dom_val_t* element)
  * @brief  Function that locate a main directory
  * @param  pointer to the main json dom
  * @return pointer to the element that contain
+ * @todo   make the function reentrant (esp. static indent/isFound)
  */
-json_dom_val_t* json_config_lookup(json_dom_val_t* element, const char* szDirectoryNane)
+json_dom_val_t *json_config_lookup(json_dom_val_t* element, const char *name)
 {
 	int    i;
 	static int  indent  = 0;
 	static bool isFound = false;
 
-	//printf("\n %d ", indent);
+	//json_dbg_trace("\n %d ", indent);
 	if (-1 == indent) {
 		indent = 0;
 		isFound = false;
@@ -354,94 +338,81 @@ json_dom_val_t* json_config_lookup(json_dom_val_t* element, const char* szDirect
 	/* Check the parameter */
 	if (NULL != element)
 	{
-#ifdef _JSON_DBG
-		printf("\n Current JSON element : %p ", element );
-#endif
+		json_dbg_trace("\n Current JSON element : %p ", element);
 
 		/* Check if the object have been already found in the json dom */
 		/* If found, memorize the pointer to the item				   */
 		if (true != isFound)
 		{
+			if (0 == strcmp("", name)) {
+				json_dbg_trace("\n\t ---- '%s' json object found (%p)----", name, element);
+				isFound = true;
+				indent--;
+				return element;
+			}
+
 			switch (element->type)
 			{
 				case JSON_OBJECT_BEGIN:
-#ifdef _JSON_DBG
-					printf("- Object begin (%d items) ", element->length);
-#endif
+					json_dbg_trace("- Object begin (%d items) ", element->length);
 					for ( i=0 ; i<element->length ; i++ )
 					{
-#ifdef _JSON_DBG
-						printf("\n\t -> key: %s ", element->u.object[i]->key);
-#endif
-						if (0 == strcmp(element->u.object[i]->key, szDirectoryNane))
+						json_dbg_trace("\n\t -> key: %s ", element->u.object[i]->key);
+						if (0 == strcmp(element->u.object[i]->key, name))
 						{
-#ifdef _JSON_DBG
-							printf("\n\t ---- '%s' json object well found (%p)----", szDirectoryNane, element->u.object[i]->val);
-#endif
+							json_dbg_trace("\n\t ---- '%s' json object well found (%p)----", name, element->u.object[i]->val);
 							isFound = true;
 							indent--;
 							return(element->u.object[i]->val);
 						} else {
 							indent++;
-							json_config_lookup(element->u.object[i]->val, szDirectoryNane);
-						} /* IF */
-					} /* FOR */
-#ifdef _JSON_DBG
-					printf("\n <-- object end ");
-#endif
+							/* FIXME: no return ? */
+							json_config_lookup(element->u.object[i]->val, name);
+						}
+					}
+					json_dbg_trace("\n <-- object end ");
 					break;
 
 				case JSON_ARRAY_BEGIN:
-#ifdef _JSON_DBG
-					printf("- Array begin (%d items in the array) ", element->length);
-#endif
+					json_dbg_trace("- Array begin (%d items in the array) ", element->length);
 					for (i = 0; i < element->length; i++)
 					{
 						indent++;
-						json_config_lookup(element->u.array[i], szDirectoryNane);
+						/* FIXME: no return ? */
+						json_config_lookup(element->u.array[i], name);
 					}
-#ifdef _JSON_DBG
-					printf("\n <- array end ");
-#endif
+					json_dbg_trace("\n <- array end ");
 					break;
 
 				case JSON_FALSE:
 				case JSON_TRUE:
 				case JSON_NULL:
-#ifdef _JSON_DBG
-					printf("- constant ");
-#endif
+					json_dbg_trace("- constant ");
 					break;
 				case JSON_INT:
-#ifdef _JSON_DBG
-					printf("- integer: %s ", element->u.data);
-#endif
+					json_dbg_trace("- integer: %s ", element->u.data);
 					break;
 				case JSON_STRING:
-#ifdef _JSON_DBG
-					printf("- string: %s ", element->u.data);
-#endif
+					json_dbg_trace("- string: %s ", element->u.data);
 					break;
 				case JSON_FLOAT:
-#ifdef _JSON_DBG
-					printf(" - float: %s ", element->u.data);
-#endif
+					json_dbg_trace(" - float: %s ", element->u.data);
 					break;
 
 				default:
 					break;
-			} /* SWITCH */
-		} /* IF */
-	} /* IF */
+			}
+		}
+	}
 
 	indent--;
 
-	return (element);
-} /* json_config_lookup */
+	return isFound ? element : NULL;
+}
 
 // ----------------------------------------------------------------------------
 
-/*
+/**
  * @brief Extract the integer value from a data
  *
  * @param current item
@@ -456,21 +427,17 @@ int json_config_get_int(json_dom_val_t* element, int* val)
 	/* Check the parameter */
 	if (NULL != element)
 	{
-#ifdef _JSON_DBG
-		printf("\n [DBG] Integer value : '%s' (%p) ", element->u.data, element);
-#endif
+		json_dbg_trace("\n [DBG] Integer value : '%s' (%p) ", element->u.data, element);
 		*val = atoi(element->u.data);
 	} else {
 		ret = -1;
-#ifdef _JSON_DBG
-		printf("\n [ERROR] NULL parameter given !!");
-#endif
-	} /* IF */
+		json_dbg_trace("\n [ERROR] NULL parameter given !!");
+	}
 
 	return (ret);
-} /* json_config_get_int */
+}
 
-/*
+/**
  * @brief Extract the boolean value from a data
  *
  * @param current item
@@ -485,21 +452,17 @@ int json_config_get_bool(json_dom_val_t* element, bool* val)
 	/* Check the parameter */
 	if (NULL != element)
 	{
-#ifdef _JSON_DBG
-		printf("\n [DBG] Boolean value : '%s' (%p) ", element->u.data, element);
-#endif
+		json_dbg_trace("\n [DBG] Boolean value : '%s' (%p) ", element->u.data, element);
 		*val = (bool)atoi(element->u.data);
 	} else {
 		ret = -1;
-#ifdef _JSON_DBG
-		printf("\n [ERROR] NULL parameter given !!");
-#endif
-	} /* IF */
+		json_dbg_trace("\n [ERROR] NULL parameter given !!");
+	}
 
 	return (ret);
-} /* json_config_get_bool */
+}
 
-/*
+/**
  * @brief Extract the string value from a data
  *
  * @param current item
@@ -514,21 +477,17 @@ int  json_config_get_string(json_dom_val_t* element, char** val)
 	/* Check the parameter */
 	if (NULL != element)
 	{
-#ifdef _JSON_DBG
-		printf("\n [DBG] String value : '%s' (%p) ", element->u.data, element);
-#endif
+		json_dbg_trace("\n [DBG] String value : '%s' (%p) ", element->u.data, element);
 		*val = strdup(element->u.data);
 	} else {
 		ret = -1;
-#ifdef _JSON_DBG
-		printf("\n [ERROR] NULL parameter given !!");
-#endif
-	} /* IF */
+		json_dbg_trace("\n [ERROR] NULL parameter given !!");
+	}
 
 	return (ret);
-} /* json_config_get_string */
+}
 
-/*
+/**
  * @brief Extract the double value from a data
  *
  * @param current item
@@ -543,193 +502,167 @@ int json_config_get_double(json_dom_val_t* element, double* val)
 	/* Check the parameter */
 	if (NULL != element)
 	{
-#ifdef _JSON_DBG
-		printf("\n [DBG] Double value : '%s' (%p) ", element->u.data, element);
-#endif
+		json_dbg_trace("\n [DBG] Double value : '%s' (%p) ", element->u.data, element);
 		*val = atof(element->u.data);
 	} else {
 		ret = -1;
-#ifdef _JSON_DBG
-		printf("\n [ERROR] NULL parameter given !!");
-#endif
-	} /* IF */
+		json_dbg_trace("\n [ERROR] NULL parameter given !!");
+	}
 
 	return (ret);
-} /* json_config_get_double */
+}
+
+/* Internal helper function */
+static int json_config_get_direct_type(json_dom_val_t* root, const char* directoryName, const char* itemName, void* val, json_type type)
+{
+	json_dom_val_t *myParentItem, *myItem;
+	char *endptr;
+
+	/* Check the parameter */
+	if (NULL == root) {
+		json_dbg_trace("\n [ERROR] NULL parameter given !!");
+		return -EINVAL;
+	}
+
+	myParentItem = json_config_lookup(root, directoryName);
+	if (NULL == myParentItem)
+		return -ENOENT;
+
+	myItem = json_config_lookup(myParentItem, itemName);
+	if (NULL == myItem)
+		return -ENOENT;
+
+	if (myItem->type != type && !(myItem->type == JSON_FALSE && type == JSON_TRUE))
+		return -ENOTTY;
+
+	switch (type) {
+	case JSON_INT:
+		json_dbg_trace("\n [DBG] Integer value : '%s' (%p) ", myItem->u.data, myItem);
+
+ 		*(int *)val = strtol(myItem->u.data, &endptr, 10);
+		if (myItem->u.data == endptr)
+			return -ENOTTY;
+		break;
+
+	case JSON_STRING:
+		json_dbg_trace("\n [DBG] String value : '%s' (%p) ", myItem->u.data, myItem);
+
+ 		*(char **)val = myItem->u.data;
+		break;
+
+	case JSON_TRUE:
+	case JSON_FALSE:
+		json_dbg_trace("\n [DBG] Boolean value : '%s' (%p) ", myItem->u.data, myItem);
+		*(bool *)val = (myItem->type == JSON_FALSE) ? false : true;
+		break;
+
+	case JSON_FLOAT:
+		json_dbg_trace("\n [DBG] Float value : '%s' (%p) ", myItem->u.data, myItem);
+
+		*(double*)val = strtod(myItem->u.data, &endptr);
+		if (myItem->u.data == endptr)
+			return -ENOTTY;
+		break;
+
+	default:
+		json_dbg_trace("\n [ERROR] %s: invalid type", __func__);
+		return -EINVAL;
+	}
+	return 0;
+}
+
 
 // ----------------------------------------------------------------------------
 
-/*
+/**
  * @brief Extract the integer value from a data
  *
  * @param pointer to the dom
  * @param directory name
- * @param attribute's name
- * @paral the integer value expected
+ * @param item's name
+ * @param the integer value expected
  *
- * @return return code
+ * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_int(json_dom_val_t* root, const char* directoryName, const char* attributeName, int* val)
+int json_config_get_direct_int(json_dom_val_t* root, const char* directoryName, const char* itemName, int* val)
 {
-	int  ret                        = 0;
-	json_dom_val_t* myParentItem	= NULL;
-	json_dom_val_t* myItem			= NULL;
+    return json_config_get_direct_type(root, directoryName, itemName, val, JSON_INT);
+}
 
-	/* Check the parameter */
-	if (NULL != root)
-	{
-		if (NULL != (myParentItem = json_config_lookup(root, directoryName)))
-		{
-			if (NULL != (myItem = json_config_lookup(myParentItem, attributeName)))
-			{
-#ifdef _JSON_DBG
-				printf("\n [DBG] Integer value : '%s' (%p) ", myItem->u.data, myItem);
-#endif
-				*val = atoi(myItem->u.data);
-			} else {
-				ret = -1;
-			} /* IF */
-		} else {
-			ret = -2;
-		} /* IF */
-	} else {
-		ret = -3;
-#ifdef _JSON_DBG
-		printf("\n [ERROR] NULL parameter given !!");
-#endif
-	} /* IF */
-
-	return (ret);
-} /* json_config_get_int */
-
-/*
+/**
  * @brief Extract the boolean value from a data
  *
  * @param pointer to the dom
  * @param directory name
- * @param attribute's name
- * @paral the boolean value expected
+ * @param item's name
+ * @param the boolean value expected
  *
- * @return return code
+ * @return zero if successful, non nul value otherwise
  */
-bool json_config_get_direct_bool(json_dom_val_t* root, const char* directoryName, const char* attributeName, bool* val)
+int json_config_get_direct_bool(json_dom_val_t* root, const char* directoryName, const char* itemName, bool* val)
 {
-	int  ret                        = 0;
-	json_dom_val_t* myParentItem	= NULL;
-	json_dom_val_t* myItem			= NULL;
+    return json_config_get_direct_type(root, directoryName, itemName, val, JSON_TRUE);
+}
 
-	/* Check the parameter */
-	if (NULL != root)
-	{
-		if (NULL != (myParentItem = json_config_lookup(root, directoryName)))
-		{
-			if (NULL != (myItem = json_config_lookup(myParentItem, attributeName)))
-			{
-#ifdef _JSON_DBG
-				printf("\n [DBG] Boolean value : '%s' (%p) ", myItem->u.data, myItem);
-#endif
-				*val = (bool)atoi(myItem->u.data);
-			} else {
-				ret = -1;
-			} /* IF */
-		} else {
-			ret = -2;
-		} /* IF */
-	} else {
-		ret = -3;
-#ifdef _JSON_DBG
-		printf("\n [ERROR] NULL parameter given !!");
-#endif
-	} /* IF */
-
-	return (ret);
-} /* json_config_get_bool */
-
-/*
+/**
  * @brief Extract the string value from a data
  *
  * @param pointer to the dom
  * @param directory name
- * @param attribute's name
- * @paral the string value expected
+ * @param item's name
+ * @param the string value expected, dynamically allocated
  *
- * @return return code
+ * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_string(json_dom_val_t* root, const char* directoryName, const char* attributeName, char** val)
+int json_config_get_direct_string(json_dom_val_t* root, const char* directoryName, const char* itemName, char** val)
 {
-	int  ret                        = 0;
-	json_dom_val_t* myParentItem	= NULL;
-	json_dom_val_t* myItem			= NULL;
+	int ret;
+	char *mval;
 
-	/* Check the parameter */
-	if (NULL != root)
-	{
-		if (NULL != (myParentItem = json_config_lookup(root, directoryName)))
-		{
-			if (NULL != (myItem = json_config_lookup(myParentItem, attributeName)))
-			{
-#ifdef _JSON_DBG
-				printf("\n [DBG] String value : '%s' (%p) ", myItem->u.data, myItem);
-#endif
-				*val = strdup(myItem->u.data);
-			} else {
-				ret = -1;
-			} /* IF */
-		} else {
-			ret = -2;
-		} /* IF */
-	} else {
-		ret = -3;
-#ifdef _JSON_DBG
-		printf("\n [ERROR] NULL parameter given !!");
-#endif
-	} /* IF */
+	ret = json_config_get_direct_type(root, directoryName, itemName, &mval, JSON_STRING);
+	if (ret == 0)
+		*val = strdup(mval);
 
-	return (ret);
-} /* json_config_get_direct_string */
+	return ret;
+}
 
-/*
+/**
+ * @brief Extract the string value from a data
+ *
+ * @param pointer to the dom
+ * @param directory name
+ * @param item's name
+ * @param the string value expected, not dynamically allocated, valid as long as root valid
+ * @param size of value
+ *
+ * @return zero if successful, non nul value otherwise
+ */
+int json_config_get_direct_strp(json_dom_val_t* root, const char* directoryName, const char* itemName, const char** val, size_t *n)
+{
+	int ret;
+
+	ret = json_config_get_direct_type(root, directoryName, itemName, (void *)val, JSON_STRING);
+
+	if (ret == 0 && n)
+		*n = strlen(*val);
+
+	return ret;
+}
+
+/**
  * @brief Extract the double value from a data
  *
  * @param pointer to the dom
  * @param directory name
- * @param attribute's name
- * @paral the double value expected
+ * @param item's name
+ * @param the double value expected
  *
- * @return return code
+ * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_double(json_dom_val_t* root, const char* directoryName, const char* attributeName, double* val)
+int json_config_get_direct_double(json_dom_val_t* root, const char* directoryName, const char* itemName, double* val)
 {
-	int  ret                        = 0;
-	json_dom_val_t* myParentItem	= NULL;
-	json_dom_val_t* myItem			= NULL;
-
-	/* Check the parameter */
-	if (NULL != root)
-	{
-		if (NULL != (myParentItem = json_config_lookup(root, directoryName)))
-		{
-			if (NULL != (myItem = json_config_lookup(myParentItem, attributeName)))
-			{
-#ifdef _JSON_DBG
-				printf("\n [DBG] String value : '%s' (%p) ", myItem->u.data, myItem);
-#endif
-				*val = atof(myItem->u.data);
-			} else {
-				ret = -1;
-			} /* IF */
-		} else {
-			ret = -2;
-		} /* IF */
-	} else {
-		ret = -3;
-#ifdef _JSON_DBG
-		printf("\n [ERROR] NULL parameter given !!");
-#endif
-	} /* IF */
-
-	return (ret);
-} /* json_config_get_double */
+    return json_config_get_direct_type(root, directoryName, itemName, val, JSON_FLOAT);
+}
 
 // ----------------------------------------------------------------------------
 
@@ -776,7 +709,7 @@ int main(int argc, char* argv[], char* env[])
 						printf("\n [ERROR] Problem to get the item's value ");
 				} else {
 					printf("\n [ERROR] Child item not found ");
-				} /* IF */
+				}
 
 				if (NULL != (myItem = json_config_lookup(myParentItem, "gateway")))
 				{
@@ -787,32 +720,31 @@ int main(int argc, char* argv[], char* env[])
 						printf("\n [ERROR] Problem to get the item's value ");
 				} else {
 					printf("\n [ERROR] Child item not found ");
-				} /* IF */
+				}
 			} else {
 				printf("\n [ERROR] Parent item not found ");
-			} /* IF */
+			}
 
 			/* --------------------------------------------------------- */
 			/* Second example                                            */
 			/* --------------------------------------------------------- */
 			json_config_get_direct_string(json_dom, "networking", "ipaddress", &valItem3);
 			printf("\n [DBG] Item's value = '%s' ", valItem3);
+			free(valItem3);
 
 			/* Cleaning the dom */
 			if (NULL != json_dom)
 				json_config_cleanup(json_dom);
 		} else {
 			printf("\n [ERROR] JSON init and converted into a DOM : NOK ");
-		} /* IF */
+		}
 		printf("\n");
 	} else {
 		printf("\n [ERROR] Expected parameter to %s !!", argv[0]);
 		printf("\n [ERROR] Usage: %s <json file> ", argv[0]);
-	} /* IF */
+	}
 
 	return(ret);
 }
 #endif
-
-
 

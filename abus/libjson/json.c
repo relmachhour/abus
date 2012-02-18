@@ -34,6 +34,24 @@
 #define TRACING(fmt, ...)	((void) 0)
 #endif
 
+static const char* string_of_errors[] =
+{
+	[0]												= "successful",
+	[JSON_ERROR_NO_MEMORY]							= "out of memory",
+	[JSON_ERROR_BAD_CHAR]							= "bad character",
+	[JSON_ERROR_POP_EMPTY]							= "stack empty",
+	[JSON_ERROR_POP_UNEXPECTED_MODE]				= "pop unexpected mode",
+	[JSON_ERROR_NESTING_LIMIT]						= "nesting limit",
+	[JSON_ERROR_DATA_LIMIT]							= "data limit",
+	[JSON_ERROR_COMMENT_NOT_ALLOWED]				= "comment not allowed by config",
+	[JSON_ERROR_UNEXPECTED_CHAR]					= "unexpected char",
+	[JSON_ERROR_UNICODE_MISSING_LOW_SURROGATE]		= "missing unicode low surrogate",
+	[JSON_ERROR_UNICODE_UNEXPECTED_LOW_SURROGATE]	= "unexpected unicode low surrogate",
+	[JSON_ERROR_COMMA_OUT_OF_STRUCTURE] 			= "error comma out of structure",
+	[JSON_ERROR_CALLBACK]							= "error in a callback",
+	[JSON_ERROR_UTF8]								= "utf8 validation error"
+};
+
 enum classes {
 	C_SPACE, /* space */
 	C_NL,    /* newline */
@@ -1043,3 +1061,13 @@ int json_parser_dom_callback(void *userdata, int type, const char *data, size_t 
 	}
 	return 0;
 }
+
+const char *json_strerror(int errnum)
+{
+	if (errnum < 0 || errnum >= sizeof(string_of_errors)/sizeof(string_of_errors[0])
+				|| !string_of_errors[errnum])
+		return "Unknown error";
+
+	return string_of_errors[errnum];
+}
+

@@ -243,7 +243,7 @@ A callback prototype looks like the following:
 * length: is the length in byte of the data associated with the atom.
 
 {{{!C
-int my_callback(void *userdata, int type, const char *data, uint32_t length)
+int my_callback(void *userdata, int type, const char *data, size_t length)
 }}}
 
 the following example is a full callback function that just print the atom received.
@@ -251,7 +251,7 @@ as a callback object it can support an optional FILE * to print to, otherwise it
 use stdout.
 
 {{{!C
-int my_callback(void *userdata, int type, const char *data, uint32_t length)
+int my_callback(void *userdata, int type, const char *data, size_t length)
 {
 	FILE *output = (userdata) ? userdata : stdout;
 	switch (type) {
@@ -396,7 +396,7 @@ disk. The file descriptor is passed through the callback object as void *, and
 need to be valid.
 
 {{{!C
-int my_printer_callback(void *userdata, const char *s, uint32_t length)
+int my_printer_callback(void *userdata, const char *s, size_t length)
 {
 	int fd = (int) userdata;
 
@@ -455,7 +455,7 @@ void *tree_create_structure(int nesting, int is_object)
 		return new_array();
 }
 
-void *tree_create_data(int type, const char *data, uint32_t length)
+void *tree_create_data(int type, const char *data, size_t length)
 {
 	switch (type) {
 	case JSON_STRING:
@@ -469,7 +469,7 @@ void *tree_create_data(int type, const char *data, uint32_t length)
 	}
 }
 
-int tree_append(void *structure, char *key, uint32_t key_length, void *obj)
+int tree_append(void *structure, char *key, size_t key_length, void *obj)
 {
 	if (key != NULL) {
 		my_object *object = structure;
