@@ -1850,15 +1850,13 @@ static int attr_decl_type(abus_t *abus, const char *service_name, const char *at
 
 	pthread_mutex_unlock(&abus->mutex);
 
-	if (!(flags & ABUS_RPC_RDONLY)) {
-		snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
-		snprintf(event_fmt, sizeof(event_fmt), "%s:%c:%s",
-					attr_name, json_type2char(json_type), descr);
+	snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
+	snprintf(event_fmt, sizeof(event_fmt), "%s:%c:%s",
+				attr_name, json_type2char(json_type), descr);
 
-		ret = abus_decl_event(abus, service_name, event_name, descr, event_fmt);
-		if (ret)
-			return ret;
-	}
+	ret = abus_decl_event(abus, service_name, event_name, descr, event_fmt);
+	if (ret)
+		return ret;
 
 	return ret;
 }
@@ -2001,10 +1999,8 @@ int abus_undecl_attr(abus_t *abus, const char *service_name, const char *attr_na
 	pthread_mutex_unlock(&abus->mutex);
 
 	/* unregister associated attr_changed events */
-	if (!(flags & ABUS_RPC_RDONLY)) {
-		snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
-		abus_undecl_event(abus, service_name, event_name);
-	}
+	snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
+	abus_undecl_event(abus, service_name, event_name);
 
 	return 0;
 }
