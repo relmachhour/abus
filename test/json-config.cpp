@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 
 static const char confContent[] = 
-    "{ \"match\":null, "
+    "{ \"match\":null, \"array0\": [1, 2, 4, 8], "
         "\"str0\": \"string 0\", \"int0\":42, \"bool0\": true, \"double0\": 3.14159265358979323846, "
         "\"level1\": { \"str1\": \"string 1\", \"int1\": 2147483647, \"bool1\": false, \"double1\": 2.7182818284590452354, "
             "\"level2\": { \"str2\": \"string 2\", \"int2\":-1, \"bool2\": true, \"double2\": -1.0}"
@@ -70,6 +70,7 @@ TEST_F(JsonConfigTest, Nominal) {
     bool mybool = false;
     const char *mystr = NULL;
     double mydouble = 0.;
+    int array_count, i;
 
 	EXPECT_EQ(0, json_config_get_direct_strp(m_json_dom, "", "str0", &mystr, NULL));
 	EXPECT_STREQ("string 0", mystr);
@@ -91,11 +92,26 @@ TEST_F(JsonConfigTest, Nominal) {
 
     // TODO: "level2" when implemented
 
+	// Array
+	array_count = json_config_get_direct_array_count(m_json_dom, "", "array0");
+	EXPECT_EQ(4, array_count);
+	for (i = 0; i < array_count; i++) {
+		json_dom_val_t *aryval = json_config_get_direct_array(m_json_dom, "", "array0", i);
+		EXPECT_EQ(0, json_config_get_int(aryval, &myint));
+		EXPECT_EQ(1<<i, myint);
+	}
+
     // error cases
 	EXPECT_EQ(-ENOENT, json_config_get_direct_int(m_json_dom, "", "no_such_key", &myint));
 	EXPECT_EQ(-ENOTTY, json_config_get_direct_int(m_json_dom, "", "match", &myint));
 	EXPECT_EQ(-ENOTTY, json_config_get_direct_int(m_json_dom, "", "str0", &myint));
 	EXPECT_EQ(-ENOTTY, json_config_get_direct_int(m_json_dom, "", "level1", &myint));
 	EXPECT_EQ(-ENOTTY, json_config_get_direct_int(m_json_dom, "", "", &myint));
+
+	EXPECT_EQ(-ENOTTY, json_config_get_direct_array_count(m_json_dom, "", "str0"));
+	EXPECT_EQ(-ENOENT, json_config_get_direct_array_count(m_json_dom, "", "no_such_array"));
+	EXPECT_EQ(NULL, json_config_get_direct_array(m_json_dom, "", "str0", 0));
+	EXPECT_EQ(NULL, json_config_get_direct_array(m_json_dom, "", "no_such_array", 0));
+	EXPECT_EQ(NULL, json_config_get_direct_array(m_json_dom, "", "array0", 2147483647));
 }
 

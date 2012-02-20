@@ -334,7 +334,6 @@ void json_config_cleanup(json_dom_val_t* element)
 		case JSON_ARRAY_BEGIN:
 			for (i = 0; i < element->length; i++) {
 				json_config_cleanup(element->u.array[i]);
-				free(element->u.array[i]);
 			}
 			free(element->u.array);
 			break;
@@ -705,6 +704,56 @@ int json_config_get_direct_double(json_dom_val_t* root, const char* directoryNam
 {
     return json_config_get_direct_type(root, directoryName, itemName, val, JSON_FLOAT);
 }
+
+/**
+ * @brief  Function that locates an index within an array
+ * @param  pointer to the main json dom
+ * @param  item's name
+ * @param  array index
+ * @return pointer to the element
+ */
+json_dom_val_t *json_config_get_direct_array(json_dom_val_t *root, const char *directoryName, const char *arrayName, unsigned idx)
+{
+	json_dom_val_t *myParentItem, *myArray;
+
+	myParentItem = json_config_lookup(root, directoryName);
+	if (NULL == myParentItem)
+		return NULL;
+
+	myArray = json_config_lookup(myParentItem, arrayName);
+	if (NULL == myArray || JSON_ARRAY_BEGIN != myArray->type || idx >= myArray->length)
+		return NULL;
+
+	return myArray->u.array[idx];
+}
+
+/**
+ * @brief Get array count of element
+ *
+ * @param current item
+ * @param pointer to the main json dom
+ * @param array's name
+ *
+ * @return integer value
+ */
+int json_config_get_direct_array_count(json_dom_val_t *root, const char *directoryName, const char *arrayName)
+{
+	json_dom_val_t *myParentItem, *myArray;
+
+	myParentItem = json_config_lookup(root, directoryName);
+	if (NULL == myParentItem)
+		return -ENOENT;
+
+	myArray = json_config_lookup(myParentItem, arrayName);
+	if (NULL == myArray)
+		return -ENOENT;
+
+	if (JSON_ARRAY_BEGIN != myArray->type)
+		return -ENOTTY;
+
+	return myArray->length;
+}
+
 
 // ----------------------------------------------------------------------------
 
