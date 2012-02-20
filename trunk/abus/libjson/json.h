@@ -259,6 +259,8 @@ typedef struct json_dom_val
 json_dom_val_t *json_config_open(const char *szJsonFilename);
 void json_config_cleanup(json_dom_val_t *element);
 json_dom_val_t *json_config_lookup(json_dom_val_t *element, const char *name);
+json_dom_val_t *json_config_get_direct_array(json_dom_val_t *element, const char *directoryName, const char *arrayName, unsigned idx);
+int json_config_get_direct_array_count(json_dom_val_t *element, const char *directoryName, const char *arrayName);
 int json_config_get_int(json_dom_val_t *element, int *val);
 int json_config_get_direct_int(json_dom_val_t *root, const char *directoryName, const char *itemName, int *val);
 int json_config_get_bool(json_dom_val_t *element, bool *val);
