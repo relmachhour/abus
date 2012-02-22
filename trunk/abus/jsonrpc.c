@@ -47,10 +47,15 @@ static int json_rpc_add_array(json_rpc_t *json_rpc);
 static int json_rpc_add_object_to_array(json_rpc_t *json_rpc);
 static int json_rpc_parser_callback(void *userdata, int type, const char *data, size_t length);
 
+/*!
+	Return string describing error number
+
+  \param[in] errnum error number likely returned by json_rpc and abus API
+  \return string describing error number
+ */
 const char *json_rpc_strerror(int errnum)
 {
 	switch (errnum) {
-		case 0: return "success";
 		case JSONRPC_PARSE_ERROR: return JSONRPC_PARSE_ERROR_MSG;
 		case JSONRPC_INVALID_REQUEST: return JSONRPC_INVALID_REQUEST_MSG;
 		case JSONRPC_NO_METHOD: return JSONRPC_NO_METHOD_MSG;
@@ -58,7 +63,8 @@ const char *json_rpc_strerror(int errnum)
 		case JSONRPC_INTERNAL_ERROR: return JSONRPC_INTERNAL_ERROR_MSG;
 		case JSONRPC_SERVER_ERROR: return JSONRPC_SERVER_ERROR_MSG;
 		default:
-			return "Unknown error";
+			if (errnum <= 0)
+				return strerror(-errnum);
 	}
 	return "";
 }
