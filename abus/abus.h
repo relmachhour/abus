@@ -153,6 +153,7 @@ int abus_attr_set_str(abus_t *abus, const char *service_name, const char *attr_n
 int abus_attr_subscribe_onchange(abus_t *abus, const char *service_name, const char *attr_name, abus_callback_t callback, int flags, void *arg, int timeout);
 int abus_attr_unsubscribe_onchange(abus_t *abus, const char *service_name, const char *attr_name, abus_callback_t callback, void *arg, int timeout);
 
+static inline const char *abus_strerror(int errnum) { return json_rpc_strerror(errnum); }
 
 /* Fast/CGI helper */
 int abus_forward_rpc(abus_t *abus, char *buffer, int *buflen, int flags, int timeout);

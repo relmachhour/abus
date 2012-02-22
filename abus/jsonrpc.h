@@ -164,4 +164,6 @@ int json_rpc_append_vargs(json_rpc_t *json_rpc, va_list ap);
 int json_rpc_get_array_count(json_rpc_t *json_rpc, const char *name);
 int json_rpc_get_point_at(json_rpc_t *json_rpc, const char *name, int idx);
 
+const char *json_rpc_strerror(int errnum);
+
 #endif	/* _JSONRPC_H */
