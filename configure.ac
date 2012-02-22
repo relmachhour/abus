@@ -1,4 +1,4 @@
-## Process this file with autoconf to create configure. -*- autoconf -*-
+## Process this file with autoreconf -i --force to create configure. -*- autoconf -*-
 
 AC_PREREQ(2.59)
 
@@ -33,7 +33,7 @@ AM_PROG_CC_C_O
 
 AC_CONFIG_HEADERS([abus_config.h])
 
-AC_DEFINE([_GNU_SOURCE],[1],[Use GNU C library extensions (e.g. stdndup).])
+AC_DEFINE([_GNU_SOURCE],[1],[Use GNU C library extensions (e.g. strndup).])
 
 ACX_PTHREAD([], [AC_MSG_ERROR([Unable to find pthread support])])
 LIBS="$PTHREAD_LIBS $LIBS"

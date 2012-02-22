@@ -34,6 +34,7 @@ class AbusAttrTest : public AbusTest {
 
 	        EXPECT_EQ(0, abus_decl_attr_int(&abus_, SVC_NAME, "int", &m_int, 0, NULL));
 	        EXPECT_EQ(0, abus_decl_attr_int(&abus_, SVC_NAME, "int_ro", &m_int, ABUS_RPC_RDONLY, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_int(&abus_, SVC_NAME, "int_const", &m_int, ABUS_RPC_CONST, NULL));
 	        EXPECT_EQ(0, abus_decl_attr_llint(&abus_, SVC_NAME, "llint", &m_llint, 0, NULL));
 	        EXPECT_EQ(0, abus_decl_attr_bool(&abus_, SVC_NAME, "bool", &m_bool, 0, NULL));
 	        EXPECT_EQ(0, abus_decl_attr_double(&abus_, SVC_NAME, "double", &m_double, 0, NULL));
@@ -43,6 +44,7 @@ class AbusAttrTest : public AbusTest {
 
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "int"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "int_ro"));
+			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "int_const"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "llint"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "bool"));
 			EXPECT_EQ(0, abus_undecl_attr(&abus_, SVC_NAME, "double"));
@@ -120,6 +122,9 @@ TEST_F(AbusAttrTest, AllTypes) {
 	EXPECT_EQ(-1, m_int);
 
 	EXPECT_EQ(JSONRPC_INVALID_METHOD, abus_attr_set_int(&abus_, SVC_NAME, "int_ro", -3, RPC_TIMEOUT));
+	EXPECT_EQ(-1, m_int);
+
+	EXPECT_EQ(JSONRPC_INVALID_METHOD, abus_attr_set_int(&abus_, SVC_NAME, "int_const", -3, RPC_TIMEOUT));
 	EXPECT_EQ(-1, m_int);
 
 	/* TODO:

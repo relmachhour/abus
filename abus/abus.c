@@ -462,7 +462,7 @@ static int service_lookup(abus_t *abus, const char *service_name, bool create, a
 		hadd(abus->service_htab, strdup(service_name), srv_len, service);
 
 		new_attr = calloc(1, sizeof(abus_attr_t));
-		new_attr->flags = ABUS_RPC_RDONLY;
+		new_attr->flags = ABUS_RPC_CONST;
 		new_attr->auto_alloc = false;
 		new_attr->ref.type = JSON_STRING;
 		new_attr->ref.length = sizeof(abus_version);
@@ -1276,7 +1276,8 @@ void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
 			json_rpc_append_args(json_rpc, JSON_OBJECT_BEGIN, -1);
 
 			json_rpc_append_strn(json_rpc, "name", attr_name, hkeyl(service->attr_htab));
-			json_rpc_append_bool(json_rpc, "readonly", attr->flags & ABUS_RPC_RDONLY);
+			json_rpc_append_bool(json_rpc, "readonly", attr->flags & (ABUS_RPC_RDONLY|ABUS_RPC_CONST));
+			json_rpc_append_bool(json_rpc, "constant", attr->flags & ABUS_RPC_CONST);
 			if (attr->descr)
 				json_rpc_append_str(json_rpc, "descr", attr->descr);
 
@@ -1850,13 +1851,15 @@ static int attr_decl_type(abus_t *abus, const char *service_name, const char *at
 
 	pthread_mutex_unlock(&abus->mutex);
 
-	snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
-	snprintf(event_fmt, sizeof(event_fmt), "%s:%c:%s",
-				attr_name, json_type2char(json_type), descr);
+	if (!(flags & ABUS_RPC_CONST)) {
+		snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
+		snprintf(event_fmt, sizeof(event_fmt), "%s:%c:%s",
+					attr_name, json_type2char(json_type), descr);
 
-	ret = abus_decl_event(abus, service_name, event_name, descr, event_fmt);
-	if (ret)
-		return ret;
+		ret = abus_decl_event(abus, service_name, event_name, descr, event_fmt);
+		if (ret)
+			return ret;
+	}
 
 	return ret;
 }
@@ -1870,7 +1873,7 @@ static int attr_decl_type(abus_t *abus, const char *service_name, const char *at
   \param[in] service_name	name of service where the attribute belongs to
   \param[in] attr_name	name of attribute to declare
   \param[in,out] val	pointer to the variable holding the attribute value, NULL for auto allocation
-  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
+  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only, ABUS_RPC_CONST if attribute constant
   \param[in] descr	string describing the event to be declared, may be NULL
   \return   0 if successful, non nul value otherwise
   \sa abus_undecl_attr()
@@ -1889,7 +1892,7 @@ int abus_decl_attr_int(abus_t *abus, const char *service_name, const char *attr_
   \param[in] service_name	name of service where the attribute belongs to
   \param[in] attr_name	name of attribute to declare
   \param[in,out] val	pointer to the variable holding the attribute value, NULL for auto allocation
-  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
+  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only, ABUS_RPC_CONST if attribute constant
   \param[in] descr	string describing the event to be declared, may be NULL
   \return   0 if successful, non nul value otherwise
   \sa abus_undecl_attr()
@@ -1908,7 +1911,7 @@ int abus_decl_attr_llint(abus_t *abus, const char *service_name, const char *att
   \param[in] service_name	name of service where the attribute belongs to
   \param[in] attr_name	name of attribute to declare
   \param[in,out] val	pointer to the variable holding the attribute value, NULL for auto allocation
-  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
+  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only, ABUS_RPC_CONST if attribute constant
   \param[in] descr	string describing the event to be declared, may be NULL
   \return   0 if successful, non nul value otherwise
   \sa abus_undecl_attr()
@@ -1927,7 +1930,7 @@ int abus_decl_attr_bool(abus_t *abus, const char *service_name, const char *attr
   \param[in] service_name	name of service where the attribute belongs to
   \param[in] attr_name	name of attribute to declare
   \param[in,out] val	pointer to the variable holding the attribute value, NULL for auto allocation
-  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
+  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only, ABUS_RPC_CONST if attribute constant
   \param[in] descr	string describing the event to be declared, may be NULL
   \return   0 if successful, non nul value otherwise
   \sa abus_undecl_attr()
@@ -1947,7 +1950,7 @@ int abus_decl_attr_double(abus_t *abus, const char *service_name, const char *at
   \param[in] attr_name	name of attribute to declare
   \param[in,out] val	pointer to the variable holding the attribute value, NULL for auto allocation
   \param[in] n	maximum memory size of the string, including nul end-of-string
-  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only
+  \param[in] flags		zero or ABUS_RPC_RDONLY flag if attribute is read-only, ABUS_RPC_CONST if attribute constant
   \param[in] descr	string describing the event to be declared, may be NULL
   \return   0 if successful, non nul value otherwise
   \sa abus_undecl_attr()
@@ -1999,8 +2002,10 @@ int abus_undecl_attr(abus_t *abus, const char *service_name, const char *attr_na
 	pthread_mutex_unlock(&abus->mutex);
 
 	/* unregister associated attr_changed events */
-	snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
-	abus_undecl_event(abus, service_name, event_name);
+	if (!(flags & ABUS_RPC_CONST)) {
+		snprintf(event_name, sizeof(event_name), ABUS_ATTR_CHANGED_PREFIX "%s", attr_name);
+		abus_undecl_event(abus, service_name, event_name);
+	}
 
 	return 0;
 }
@@ -2446,8 +2451,8 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 			return;
 		}
 	
-		if (attr->flags & ABUS_RPC_RDONLY) {
-			json_rpc_set_error(json_rpc, JSONRPC_INVALID_METHOD, "Cannot set read-only attribute");
+		if (attr->flags & (ABUS_RPC_RDONLY|ABUS_RPC_CONST)) {
+			json_rpc_set_error(json_rpc, JSONRPC_INVALID_METHOD, "Cannot set read-only/constant attribute");
 			pthread_mutex_unlock(&service->attr_mutex);
 			return;
 		}

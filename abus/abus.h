@@ -35,6 +35,7 @@ typedef void (*abus_callback_t)(json_rpc_t *json_rpc, void *arg);
 #define ABUS_RPC_RDONLY		0x04
 #define ABUS_RPC_WITHOUTVAL	0x08
 #define ABUS_RPC_ASYNC		0x40	/* internal use */
+#define ABUS_RPC_CONST		0x80
 /* TODO flags:
 	VISIBILITY: process, network, default: host ?
 	NO_REPLY?
