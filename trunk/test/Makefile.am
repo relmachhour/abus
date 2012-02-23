@@ -37,4 +37,4 @@ abus_test_CPPFLAGS = $(INC) $(GTEST_CFLAGS) \
 					-Wextra
 
 abus_test_LDADD    = $(top_builddir)/abus/libabus.la \
-						$(GTEST_LIBS) -lgtest_main -lgtest
+						$(GTEST_LIBS) -lgtest_main
