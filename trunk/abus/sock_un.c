@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <errno.h>
@@ -46,6 +47,20 @@ static void un_sock_print_message(int out, const struct sockaddr *sockaddr, cons
 					msglen, msg);
 }
 
+static void set_fd_cloexec(int fd)
+{
+#ifdef FD_CLOEXEC
+	int flags;
+
+	flags = fcntl(fd, F_GETFD);
+	if (flags < 0)
+		flags = FD_CLOEXEC;
+	else
+		flags |= FD_CLOEXEC;
+	fcntl(fd, F_SETFD, flags);
+#endif
+}
+
 int un_sock_create(void)
 {
 	struct sockaddr_un sockaddrun;
@@ -58,6 +73,8 @@ int un_sock_create(void)
 		LogError("%s: failed to bind server socket: %s", __func__, strerror(errno));
 		return ret;
 	}
+
+	set_fd_cloexec(sock);
 
 	memset(&sockaddrun, 0, sizeof(sockaddrun));
 	sockaddrun.sun_family = AF_UNIX;
@@ -195,6 +212,8 @@ int un_sock_transaction(const int sockarg, void *buf, size_t len, size_t bufsz, 
 			return ret;
 		}
 	
+		set_fd_cloexec(sock);
+
 		/* autobind */
 		passcred = 1;
 		ret = setsockopt(sock, SOL_SOCKET, SO_PASSCRED, &passcred, sizeof(passcred));
