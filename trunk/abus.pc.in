@@ -7,5 +7,5 @@ Name: abus
 Description: Library supporting A-Bus interprocess messaging system
 URL: @PACKAGE_URL@
 Version: @VERSION@
-Libs: -L${libdir} -labus
-Cflags: -I${includedir}/abus
+Libs: -L${libdir} -labus @PTHREAD_LIBS@
+Cflags: @PTHREAD_CFLAGS@ -I${includedir}/abus
