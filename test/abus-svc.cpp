@@ -392,7 +392,7 @@ TEST_F(AbusEchoTest, SpecialCharStringParam) {
     bufsnd_len = ascii_count;
 #if 1
     static const char special_chars[] = "éèàùçâĝĥ";
-    for (int i=0; i<strlen(special_chars); i++) {
+    for (size_t i=0; i<strlen(special_chars); i++) {
         bufsnd[ascii_count+i] = special_chars[i];
     }
     bufsnd_len += strlen(special_chars);
