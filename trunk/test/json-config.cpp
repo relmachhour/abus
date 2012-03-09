@@ -110,8 +110,8 @@ TEST_F(JsonConfigTest, Nominal) {
 
 	EXPECT_EQ(-ENOTTY, json_config_get_direct_array_count(m_json_dom, "", "str0"));
 	EXPECT_EQ(-ENOENT, json_config_get_direct_array_count(m_json_dom, "", "no_such_array"));
-	EXPECT_EQ(NULL, json_config_get_direct_array(m_json_dom, "", "str0", 0));
-	EXPECT_EQ(NULL, json_config_get_direct_array(m_json_dom, "", "no_such_array", 0));
-	EXPECT_EQ(NULL, json_config_get_direct_array(m_json_dom, "", "array0", 2147483647));
+	EXPECT_EQ(0, json_config_get_direct_array(m_json_dom, "", "str0", 0));
+	EXPECT_EQ(0, json_config_get_direct_array(m_json_dom, "", "no_such_array", 0));
+	EXPECT_EQ(0, json_config_get_direct_array(m_json_dom, "", "array0", 2147483647));
 }
 
