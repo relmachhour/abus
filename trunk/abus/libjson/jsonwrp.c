@@ -451,6 +451,98 @@ json_dom_val_t *json_config_lookup(json_dom_val_t* element, const char *name)
 	return isFound ? element : NULL;
 }
 
+/*
+ * Helper for json_config_query(), with nesting handling and writable query string
+ * NB: this function is recursive
+ */
+static json_dom_val_t *json_config_query_helper(json_dom_val_t *root, json_dom_val_t *element, char *query, char **endptr, int level)
+{
+	char *p, *q, c;
+    json_dom_val_t *obj, *key, *item;
+
+    *endptr = query;
+
+    /* max nesting level reached */
+    if (level <= 0 || !query || !root || !element)
+        return NULL;
+
+	if (query[0] == '\0')
+        return element;
+
+    /* TODO: operator = and literal ' */
+
+	p = strpbrk(query, ".{}[]");
+
+    if (!p) {
+        *endptr = query+strlen(query);
+        return json_config_lookup(root, query);
+    }
+
+    c = *p;
+    *p++ = '\0';
+
+    obj = query+1 == p ? element : json_config_lookup(root, query);
+    if (!obj)
+        return NULL;
+
+    switch (c) {
+        case '}':
+        case ']':
+            *endptr = p;
+            return obj;
+
+        case '.':
+  	        q = strpbrk(p, ".{}[]");
+            if (q) {
+                c = *q;
+                *q = '\0';
+            } else {
+                c = '\0';
+  	            q = p + strlen(p);
+            }
+            item = json_config_lookup(obj, p);
+            *q = c;
+
+            return json_config_query_helper(root, item, q, endptr, level-1);
+
+        case '{':
+            key = json_config_query_helper(root, element, p, endptr, level-1);
+            if (!key)
+                return NULL;
+            p = *endptr;
+            /* TODO check key type */
+            item = json_config_lookup(obj, key->u.data);
+            return json_config_query_helper(root, item, p, endptr, level-1);
+
+        case '[':
+            /* TODO array access */
+            return NULL;
+    }
+
+	return NULL;
+}
+
+/**
+  Basic Json Query Language processor
+ json_config_query(root, "channelProfile{studioProfile{studioProfileID}.channelProfileID}.rtpPort")
+ */
+json_dom_val_t *json_config_query(json_dom_val_t *element, const char *query)
+{
+    char *query_dup, *endptr;
+    json_dom_val_t *item;
+
+#define MAX_NESTING_LEVEL 16
+    query_dup = strdup(query);
+    if (!query_dup)
+        return NULL;
+
+	item = json_config_query_helper(element, element, query_dup, &endptr, MAX_NESTING_LEVEL);
+    free(query_dup);
+
+    return item;
+}
+
+
 // ----------------------------------------------------------------------------
 
 /**
@@ -554,9 +646,9 @@ int json_config_get_double(json_dom_val_t* element, double* val)
 }
 
 /* Internal helper function */
-static int json_config_get_direct_type(json_dom_val_t* root, const char* directoryName, const char* itemName, void* val, json_type type)
+static int json_config_get_direct_type(json_dom_val_t *root, const char *query, void* val, json_type type)
 {
-	json_dom_val_t *myParentItem, *myItem;
+	json_dom_val_t *myItem;
 	char *endptr;
 
 	/* Check the parameter */
@@ -565,11 +657,7 @@ static int json_config_get_direct_type(json_dom_val_t* root, const char* directo
 		return -EINVAL;
 	}
 
-	myParentItem = json_config_lookup(root, directoryName);
-	if (NULL == myParentItem)
-		return -ENOENT;
-
-	myItem = json_config_lookup(myParentItem, itemName);
+	myItem = json_config_query(root, query);
 	if (NULL == myItem)
 		return -ENOENT;
 
@@ -619,48 +707,45 @@ static int json_config_get_direct_type(json_dom_val_t* root, const char* directo
  * @brief Extract the integer value from a data
  *
  * @param pointer to the dom
- * @param directory name
  * @param item's name
  * @param the integer value expected
  *
  * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_int(json_dom_val_t* root, const char* directoryName, const char* itemName, int* val)
+int json_config_get_direct_int(json_dom_val_t *root, const char *itemName, int* val)
 {
-    return json_config_get_direct_type(root, directoryName, itemName, val, JSON_INT);
+    return json_config_get_direct_type(root, itemName, val, JSON_INT);
 }
 
 /**
  * @brief Extract the boolean value from a data
  *
  * @param pointer to the dom
- * @param directory name
  * @param item's name
  * @param the boolean value expected
  *
  * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_bool(json_dom_val_t* root, const char* directoryName, const char* itemName, bool* val)
+int json_config_get_direct_bool(json_dom_val_t *root, const char *itemName, bool* val)
 {
-    return json_config_get_direct_type(root, directoryName, itemName, val, JSON_TRUE);
+    return json_config_get_direct_type(root, itemName, val, JSON_TRUE);
 }
 
 /**
  * @brief Extract the string value from a data
  *
  * @param pointer to the dom
- * @param directory name
  * @param item's name
  * @param the string value expected, dynamically allocated
  *
  * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_string(json_dom_val_t* root, const char* directoryName, const char* itemName, char** val)
+int json_config_get_direct_string(json_dom_val_t *root, const char *itemName, char **val)
 {
 	int ret;
 	char *mval;
 
-	ret = json_config_get_direct_type(root, directoryName, itemName, &mval, JSON_STRING);
+	ret = json_config_get_direct_type(root, itemName, &mval, JSON_STRING);
 	if (ret == 0)
 		*val = strdup(mval);
 
@@ -671,18 +756,17 @@ int json_config_get_direct_string(json_dom_val_t* root, const char* directoryNam
  * @brief Extract the string value from a data
  *
  * @param pointer to the dom
- * @param directory name
  * @param item's name
  * @param the string value expected, not dynamically allocated, valid as long as root valid
  * @param size of value
  *
  * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_strp(json_dom_val_t* root, const char* directoryName, const char* itemName, const char** val, size_t *n)
+int json_config_get_direct_strp(json_dom_val_t *root, const char *itemName, const char **val, size_t *n)
 {
 	int ret;
 
-	ret = json_config_get_direct_type(root, directoryName, itemName, (void *)val, JSON_STRING);
+	ret = json_config_get_direct_type(root, itemName, (void *)val, JSON_STRING);
 
 	if (ret == 0 && n)
 		*n = strlen(*val);
@@ -691,18 +775,17 @@ int json_config_get_direct_strp(json_dom_val_t* root, const char* directoryName,
 }
 
 /**
- * @brief Extract the double value from a data
+ * @brief Extract the double float value from a data
  *
  * @param pointer to the dom
- * @param directory name
  * @param item's name
  * @param the double value expected
  *
  * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_double(json_dom_val_t* root, const char* directoryName, const char* itemName, double* val)
+int json_config_get_direct_double(json_dom_val_t *root, const char *itemName, double* val)
 {
-    return json_config_get_direct_type(root, directoryName, itemName, val, JSON_FLOAT);
+    return json_config_get_direct_type(root, itemName, val, JSON_FLOAT);
 }
 
 /**
@@ -710,17 +793,12 @@ int json_config_get_direct_double(json_dom_val_t* root, const char* directoryNam
  * @param  pointer to the main json dom
  * @param  item's name
  * @param  array index
- * @return pointer to the element
  */
-json_dom_val_t *json_config_get_direct_array(json_dom_val_t *root, const char *directoryName, const char *arrayName, unsigned idx)
+json_dom_val_t *json_config_get_direct_array(json_dom_val_t *root, const char *arrayName, unsigned idx)
 {
-	json_dom_val_t *myParentItem, *myArray;
+	json_dom_val_t *myArray;
 
-	myParentItem = json_config_lookup(root, directoryName);
-	if (NULL == myParentItem)
-		return NULL;
-
-	myArray = json_config_lookup(myParentItem, arrayName);
+	myArray = json_config_query(root, arrayName);
 	if (NULL == myArray || JSON_ARRAY_BEGIN != myArray->type || idx >= myArray->length)
 		return NULL;
 
@@ -730,21 +808,16 @@ json_dom_val_t *json_config_get_direct_array(json_dom_val_t *root, const char *d
 /**
  * @brief Get array count of element
  *
- * @param current item
  * @param pointer to the main json dom
  * @param array's name
  *
  * @return integer value
  */
-int json_config_get_direct_array_count(json_dom_val_t *root, const char *directoryName, const char *arrayName)
+int json_config_get_direct_array_count(json_dom_val_t *root, const char *arrayName)
 {
-	json_dom_val_t *myParentItem, *myArray;
+	json_dom_val_t *myArray;
 
-	myParentItem = json_config_lookup(root, directoryName);
-	if (NULL == myParentItem)
-		return -ENOENT;
-
-	myArray = json_config_lookup(myParentItem, arrayName);
+	myArray = json_config_query(root, arrayName);
 	if (NULL == myArray)
 		return -ENOENT;
 
@@ -753,7 +826,6 @@ int json_config_get_direct_array_count(json_dom_val_t *root, const char *directo
 
 	return myArray->length;
 }
-
 
 // ----------------------------------------------------------------------------
 
