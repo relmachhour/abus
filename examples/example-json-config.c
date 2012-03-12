@@ -26,20 +26,17 @@ int main(int argc, char* argv[])
 {
 	json_dom_val_t *json_dom;
 	const char *valItem = NULL;
-	const char *dir	= "networking";
-	const char *item = "ipaddress";
+	const char *item = "networking.ipaddress";
 	int ret;
 
 	if (argc < 2)
 	{
-		fprintf(stderr, " [ERROR] Usage: %s <json file> [directory item]\n", argv[0]);
+		fprintf(stderr, " [ERROR] Usage: %s <json file> [item_query]\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
-	if (argc > 3) {
-		dir = argv[2];
+	if (argc > 2)
 		item = argv[3];
-	}
 
 	/* Load and parse the json file */
 	json_dom = json_config_open(argv[1]);
@@ -51,14 +48,14 @@ int main(int argc, char* argv[])
 
 	printf(" [DBG] JSON init and converted into a DOM : OK\n");
 
-	ret = json_config_get_direct_strp(json_dom, dir, item, &valItem, NULL);
+	ret = json_config_get_direct_strp(json_dom, item, &valItem, NULL);
 	if (ret == 0)
 	{
-		printf("Item's value %s.%s = '%s'\n", dir, item, valItem);
+		printf("Item's value %s = '%s'\n", item, valItem);
 	}
 	else
 	{
-		printf(" [ERROR] Item %s.%s not found or invalid type (%d)\n", dir, item, ret);
+		printf(" [ERROR] Item %s not found or invalid type (%d)\n", item, ret);
 	}
 
 	/* Cleaning the dom */
