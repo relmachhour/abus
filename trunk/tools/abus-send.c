@@ -17,7 +17,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 #include <errno.h>
 
 #include <getopt.h>
@@ -369,12 +368,12 @@ int main(int argc, char **argv)
 		}
 	} else {
 		ret = abus_request_method_invoke(&abus, json_rpc, 0, opt_timeout);
+		async_print_all_cb(json_rpc, "printall cookie");
 		if (ret != 0) {
 			abus_request_method_cleanup(&abus, json_rpc);
 			abus_cleanup(&abus);
 			exit(EXIT_FAILURE);
 		}
-		async_print_all_cb(json_rpc, "printall cookie");
 		abus_request_method_cleanup(&abus, json_rpc);
 	}
 
