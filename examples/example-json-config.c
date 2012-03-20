@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 	}
 
 	if (argc > 2)
-		item = argv[3];
+		item = argv[2];
 
 	/* Load and parse the json file */
 	json_dom = json_config_open(argv[1]);
