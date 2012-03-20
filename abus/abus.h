@@ -90,7 +90,14 @@ typedef struct abus {
 
 	pthread_t srv_thread;
 	int sock;
+	/* JSON RPC "id" field for requests */
 	unsigned id;
+
+	/* don't want A-Bus system thread */
+	int poll_operation;
+
+	/* preallocated buffer, may be NULL */
+	char *incoming_buffer;
 
 	pthread_mutex_t mutex;
 } abus_t;
@@ -104,6 +111,9 @@ int abus_cleanup(abus_t *abus);
 
 int abus_decl_method(abus_t *abus, const char *service_name, const char *method_name, abus_callback_t method_callback, int flags, void *arg, const char *descr, const char *fmt, const char *result_fmt);
 int abus_undecl_method(abus_t *abus, const char *service_name, const char *method_name);
+
+int abus_get_fd(abus_t *abus);
+int abus_process_incoming(abus_t *abus);
 
 /* synchronous call */
 

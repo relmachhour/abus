@@ -131,7 +131,7 @@ int abus_init(abus_t *abus)
 
 	pthread_mutex_init(&abus->mutex, NULL);
 
-	/* make sure A-bus directory exist before creating socket */
+	/* make sure A-bus directory exists before creating socket */
 	ret = mkdir(abus_prefix, 0777);
 	if (ret == -1 && errno != EEXIST) {
 		ret = -errno;
@@ -140,6 +140,8 @@ int abus_init(abus_t *abus)
 	}
 
 	abus->sock = -1;
+
+	abus->poll_operation = 0;
 
 #if 0
 	/* TODO */
@@ -164,6 +166,10 @@ static int abus_launch_thread_ondemand(abus_t *abus)
 	abus->sock = un_sock_create();
 	if (abus->sock < 0)
 		return abus->sock;
+
+	/* don't want A-Bus thread? */
+	if (abus->poll_operation)
+		return 0;
 
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
@@ -324,15 +330,79 @@ static void thread_routine_free(void *arg)
 	}
 }
 
+/*!
+	Get the file descriptor of A-Bus system, for use in poll()/select()
+
+  \return   socket file descriptor, might be -1 if socket not opened already (i.e. no service declared).
+  \sa abus_process_incoming()
+ */
+int abus_get_fd(abus_t *abus)
+{
+	return abus->sock;
+}
+
+/*!
+	Process one incoming message from A-Bus socket.
+
+  This function is suitable for poll operation, as well as internal threaded operation.
+
+  \param abus pointer to an opaque handle for A-Bus operation
+  \return   0 if successful, non nul value otherwise
+  \sa abus_get_fd()
+ */
+int abus_process_incoming(abus_t *abus)
+{
+	struct sockaddr_un sock_src_addr;
+	socklen_t sock_addrlen = sizeof(sock_src_addr);
+	json_rpc_t *json_rpc;
+	char *buffer;
+    ssize_t len;
+
+	if (abus->incoming_buffer) {
+		buffer = abus->incoming_buffer;
+	} else {
+		buffer = malloc(JSONRPC_REQ_SZ_MAX);
+		if (!buffer)
+			return -ENOMEM;
+	}
+
+	len = un_sock_recvfrom(abus->sock, buffer, JSONRPC_REQ_SZ_MAX,
+					(struct sockaddr*)&sock_src_addr,
+					&sock_addrlen);
+	if (len < 0) {
+		if (!abus->incoming_buffer)
+			free(buffer);
+		return len;
+	}
+
+	json_rpc = calloc(1, sizeof(json_rpc_t));
+
+	if (json_rpc)
+		abus_process_msg(abus, buffer, len, json_rpc, (const struct sockaddr *)&sock_src_addr, sock_addrlen);
+
+	if (!abus->incoming_buffer)
+		free(buffer);
+
+	if (!json_rpc)
+		return -ENOMEM;
+
+	if (!abus_method_is_threaded((abus_method_t*)json_rpc->cb_context)) {
+		if (json_rpc->msglen) {
+			abus_resp_send(json_rpc);
+			json_rpc_cleanup(json_rpc);
+		}
+		free(json_rpc);
+	}
+	return 0;
+}
+
 /*
  \internal
  */
 void *abus_thread_routine(void *arg)
 {
 	abus_t *abus = (abus_t *)arg;
-    ssize_t len;
 	char *buffer;
-	json_rpc_t *json_rpc;
 
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
@@ -342,29 +412,13 @@ void *abus_thread_routine(void *arg)
 		pthread_exit(NULL);
 	}
 
+	buffer = abus->incoming_buffer;
+
 	pthread_cleanup_push(thread_routine_free, &buffer);
 
 	while (1) {
-		struct sockaddr_un sock_src_addr;
-		socklen_t sock_addrlen = sizeof(sock_src_addr);
 
-		len = un_sock_recvfrom(abus->sock, buffer, JSONRPC_REQ_SZ_MAX,
-						(struct sockaddr*)&sock_src_addr,
-						&sock_addrlen);
-		if (len < 0)
-			continue;
-
-		json_rpc = calloc(1, sizeof(json_rpc_t));
-
-		abus_process_msg(abus, buffer, len, json_rpc, (const struct sockaddr *)&sock_src_addr, sock_addrlen);
-
-		if (!abus_method_is_threaded((abus_method_t*)json_rpc->cb_context)) {
-			if (json_rpc->msglen) {
-				abus_resp_send(json_rpc);
-				json_rpc_cleanup(json_rpc);
-			}
-			free(json_rpc);
-		}
+		abus_process_incoming(abus);
 	}
 
 	pthread_cleanup_pop(1);
@@ -1638,8 +1692,10 @@ void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 	if (!event->subscriber_htab)
 		event->subscriber_htab = hcreate(1);
 
+#if 0
 	LogDebug("####%s %s %p %u %*s\n", json_rpc->service_name, event_name, event->subscriber_htab, event->uniq_subscriber_cnt,
 					json_rpc->sock_addrlen-1, un_sock_name((const struct sockaddr *)&json_rpc->sock_src_addr));
+#endif
 
 	key = memdup(&event->uniq_subscriber_cnt, sizeof(event->uniq_subscriber_cnt));
 	event->uniq_subscriber_cnt++;
