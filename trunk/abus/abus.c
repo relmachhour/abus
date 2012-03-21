@@ -60,6 +60,7 @@ static void abus_req_attr_get_cb(json_rpc_t *json_rpc, void *arg);
 static void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg);
 static int abus_unsubscribe_service(abus_t *abus, const char *service_name, const char *event_name);
 static int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json_rpc, const struct sockaddr *sock_src_addr, socklen_t sock_addrlen);
+static char json_type2char(int json_type);
 
 /*!
   \def ABUS_RPC_FLAG_NONE
@@ -1324,12 +1325,16 @@ void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
 
 		do {
 			const char *attr_name = (const char*)hkey(service->attr_htab);
+			char c;
 	
 			attr = hstuff(service->attr_htab);
+
+			c = json_type2char(attr->ref.type);
 
 			json_rpc_append_args(json_rpc, JSON_OBJECT_BEGIN, -1);
 
 			json_rpc_append_strn(json_rpc, "name", attr_name, hkeyl(service->attr_htab));
+			json_rpc_append_strn(json_rpc, "type", &c, 1);
 			json_rpc_append_bool(json_rpc, "readonly", attr->flags & (ABUS_RPC_RDONLY|ABUS_RPC_CONST));
 			json_rpc_append_bool(json_rpc, "constant", attr->flags & ABUS_RPC_CONST);
 			if (attr->descr)
