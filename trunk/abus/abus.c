@@ -152,6 +152,29 @@ int abus_init(abus_t *abus)
 	return 0;
 }
 
+#ifdef HAVE_PRCTL
+
+#include <sys/prctl.h>
+
+static void set_thread_name(const char *th_new_name)
+{
+	if (prctl(PR_SET_NAME, (unsigned long)th_new_name, 0, 0, 0) < 0)
+	{
+		LogError("prctl(PR_SET_NAME) failed: %s", strerror(errno));
+	}
+}
+static void get_thread_name(char *th_name)
+{
+	if (prctl(PR_GET_NAME, (unsigned long)th_name, 0, 0, 0) < 0)
+	{
+		LogError("prctl(PR_GET_NAME) failed: %s", strerror(errno));
+	}
+}
+#else
+static void set_thread_name(const char *th_new_name) { }
+static void get_thread_name(char *th_name) { th_name[0] = '\0'; }
+#endif
+
 /*
    Lazy creation of socket and startup of A-Bus thread.
  */
@@ -413,6 +436,12 @@ void *abus_thread_routine(void *arg)
 		pthread_exit(NULL);
 	}
 
+	/* NB: limited to 16 bytes according to prctl(2) */
+	memset(buffer, 0, 17);
+	strcpy(buffer, "abus:");
+	get_thread_name(buffer+5);
+	set_thread_name(buffer);
+
 	buffer = abus->incoming_buffer;
 
 	pthread_cleanup_push(thread_routine_free, &buffer);
@@ -667,6 +696,9 @@ static void *abus_threaded_rpc_routine(void *arg)
 	abus_method_t *method = (abus_method_t *)json_rpc->cb_context;
     int ret;
 
+	if (json_rpc->method_name)
+		set_thread_name(json_rpc->method_name);
+
 	abus_call_callback(method, json_rpc);
 
 	if (json_rpc->service_name && json_rpc->method_name &&
@@ -701,14 +733,13 @@ static int abus_do_rpc(abus_t *abus, json_rpc_t *json_rpc, abus_method_t *method
 		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
 		ret = pthread_create(&th, &attr, &abus_threaded_rpc_routine, json_rpc);
+		pthread_attr_destroy(&attr);
 		if (ret != 0)
 		{
 			LogError("%s: pthread_create() failed: %s", __func__, strerror(ret));
-			pthread_attr_destroy(&attr);
 			return -ret;
 		}
 
-		pthread_attr_destroy(&attr);
 	} else {
 		abus_call_callback(method, json_rpc);
 	}
