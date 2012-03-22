@@ -35,6 +35,8 @@ AC_CONFIG_HEADERS([abus_config.h])
 
 AC_DEFINE([_GNU_SOURCE],[1],[Use GNU C library extensions (e.g. strndup).])
 
+AC_CHECK_FUNCS([prctl])
+
 ACX_PTHREAD([], [AC_MSG_ERROR([Unable to find pthread support])])
 LIBS="$PTHREAD_LIBS $LIBS"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
