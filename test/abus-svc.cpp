@@ -179,6 +179,49 @@ TEST_F(AbusReqTest, PlentyOfMethods) {
     EXPECT_EQ(0, abus_request_method_cleanup(&abus_, &json_rpc_introspect));
 }
 
+TEST_F(AbusReqTest, PlentyOfServices) {
+	char service_name[32];
+	json_rpc_t json_rpc_plenty;
+	const int plenty_count = 64;
+
+	for (int i=0; i<plenty_count; i++) {
+		sprintf(service_name, SVC_NAME"%d", i);
+
+		EXPECT_EQ(0, abus_decl_method_cxx(&abus_, service_name, "sum2", this, svc_sum_cb,
+					ABUS_RPC_FLAG_NONE,
+					"Compute summation of two integers, plenty of services",
+					"a:i:first operand,b:i:second operand",
+					"res_value:i:summation"));
+	}
+
+	/* pass 2 parameters: "a" and "b" */
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "a", 2));
+	EXPECT_EQ(0, json_rpc_append_int(&json_rpc_, "b", 3));
+
+	EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc_, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
+
+	EXPECT_EQ(0, json_rpc_get_int(&json_rpc_, "res_value", &m_res_value));
+
+	EXPECT_EQ(2+3, m_res_value);
+
+	/* check plenty of services */
+	for (int i=0; i<plenty_count; i++) {
+
+		sprintf(service_name, SVC_NAME"%d", i);
+
+		EXPECT_EQ(0, abus_request_method_init(&abus_, service_name, "sum2", &json_rpc_plenty));
+		EXPECT_EQ(0, json_rpc_append_int(&json_rpc_plenty, "a", 1000));
+		EXPECT_EQ(0, json_rpc_append_int(&json_rpc_plenty, "b", i));
+
+		EXPECT_EQ(0, abus_request_method_invoke(&abus_, &json_rpc_plenty, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT));
+		EXPECT_EQ(0, json_rpc_get_int(&json_rpc_plenty, "res_value", &m_res_value));
+		EXPECT_EQ(1000+i, m_res_value);
+
+		EXPECT_EQ(0, abus_request_method_cleanup(&abus_, &json_rpc_plenty));
+	}
+}
+
+
 TEST_F(AbusReqTest, MissingArg) {
 
 	/* pass only 1 parameter: "a", make "b" missing */
