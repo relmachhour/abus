@@ -1704,13 +1704,14 @@ void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 {
 	abus_t *abus = (abus_t *)arg;
 	abus_event_t *event;
-	char event_name[JSONRPC_METHNAME_SZ_MAX];
+	const char *event_name;
 	void *key, *stuff;
 	int ret;
+	size_t event_len;
 	bool withoutval = true;
 
-	ret = json_rpc_get_str(json_rpc, "event", event_name, sizeof(event_name));
-	if (ret != 0) {
+	ret = json_rpc_get_strp(json_rpc, "event", &event_name, &event_len);
+	if (ret != 0 || event_len <= 0) {
 		json_rpc_set_error(json_rpc, ret, NULL);
 		return;
 	}
@@ -1765,11 +1766,12 @@ int abus_unsubscribe_service(abus_t *abus, const char *service_name, const char 
 void abus_req_unsubscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 {
 	abus_t *abus = (abus_t *)arg;
-	char event_name[JSONRPC_METHNAME_SZ_MAX];
+	const char *event_name;
 	int ret;
+	size_t event_len;
 
-	ret = json_rpc_get_str(json_rpc, "event", event_name, sizeof(event_name));
-	if (ret != 0) {
+	ret = json_rpc_get_strp(json_rpc, "event", &event_name, &event_len);
+	if (ret != 0 || event_len <= 0) {
 		json_rpc_set_error(json_rpc, ret, NULL);
 		return;
 	}
@@ -2452,7 +2454,7 @@ void abus_req_attr_get_cb(json_rpc_t *json_rpc, void *arg)
 {
 	abus_t *abus = (abus_t *)arg;
 	abus_service_t *service;
-	char attr_name[JSONRPC_METHNAME_SZ_MAX];
+	const char *attr_name;
 	int ret, i, count;
 
     count = json_rpc_get_array_count(json_rpc, "attr");
@@ -2473,7 +2475,8 @@ void abus_req_attr_get_cb(json_rpc_t *json_rpc, void *arg)
 		/* Aim at i-th element within array "attr" */
 		json_rpc_get_point_at(json_rpc, "attr", i);
 
-		ret = json_rpc_get_str(json_rpc, "name", attr_name, sizeof(attr_name));
+		/* nb: allow empty attr name to retrieve all attributes */
+		ret = json_rpc_get_strp(json_rpc, "name", &attr_name, NULL);
 		if (ret != 0) {
 			json_rpc_set_error(json_rpc, ret, NULL);
 			pthread_mutex_unlock(&service->attr_mutex);
@@ -2501,8 +2504,9 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 {
 	abus_t *abus = (abus_t *)arg;
 	abus_service_t *service;
-	char attr_name[JSONRPC_METHNAME_SZ_MAX];
+	const char *attr_name;
 	int i, count;
+	size_t attr_len;
 	abus_attr_t *attr;
 	int ret;
 	int a;
@@ -2529,26 +2533,26 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 		/* Aim at i-th element within array "attr" */
 		json_rpc_get_point_at(json_rpc, "attr", i);
 
-		ret = json_rpc_get_str(json_rpc, "name", attr_name, sizeof(attr_name));
-		if (ret != 0) {
+		ret = json_rpc_get_strp(json_rpc, "name", &attr_name, &attr_len);
+		if (ret != 0 || attr_len <= 0) {
 			json_rpc_set_error(json_rpc, ret, NULL);
 			pthread_mutex_unlock(&service->attr_mutex);
 			return;
 		}
-	
+
 		ret = attr_lookup(abus, json_rpc->service_name, attr_name, false, NULL, &attr);
 		if (ret) {
 			json_rpc_set_error(json_rpc, ret, NULL);
 			pthread_mutex_unlock(&service->attr_mutex);
 			return;
 		}
-	
+
 		if (attr->flags & (ABUS_RPC_RDONLY|ABUS_RPC_CONST)) {
 			json_rpc_set_error(json_rpc, JSONRPC_INVALID_METHOD, "Cannot set read-only/constant attribute");
 			pthread_mutex_unlock(&service->attr_mutex);
 			return;
 		}
-	
+
 		switch(attr->ref.type) {
 		case JSON_INT:
 			ret = json_rpc_get_int(json_rpc, "value", &a);
@@ -2614,7 +2618,7 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 		default:
 			json_rpc_set_error(json_rpc, JSONRPC_INTERNAL_ERROR, NULL);
 		}
-	
+
 		if (attr_changed)
 			abus_attr_changed(abus, json_rpc->service_name, attr_name);
 	}
