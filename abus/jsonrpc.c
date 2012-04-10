@@ -787,7 +787,7 @@ int json_rpc_get_strn(json_rpc_t *json_rpc, const char *name, char *val, size_t 
   \param json_rpc pointer to an opaque handle of a JSON RPC
   \param[in] name key name of a "params"/"result" designating a string value
   \param[out] pval pointer to location where to store a pointer to the string value
-  \param[out] n pointer where to store the real size of the string
+  \param[out] n if not NULL, pointer where to store the real size of the string
   \return	0 if successful, non nul value otherwise
  */
 int json_rpc_get_strp(json_rpc_t *json_rpc, const char *name, const char **pval, size_t *n)
@@ -799,8 +799,9 @@ int json_rpc_get_strp(json_rpc_t *json_rpc, const char *name, const char **pval,
 	if (ret)
 		return ret;
 
-	*pval = (const char*)json_val->u.data;
-	*n = json_val->length;
+	*pval = (const char *)json_val->u.data;
+	if (n)
+		*n = json_val->length;
 
 	return 0;
 }
