@@ -92,26 +92,31 @@ class AbusAutoAttrTest : public AbusTest {
 
 TEST_F(AbusAttrTest, AllTypes) {
 	int a;
+    long long ll;
     bool b;
     double d;
     char s[512];
 
 	EXPECT_EQ(0, abus_attr_get_int(&abus_, SVC_NAME, "int", &a, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_get_llint(&abus_, SVC_NAME, "llint", &ll, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_get_bool(&abus_, SVC_NAME, "bool", &b, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_get_double(&abus_, SVC_NAME, "double", &d, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_get_str(&abus_, SVC_NAME, "str", s, sizeof(s), RPC_TIMEOUT));
 
 	EXPECT_EQ(a, m_int);
+	EXPECT_EQ(ll, m_llint);
 	EXPECT_EQ(b, m_bool);
 	EXPECT_NEAR(d, m_double, DABSERROR);
 	EXPECT_STREQ(m_str, s);
 
 	EXPECT_EQ(0, abus_attr_set_int(&abus_, SVC_NAME, "int", -1, RPC_TIMEOUT));
+	EXPECT_EQ(0, abus_attr_set_llint(&abus_, SVC_NAME, "llint", -2LL, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_set_bool(&abus_, SVC_NAME, "bool", false, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_set_double(&abus_, SVC_NAME, "double", M_E, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_set_str(&abus_, SVC_NAME, "str", abus_get_version(), RPC_TIMEOUT));
 
 	EXPECT_EQ(-1, m_int);
+	EXPECT_EQ(-2LL, m_llint);
 	EXPECT_FALSE(m_bool);
 	EXPECT_NEAR(M_E, m_double, DABSERROR);
 	EXPECT_STREQ(m_str, abus_get_version());
