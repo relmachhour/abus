@@ -69,6 +69,13 @@ const char *json_rpc_strerror(int errnum)
 	return "";
 }
 
+int json_rpc_type_eq(int type1, int type2)
+{
+	return type1 == type2 ||
+			(type1 == JSON_TRUE && type2 == JSON_FALSE) ||
+			(type1 == JSON_FALSE && type2 == JSON_TRUE);
+}
+
 static void json_val_set_string(json_val_t *json_val, char *data, int length)
 {
 	json_val->type = JSON_STRING;
@@ -198,12 +205,6 @@ int json_rpc_parse_msg(json_rpc_t *json_rpc, const char *buffer, size_t len)
 	json_parser_free(&parser);
 
 	return ret;
-}
-
-int json_rpc_is_req(json_rpc_t *json_rpc)
-{
-	return json_rpc->parsing_status == PARSING_OK && !json_rpc->error_code
-		&& json_rpc->service_name && json_rpc->method_name;
 }
 
 struct jsprint_cb_user {
@@ -640,8 +641,8 @@ static int json_rpc_check_val_type(json_rpc_t *json_rpc, const char *name, json_
 
 	json_val = *json_valp;
 
-	if (json_val->type != type &&
-			!(json_val->type == JSON_INT && type == JSON_LLINT))
+	if (!(json_rpc_type_eq(json_val->type, type) ||
+			(json_val->type == JSON_INT && type == JSON_LLINT)))
 		return JSONRPC_INVALID_METHOD;	/* wrong type */
 
 	if (!json_val->u.data ||
