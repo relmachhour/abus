@@ -49,6 +49,10 @@
 #define ABUS_GET_METHOD "get"
 #define ABUS_SET_METHOD "set"
 
+/* for use by {service,method,event,attr}_lookup() */
+#define CreateIfNotThere true
+#define LookupOnly false
+
 static void *abus_thread_routine(void *arg);
 
 static int create_service_path(abus_t *abus, const char *service_name);
@@ -317,7 +321,7 @@ int abus_cleanup(abus_t *abus)
 	return 0;
 }
 
-void static service_may_cleanup(abus_t *abus, abus_service_t *service, const char *service_name)
+static void service_may_cleanup(abus_t *abus, abus_service_t *service, const char *service_name)
 {
 	/* no more stuff in service? */
 	if (hcount(service->method_htab) == 0 &&
@@ -774,7 +778,7 @@ int abus_decl_method(abus_t *abus, const char *service_name, const char *method_
 	abus_method_t *method;
 	int ret;
 
-	ret = method_lookup(abus, service_name, method_name, true, NULL, &method);
+	ret = method_lookup(abus, service_name, method_name, CreateIfNotThere, NULL, &method);
 	if (ret)
 		return ret;
 
@@ -817,7 +821,7 @@ int abus_undecl_method(abus_t *abus, const char *service_name, const char *metho
 	abus_service_t *service;
 	int ret;
 
-	ret = method_lookup(abus, service_name, method_name, false, &service, &method);
+	ret = method_lookup(abus, service_name, method_name, LookupOnly, &service, &method);
 	if (ret)
 		return ret;
 
@@ -1108,7 +1112,9 @@ int abus_request_method_cleanup(abus_t *abus, json_rpc_t *json_rpc)
 	return 0;
 }
 
-
+/*
+ \internal
+ */
 int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json_rpc, const struct sockaddr *sock_src_addr, socklen_t sock_addrlen)
 {
 	int ret;
@@ -1134,7 +1140,7 @@ int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json
 		/* this is a request */
 		/* TODO: more than one cb possible */
 
-		ret = method_lookup(abus, json_rpc->service_name, json_rpc->method_name, false, NULL, &method);
+		ret = method_lookup(abus, json_rpc->service_name, json_rpc->method_name, LookupOnly, NULL, &method);
 		if (ret)
 			json_rpc->error_code = ret;
 	
@@ -1418,7 +1424,7 @@ int abus_decl_event(abus_t *abus, const char *service_name, const char *event_na
 	abus_event_t *event;
 	int ret;
 
-	ret = event_lookup(abus, service_name, event_name, true, NULL, &event);
+	ret = event_lookup(abus, service_name, event_name, CreateIfNotThere, NULL, &event);
 	if (ret)
 		return ret;
 
@@ -1452,7 +1458,7 @@ int abus_undecl_event(abus_t *abus, const char *service_name, const char *event_
 	abus_service_t *service;
 	int ret;
 
-	ret = event_lookup(abus, service_name, event_name, false, &service, &event);
+	ret = event_lookup(abus, service_name, event_name, LookupOnly, &service, &event);
 	if (ret)
 		return ret;
 
@@ -1519,7 +1525,7 @@ int abus_request_event_init(abus_t *abus, const char *service_name, const char *
 	json_rpc_append_str(json_rpc, "event", event_name);
 
 	/* implicit abus_decl_event() */
-	event_lookup(abus, service_name, event_name, true, NULL, &event);
+	event_lookup(abus, service_name, event_name, CreateIfNotThere, NULL, &event);
 
 	/* re-use cb_context for event context */
 	json_rpc->cb_context = event;
@@ -1719,7 +1725,7 @@ void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 	/* optional */
 	json_rpc_get_bool(json_rpc, "without_value", &withoutval);
 
-	ret = event_lookup(abus, json_rpc->service_name, event_name, false, NULL, &event);
+	ret = event_lookup(abus, json_rpc->service_name, event_name, LookupOnly, NULL, &event);
 	if (ret) {
 		json_rpc_set_error(json_rpc, ret, NULL);
 		return;
@@ -1747,7 +1753,7 @@ int abus_unsubscribe_service(abus_t *abus, const char *service_name, const char 
 	abus_event_t *event;
 	int ret;
 
-	ret = event_lookup(abus, service_name, event_name, false, NULL, &event);
+	ret = event_lookup(abus, service_name, event_name, LookupOnly, NULL, &event);
 	if (ret || !event || !event->subscriber_htab) {
 		return ret ? ret : JSONRPC_INTERNAL_ERROR;
 	}
@@ -1845,7 +1851,7 @@ static int attr_append(abus_t *abus, json_rpc_t *json_rpc, const char *service_n
 	abus_attr_t *attr;
 	int ret, attr_name_len;
 
-	ret = attr_lookup(abus, service_name, attr_name, false, &service, &attr);
+	ret = attr_lookup(abus, service_name, attr_name, LookupOnly, &service, &attr);
 	if (ret == 0)
 		return attr_append_type(json_rpc, attr_name, attr->ref.type, attr->ref.u.data);
 
@@ -1914,7 +1920,7 @@ static int attr_decl_type(abus_t *abus, const char *service_name, const char *at
 	char event_name[JSONRPC_METHNAME_SZ_MAX];
 	char event_fmt[JSONRPC_METHNAME_SZ_MAX];
 
-	ret = attr_lookup(abus, service_name, attr_name, true, NULL, &attr);
+	ret = attr_lookup(abus, service_name, attr_name, CreateIfNotThere, NULL, &attr);
 	if (ret)
 		return ret;
 
@@ -2070,7 +2076,7 @@ int abus_undecl_attr(abus_t *abus, const char *service_name, const char *attr_na
 	int ret, flags;
 	char event_name[JSONRPC_METHNAME_SZ_MAX];
 
-	ret = attr_lookup(abus, service_name, attr_name, false, &service, &attr);
+	ret = attr_lookup(abus, service_name, attr_name, LookupOnly, &service, &attr);
 	if (ret)
 		return ret;
 
@@ -2138,12 +2144,53 @@ int abus_attr_changed(abus_t *abus, const char *service_name, const char *attr_n
 	return ret;
 }
 
-int attr_get_type(abus_t *abus, const char *service_name, const char *attr_name, int json_type, void *val, size_t len, int timeout)
+static int attr_get_local(abus_t *abus, const abus_attr_t *attr, int json_type, void *val, size_t len)
+{
+	if (!json_rpc_type_eq(attr->ref.type, json_type))
+		return JSONRPC_INVALID_METHOD;
+
+	switch (json_type) {
+	case JSON_INT:
+		*(int*)val = *(const int*)attr->ref.u.data;
+		break;
+	case JSON_LLINT:
+		/* FIXME: this may not be atomic */
+		*(long long*)val = *(const long long*)attr->ref.u.data;
+		break;
+	case JSON_FALSE:
+	case JSON_TRUE:
+		*(bool*)val = *(const bool*)attr->ref.u.data;
+		break;
+	case JSON_FLOAT:
+		/* FIXME: this may not be atomic */
+		*(double*)val = *(const double*)attr->ref.u.data;
+		break;
+	case JSON_STRING:
+		/* FIXME: this is not atomic */
+		strncpy(val, attr->ref.u.data, len);
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+
+static int attr_get_type(abus_t *abus, const char *service_name, const char *attr_name, int json_type, void *val, size_t len, int timeout)
 {
 	json_rpc_t json_rpc;
+	abus_service_t *service;
+	abus_attr_t *attr;
 	int ret;
 
-	/* TODO: no RPC when attr's service is local to process? */
+	/* no RPC where attr's service is local to process/abus context */
+	if (attr_lookup(abus, service_name, attr_name, LookupOnly, &service, &attr) == 0) {
+		pthread_mutex_lock(&service->attr_mutex);
+		ret = attr_get_local(abus, attr, json_type, val, len);
+		pthread_mutex_unlock(&service->attr_mutex);
+		return ret;
+	}
 
     ret = abus_request_method_init(abus, service_name, ABUS_GET_METHOD, &json_rpc);
     if (ret)
@@ -2198,16 +2245,80 @@ int attr_get_type(abus_t *abus, const char *service_name, const char *attr_name,
 	return ret;
 }
 
-int attr_set_type(abus_t *abus, const char *service_name, const char *attr_name, int json_type, const void *val, size_t len, int timeout)
+static int attr_set_local(abus_t *abus, abus_attr_t *attr, const char *service_name, const char *attr_name, int json_type, const void *val, size_t len)
+{
+	bool attr_changed = false;
+
+	if (!json_rpc_type_eq(attr->ref.type, json_type))
+		return JSONRPC_INVALID_METHOD;
+
+	if (attr->flags & ABUS_RPC_CONST)
+		return JSONRPC_INVALID_METHOD;
+
+	switch (json_type) {
+	case JSON_INT:
+		if (*(const int*)attr->ref.u.data != *(const int*)val) {
+			*(int*)attr->ref.u.data = *(const int*)val;
+			attr_changed = true;
+		}
+		break;
+	case JSON_LLINT:
+		if (*(const long long*)attr->ref.u.data != *(const long long*)val) {
+			/* FIXME: this may not be atomic */
+			*(long long*)attr->ref.u.data = *(const long long*)val;
+			attr_changed = true;
+		}
+		break;
+	case JSON_FALSE:
+	case JSON_TRUE:
+		if (*(const bool*)attr->ref.u.data != *(const bool*)val) {
+			*(bool*)attr->ref.u.data = *(const bool*)val;
+			attr_changed = true;
+		}
+		break;
+	case JSON_FLOAT:
+		if (*(const double*)attr->ref.u.data != *(const double*)val) {
+			/* FIXME: this may not be atomic */
+			*(double*)attr->ref.u.data = *(const double*)val;
+			attr_changed = true;
+		}
+		break;
+	case JSON_STRING:
+		/* TODO check also len */
+		if (strncmp(attr->ref.u.data, val, attr->ref.length) != 0) {
+			/* FIXME: this is not atomic */
+			strncpy(attr->ref.u.data, val, attr->ref.length);
+			attr_changed = true;
+		}
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	if (attr_changed)
+		abus_attr_changed(abus, service_name, attr_name);
+
+	return 0;
+}
+
+static int attr_set_type(abus_t *abus, const char *service_name, const char *attr_name, int json_type, const void *val, size_t len, int timeout)
 {
 	json_rpc_t json_rpc;
+	abus_service_t *service;
+	abus_attr_t *attr;
 	int ret;
 
-	/* TODO: no RPC when attr's service is local to process? */
+	/* no RPC where attr's service is local to process/abus context */
+	if (attr_lookup(abus, service_name, attr_name, LookupOnly, &service, &attr) == 0) {
+		pthread_mutex_lock(&service->attr_mutex);
+		ret = attr_set_local(abus, attr, service_name, attr_name, json_type, val, len);
+		pthread_mutex_unlock(&service->attr_mutex);
+		return ret;
+	}
 
-    ret = abus_request_method_init(abus, service_name, ABUS_SET_METHOD, &json_rpc);
-    if (ret)
-        return ret;
+	ret = abus_request_method_init(abus, service_name, ABUS_SET_METHOD, &json_rpc);
+	if (ret)
+		return ret;
 
 	/* "service.set" "attr":[{"name":attr.a, "value":new_value}] */
 
@@ -2463,7 +2574,7 @@ void abus_req_attr_get_cb(json_rpc_t *json_rpc, void *arg)
 		return;
     }
 
-	ret = service_lookup(abus, json_rpc->service_name, false, &service);
+	ret = service_lookup(abus, json_rpc->service_name, LookupOnly, &service);
 	if (ret < 0) {
 		json_rpc_set_error(json_rpc, ret, NULL);
 		return;
@@ -2506,13 +2617,14 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 	abus_service_t *service;
 	const char *attr_name;
 	int i, count;
-	size_t attr_len;
+	size_t attr_len, len=0;
 	abus_attr_t *attr;
 	int ret;
 	int a;
 	bool b;
 	double d;
 	long long ll;
+	const void *val;
 
     count = json_rpc_get_array_count(json_rpc, "attr");
     if (count < 0) {
@@ -2520,7 +2632,7 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 		return;
     }
 
-	ret = service_lookup(abus, json_rpc->service_name, false, &service);
+	ret = service_lookup(abus, json_rpc->service_name, LookupOnly, &service);
 	if (ret < 0) {
 		json_rpc_set_error(json_rpc, ret, NULL);
 		return;
@@ -2528,7 +2640,6 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 	pthread_mutex_lock(&service->attr_mutex);
 
     for (i = 0; i<count; i++) {
-		bool attr_changed = false;
 
 		/* Aim at i-th element within array "attr" */
 		json_rpc_get_point_at(json_rpc, "attr", i);
@@ -2540,7 +2651,7 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 			return;
 		}
 
-		ret = attr_lookup(abus, json_rpc->service_name, attr_name, false, NULL, &attr);
+		ret = attr_lookup(abus, json_rpc->service_name, attr_name, LookupOnly, NULL, &attr);
 		if (ret) {
 			json_rpc_set_error(json_rpc, ret, NULL);
 			pthread_mutex_unlock(&service->attr_mutex);
@@ -2556,71 +2667,36 @@ void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg)
 		switch(attr->ref.type) {
 		case JSON_INT:
 			ret = json_rpc_get_int(json_rpc, "value", &a);
-			if (ret) {
-				json_rpc_set_error(json_rpc, ret, NULL);
-				pthread_mutex_unlock(&service->attr_mutex);
-				return;
-			}
-			if (*(int*)attr->ref.u.data != a) {
-				*(int*)attr->ref.u.data = a;
-				attr_changed = true;
-			}
+			val = &a;
 			break;
 		case JSON_LLINT:
 			ret = json_rpc_get_llint(json_rpc, "value", &ll);
-			if (ret) {
-				json_rpc_set_error(json_rpc, ret, NULL);
-				pthread_mutex_unlock(&service->attr_mutex);
-				return;
-			}
-			if (*(long long*)attr->ref.u.data != ll) {
-				*(long long*)attr->ref.u.data = ll;
-				attr_changed = true;
-			}
+			val = &ll;
 			break;
 		case JSON_FALSE:
 		case JSON_TRUE:
 			ret = json_rpc_get_bool(json_rpc, "value", &b);
-			if (ret) {
-				json_rpc_set_error(json_rpc, ret, NULL);
-				pthread_mutex_unlock(&service->attr_mutex);
-				return;
-			}
-			if (*(bool*)attr->ref.u.data != b) {
-				*(bool*)attr->ref.u.data = b;
-				attr_changed = true;
-			}
+			val = &b;
 			break;
 		case JSON_FLOAT:
 			ret = json_rpc_get_double(json_rpc, "value", &d);
-			if (ret) {
-				json_rpc_set_error(json_rpc, ret, NULL);
-				pthread_mutex_unlock(&service->attr_mutex);
-				return;
-			}
-			if (*(double*)attr->ref.u.data != d) {
-				/* FIXME: this may not be atomic */
-				*(double*)attr->ref.u.data = d;
-				attr_changed = true;
-			}
+			val = &d;
 			break;
 		case JSON_STRING:
-			/* FIXME: this is not atomic */
-			ret = json_rpc_get_str(json_rpc, "value", attr->ref.u.data, attr->ref.length);
-			if (ret) {
-				json_rpc_set_error(json_rpc, ret, NULL);
-				pthread_mutex_unlock(&service->attr_mutex);
-				return;
-			}
-			/* TODO: implement detection? */
-			attr_changed = true;
+			ret = json_rpc_get_strp(json_rpc, "value", (const char **)&val, &len);
 			break;
 		default:
-			json_rpc_set_error(json_rpc, JSONRPC_INTERNAL_ERROR, NULL);
+			ret = JSONRPC_INTERNAL_ERROR;
 		}
 
-		if (attr_changed)
-			abus_attr_changed(abus, json_rpc->service_name, attr_name);
+		if (ret == 0)
+			ret = attr_set_local(abus, attr, json_rpc->service_name, attr_name, attr->ref.type, val, len);
+
+		if (ret) {
+			json_rpc_set_error(json_rpc, ret, NULL);
+			pthread_mutex_unlock(&service->attr_mutex);
+			return;
+		}
 	}
 
 	pthread_mutex_unlock(&service->attr_mutex);

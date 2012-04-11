@@ -131,6 +131,7 @@ void json_rpc_cleanup(json_rpc_t *json_rpc);
 int json_rpc_resp_init(json_rpc_t *json_rpc);
 int json_rpc_resp_finalize(json_rpc_t *json_rpc);
 int json_rpc_parse_msg(json_rpc_t *json_rpc, const char *buffer, size_t len);
+int json_rpc_type_eq(int type1, int type2);
 int json_val_is_undef(const json_val_t *json_val);
 
 /* service side */
