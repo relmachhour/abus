@@ -157,7 +157,7 @@ ub1   *key;   /* key to find */
 ub4    keyl;  /* key length */
 {
   hitem *h;
-  ub4    x = lookup(key,keyl,0);
+  ub4    x = hlookup(key,keyl,0);
   ub4    y;
   for (h = t->table[y=(x&t->mask)]; h; h = h->next)
   {
@@ -184,7 +184,7 @@ ub4    keyl;   /* key length */
 void  *stuff;  /* stuff to associate with this key */
 {
   register hitem  *h,**hp;
-  register ub4     y, x = lookup(key,keyl,0);
+  register ub4     y, x = hlookup(key,keyl,0);
 
   /* make sure the key is not already there */
   for (h = t->table[(y=(x&t->mask))]; h; h = h->next)
