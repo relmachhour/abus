@@ -79,8 +79,8 @@ acceptable.  Do NOT use for cryptographic purposes.
 --------------------------------------------------------------------
 */
 
-ub4 lookup( k, length, level)
-register ub1 *k;        /* the key */
+ub4 hlookup( k, length, level)
+const register ub1 *k;  /* the key */
 register ub4  length;   /* the length of the key */
 register ub4  level;    /* the previous hash, or an arbitrary value */
 {
@@ -163,8 +163,8 @@ Use to detect changes between revisions of documents, assuming nobody
 is trying to cause collisions.  Do NOT use for cryptography.
 --------------------------------------------------------------------
 */
-void  checksum( k, len, state)
-register ub1 *k;
+void  hchecksum( k, len, state)
+const register ub1 *k;
 register ub4  len;
 register ub4 *state;
 {
