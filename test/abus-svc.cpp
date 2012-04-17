@@ -343,6 +343,12 @@ TEST_F(AbusJtypesTest, AllTypes)
 	EXPECT_NEAR(d1, res_d1, DABSERROR);
 	EXPECT_NEAR(d2, res_d2, DABSERROR);
 	EXPECT_STREQ(res_s, abus_get_copyright());
+
+	/* promoted int -> long long */
+	EXPECT_EQ(0, json_rpc_get_llint(&json_rpc_, "res_int", &res_ll));
+	EXPECT_EQ((long long)a, res_ll);
+	/* int overflow, shall fail */
+	EXPECT_EQ(-ERANGE, json_rpc_get_int(&json_rpc_, "res_llint", &res_a));
 }
 
 TEST_F(AbusArrayTest, SqrArray)
