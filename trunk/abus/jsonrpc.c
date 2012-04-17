@@ -33,6 +33,8 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <stdbool.h>
+#include <limits.h>
+#include <math.h>	/* HUGE_VAL */
 
 #include "json.h"
 #include "hashtab.h"
@@ -670,7 +672,14 @@ int json_rpc_get_int(json_rpc_t *json_rpc, const char *name, int *val)
 	if (ret)
 		return ret;
 
+	/* c.f. strtol(3) */
+	if (errno == ERANGE)
+		errno = 0;
+
 	*val = strtol(json_val->u.data, &endptr, 10);
+
+	if (errno == ERANGE && (*val == LONG_MAX || *val == LONG_MIN))
+		return -ERANGE;
 
 	if (json_val->u.data == endptr)
 		return JSONRPC_PARSE_ERROR;
@@ -696,7 +705,14 @@ int json_rpc_get_llint(json_rpc_t *json_rpc, const char *name, long long *val)
 	if (ret)
 		return ret;
 
+	/* c.f. strtoll(3) */
+	if (errno == ERANGE)
+		errno = 0;
+
 	*val = strtoll(json_val->u.data, &endptr, 10);
+
+	if (errno == ERANGE && (*val == LLONG_MAX || *val == LLONG_MIN))
+		return -ERANGE;
 
 	if (json_val->u.data == endptr)
 		return JSONRPC_PARSE_ERROR;
@@ -749,7 +765,14 @@ int json_rpc_get_double(json_rpc_t *json_rpc, const char *name, double *val)
 	if (ret)
 		return ret;
 
+	/* c.f. strtod(3) */
+	if (errno == ERANGE)
+		errno = 0;
+
 	*val = strtod(json_val->u.data, &endptr);
+
+	if (errno == ERANGE && (*val == HUGE_VAL || *val == -HUGE_VAL || *val == 0.))
+		return -ERANGE;
 
 	if (json_val->u.data == endptr)
 		return JSONRPC_PARSE_ERROR;

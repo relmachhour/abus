@@ -146,6 +146,13 @@ TEST_P(AbusAttrTest, AllTypes) {
 	EXPECT_NEAR(d, m_double, DABSERROR);
 	EXPECT_STREQ(m_str, s);
 
+	/* promoted int -> long long */
+	EXPECT_EQ(0, abus_attr_get_llint(abus_, SVC_NAME, "int", &ll, RPC_TIMEOUT));
+	EXPECT_EQ((long long)m_int, ll);
+	/* int overflow, shall fail */
+	EXPECT_EQ(-ERANGE, abus_attr_get_int(abus_, SVC_NAME, "llint", &a, RPC_TIMEOUT));
+
+
 	EXPECT_EQ(0, abus_attr_set_int(abus_, SVC_NAME, "int", -1, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_set_llint(abus_, SVC_NAME, "llint", -2LL, RPC_TIMEOUT));
 	EXPECT_EQ(0, abus_attr_set_bool(abus_, SVC_NAME, "bool", false, RPC_TIMEOUT));

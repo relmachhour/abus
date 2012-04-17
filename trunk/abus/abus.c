@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <pthread.h>
+#include <limits.h>
 
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -2146,6 +2147,21 @@ int abus_attr_changed(abus_t *abus, const char *service_name, const char *attr_n
 
 static int attr_get_local(abus_t *abus, const abus_attr_t *attr, int json_type, void *val, size_t len)
 {
+	/* promoted int */
+	if (json_type == JSON_LLINT && attr->ref.type == JSON_INT) {
+		*(long long*)val = (long long) *(const int*)attr->ref.u.data;
+		return 0;
+	}
+
+	/* demoted int */
+	if (json_type == JSON_INT && attr->ref.type == JSON_LLINT) {
+		long long ll = *(const long long*)attr->ref.u.data;
+		if (ll > (long long)INT_MAX || ll < (long long)INT_MIN)
+			return -ERANGE;
+		*(int *)val = ll;
+		return 0;
+	}
+
 	if (!json_rpc_type_eq(attr->ref.type, json_type))
 		return JSONRPC_INVALID_METHOD;
 
@@ -2248,6 +2264,23 @@ static int attr_get_type(abus_t *abus, const char *service_name, const char *att
 static int attr_set_local(abus_t *abus, abus_attr_t *attr, const char *service_name, const char *attr_name, int json_type, const void *val, size_t len)
 {
 	bool attr_changed = false;
+	long long ll_val;
+	int i_val;
+
+	if (json_type == JSON_INT && attr->ref.type == JSON_LLINT) {
+		ll_val = (long long) *(const int*)val;
+		val = &ll_val;
+		/* promoted int */
+		json_type = JSON_LLINT;
+	} else if (json_type == JSON_LLINT && attr->ref.type == JSON_INT) {
+		ll_val = *(const long long *)val;
+		if (ll_val > (long long)INT_MAX || ll_val < (long long)INT_MIN)
+			return -ERANGE;
+		i_val = ll_val;
+		val = &i_val;
+		/* demoted int */
+		json_type = JSON_INT;
+	}
 
 	if (!json_rpc_type_eq(attr->ref.type, json_type))
 		return JSONRPC_INVALID_METHOD;
