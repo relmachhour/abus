@@ -35,6 +35,7 @@
 #include <stdbool.h>
 #include <limits.h>
 #include <math.h>	/* HUGE_VAL */
+#include <locale.h>
 
 #include "json.h"
 #include "hashtab.h"
@@ -758,12 +759,16 @@ int json_rpc_get_bool(json_rpc_t *json_rpc, const char *name, bool *val)
 int json_rpc_get_double(json_rpc_t *json_rpc, const char *name, double *val)
 {
 	json_val_t *json_val;
-	char *endptr;
+	char *endptr, *savedlocale;
 	int ret;
 
 	ret = json_rpc_check_val_type(json_rpc, name, &json_val, JSON_FLOAT);
 	if (ret)
 		return ret;
+
+	/* Workaround some locales where the decimal separator is not the dot */
+	savedlocale = setlocale(LC_NUMERIC, NULL);
+	setlocale(LC_NUMERIC, "C");
 
 	/* c.f. strtod(3) */
 	if (errno == ERANGE)
@@ -772,12 +777,15 @@ int json_rpc_get_double(json_rpc_t *json_rpc, const char *name, double *val)
 	*val = strtod(json_val->u.data, &endptr);
 
 	if (errno == ERANGE && (*val == HUGE_VAL || *val == -HUGE_VAL || *val == 0.))
-		return -ERANGE;
+		ret = -ERANGE;
+	else if (json_val->u.data == endptr)
+		ret = JSONRPC_PARSE_ERROR;
+	else
+		ret = 0;
 
-	if (json_val->u.data == endptr)
-		return JSONRPC_PARSE_ERROR;
+	setlocale(LC_NUMERIC, savedlocale);
 
-	return 0;
+	return ret;
 }
 
 /*!
