@@ -81,6 +81,12 @@ typedef struct abus_service {
 	pthread_mutex_t attr_mutex;	/* for get/set */
 } abus_service_t;
 
+typedef struct abus_conf {
+	/* don't want A-Bus system thread */
+	int poll_operation;
+
+} abus_conf_t;
+
 typedef struct abus {
 	/* service */
 	htab *service_htab;	// service name->abus_service_t
@@ -93,13 +99,12 @@ typedef struct abus {
 	/* JSON RPC "id" field for requests */
 	unsigned id;
 
-	/* don't want A-Bus system thread */
-	int poll_operation;
-
 	/* preallocated buffer, may be NULL */
 	char *incoming_buffer;
 
 	pthread_mutex_t mutex;
+
+	abus_conf_t conf;
 } abus_t;
 
 /* user API */
@@ -108,6 +113,8 @@ const char *abus_get_copyright();
 
 int abus_init(abus_t *abus);
 int abus_cleanup(abus_t *abus);
+int abus_get_conf(abus_t *abus, abus_conf_t *conf);
+int abus_set_conf(abus_t *abus, const abus_conf_t *conf);
 
 int abus_decl_method(abus_t *abus, const char *service_name, const char *method_name, abus_callback_t method_callback, int flags, void *arg, const char *descr, const char *fmt, const char *result_fmt);
 int abus_undecl_method(abus_t *abus, const char *service_name, const char *method_name);
