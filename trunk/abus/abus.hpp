@@ -281,6 +281,25 @@ public:
 	/*! Destructor */
 	virtual ~cABus() { abus_cleanup(&m_abus); }
 
+	/*! Get current A-Bus configuration 
+		\sa abus_get_conf()
+	 */
+	int get_conf(abus_conf_t *conf)
+		{ return abus_get_conf(&m_abus, conf); }
+	/*! Set current A-Bus configuration 
+		\sa abus_set_conf()
+	 */
+	int set_conf(const abus_conf_t *conf)
+		{ return abus_set_conf(&m_abus, conf); }
+
+	/*! Get the file descriptor of A-Bus system, for use in poll()/select() */
+	int get_fd(void)
+		{ return abus_get_fd(&m_abus); }
+
+	/*! Processing in polling operation mode */
+	int process_incoming(void)
+		{ return abus_process_incoming(&m_abus); }
+
 	/*! Declare a new method in a service
 		\return	0	if successful, non nul value otherwise
 		\sa declpp_method(), undecl_method()
@@ -374,7 +393,7 @@ public:
 	/*! Notify that the value of an attribute has changed
 	    Any listeners of this attribute will receive an event
 	 */
-	int abus_attr_changed(abus_t *abus, const char *service_name, const char *attr_name)
+	int attr_changed(abus_t *abus, const char *service_name, const char *attr_name)
 		{ return abus_attr_changed(&m_abus, service_name, attr_name); }
 
 

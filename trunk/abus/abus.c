@@ -33,6 +33,7 @@
 #include <sys/un.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>
 
 #include "hashtab.h"
 #include "jsonrpc.h"
@@ -147,12 +148,99 @@ int abus_init(abus_t *abus)
 
 	abus->sock = -1;
 
-	abus->poll_operation = 0;
+	abus->conf.poll_operation = 0;
 
 #if 0
 	/* TODO */
 	on_exit(&abus_dtor, abus);
 #endif
+
+	return 0;
+}
+
+/*!
+  Get current configuration of A-Bus
+
+  \param[in] abus pointer to an opaque handle for A-Bus operation
+  \param[out] conf pointer to an area where to store current A-Bus conf
+  \return   0
+ */
+int abus_get_conf(abus_t *abus, abus_conf_t *conf)
+{
+	pthread_mutex_lock(&abus->mutex);
+
+	memcpy(conf, &abus->conf, sizeof(abus_conf_t));
+
+	pthread_mutex_unlock(&abus->mutex);
+
+	return 0;
+}
+
+static int set_fd_nonblock(int fd)
+{
+	int ret, flags = fcntl(fd, F_GETFL);
+	if (flags < 0)
+		flags = O_NONBLOCK;
+	else
+		flags |= O_NONBLOCK;
+	ret = fcntl(fd, F_SETFL, flags);
+	if (ret == -1) {
+		ret = -errno;
+		LogError("%s: fcntl(O_NONBLOCK) failed: %s", __func__, strerror(errno));
+		return ret;
+	}
+	return 0;
+}
+
+/*!
+  Apply configuration of A-Bus
+
+  This function may be used to change the poll_operation mode,
+  which will stop the A-Bus thread as necessary for pure polling
+  operation, and set the A-Bus socket in non blocking mode.
+\sa abus_get_conf(), abus_process_incoming(), abus_get_fd()
+
+  If only one parameter is to be modified, it is recommended
+  to follow the pattern herebelow:
+\code
+	abus_t abus;
+	abus_conf_t abus_conf;
+	int ret;
+
+	abus_init(&abus);
+
+	abus_get_conf(&abus, &abus_conf);
+	...
+	conf.xxx = y;
+	...
+	ret = abus_set_conf(&abus, &abus_conf);
+	if (ret != 0)
+		fprintf(stderr, "New conf failed: %s\n", abus_strerror(ret));
+\endcode
+  \param abus pointer to an opaque handle for A-Bus operation
+  \param[in] conf pointer to the A-Bus conf to be applied
+  \return   0 if successful, non nul value otherwise
+ */
+int abus_set_conf(abus_t *abus, const abus_conf_t *conf)
+{
+	int want_thread_cancel;
+
+	pthread_mutex_lock(&abus->mutex);
+
+	/* detect poll_operation rising edge */
+	want_thread_cancel = abus->conf.poll_operation == 0 &&
+			conf->poll_operation != 0 && abus->sock != -1;
+
+	/* update poll_operation before issuing thread cancel */
+	memcpy(&abus->conf, conf, sizeof(abus_conf_t));
+
+	pthread_mutex_unlock(&abus->mutex);
+
+	/* stop A-Bus thread */
+	if (want_thread_cancel) {
+		pthread_cancel(abus->srv_thread);
+		set_fd_nonblock(abus->sock);
+	}
 
 	return 0;
 }
@@ -197,7 +285,7 @@ static int abus_launch_thread_ondemand(abus_t *abus)
 		return abus->sock;
 
 	/* don't want A-Bus thread? */
-	if (abus->poll_operation)
+	if (abus->conf.poll_operation)
 		return 0;
 
 	pthread_attr_init(&attr);
@@ -362,6 +450,7 @@ static void thread_routine_free(void *arg)
 /*!
 	Get the file descriptor of A-Bus system, for use in poll()/select()
 
+  \param[in] abus pointer to an opaque handle for A-Bus operation
   \return   socket file descriptor, might be -1 if socket not opened already (i.e. no service declared).
   \sa abus_process_incoming()
  */
@@ -385,7 +474,10 @@ int abus_process_incoming(abus_t *abus)
 	socklen_t sock_addrlen = sizeof(sock_src_addr);
 	json_rpc_t *json_rpc;
 	char *buffer;
-    ssize_t len;
+	ssize_t len;
+
+	if (abus->sock == -1)
+		return -EPIPE;
 
 	if (abus->incoming_buffer) {
 		buffer = abus->incoming_buffer;
@@ -451,9 +543,11 @@ void *abus_thread_routine(void *arg)
 
 	pthread_cleanup_push(thread_routine_free, &buffer);
 
-	while (1) {
+	while ((volatile int)abus->conf.poll_operation == 0) {
 
-		abus_process_incoming(abus);
+		int ret = abus_process_incoming(abus);
+		if (ret < 0)
+			break;
 	}
 
 	pthread_cleanup_pop(1);
