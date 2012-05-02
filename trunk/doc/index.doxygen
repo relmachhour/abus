@@ -86,6 +86,11 @@ tools/abus-send examplesvc.\*
  *
  */
 /*!
+ * \example example-svc-poll.c
+ * This example is the same example of a service named "examplesvc",
+ * except it works in polling mode, without an A-Bus internal thread.
+ */
+/*!
  * \example example-servicexx.cpp
  * This example is the same example of a service named "examplesvc",
  * except it is written in C++.
@@ -124,13 +129,6 @@ tools/abus-send examplesvc.\*
  * To be used with the client example-clnt-array.
  */
 /*!
- * \example example-clnt-attr.c
- * This example is a client written in C, dealing with attributes in a data model.
- *
- * For the example to work, the service "exampleattrsvc" must be provided by running program
- * example-svc-attr.
- */
-/*!
  * \example example-svc-attr.c
  * This example is a service named "exampleattrsvc" written in C,
  * dealing with attributes in a data model.
@@ -150,6 +148,20 @@ abus-send exampleattrsvc.get ""
 \code
 abus-send exampleattrsvc.subscribe attr_changed%tree.auto_count
 \endcode
+ */
+/*!
+ * \example example-clnt-attr.c
+ * This example is a client written in C, dealing with attributes in a data model.
+ *
+ * For the example to work, the service "exampleattrsvc" must be provided by running program
+ * example-svc-attr.
+ */
+/*!
+ * \example example-clnt-multiattr.c
+ * This example is a client written in C, dealing with multiple attributes retrieval at once.
+ *
+ * For the example to work, the service "exampleattrsvc" must be provided by running program
+ * example-svc-attr.
  */
 /*!
  * \example example-svc-event.c
