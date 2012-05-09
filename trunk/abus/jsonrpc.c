@@ -800,13 +800,14 @@ int json_rpc_get_double(json_rpc_t *json_rpc, const char *name, double *val)
 int json_rpc_get_strn(json_rpc_t *json_rpc, const char *name, char *val, size_t *n)
 {
 	json_val_t *json_val;
-	int ret, len;
+	size_t len;
+	int ret;
 
 	ret = json_rpc_check_val_type(json_rpc, name, &json_val, JSON_STRING);
 	if (ret)
 		return ret;
 
-	len = *n < json_val->length ? *n : json_val->length;
+	len = (int)*n < json_val->length ? *n : (size_t)json_val->length;
 	memcpy(val, json_val->u.data, len);
 	*n = len;
 
@@ -861,7 +862,7 @@ int json_rpc_get_str(json_rpc_t *json_rpc, const char *name, char *val, size_t n
 	if (ret < 0)
 		return ret;
 
-    if (len >= 0 && len < n)
+    if (len < n)
         val[len] = '\0';
 
 	return 0;
@@ -982,7 +983,7 @@ int json_rpc_req_finalize(json_rpc_t *json_rpc)
 	Set the error code and message in a RPC before response
 
   \param json_rpc pointer to an opaque handle of a JSON RPC
-  \param[in] error_code integer value of the error, as per JSON/XML convention
+  \param[in] error_code non zero integer value of the error, as per JSON/XML convention
   \param[in] message pointer to a string describing the error, may be NULL
   \return	0 if successful, non nul value otherwise
  */

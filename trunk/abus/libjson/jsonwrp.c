@@ -208,7 +208,7 @@ static int process_file(json_parser *parser, FILE *input, int *retlines, int *re
 		if (read <= 0)
 			break;
 		ret = json_parser_string(parser, buffer, read, &processed);
-		for (i = 0; i < processed; i++)
+		for (i = 0; i < (int)processed; i++)
 		{
 			if (buffer[i] == '\n') { col = 0; lines++; } else col++;
 		}
@@ -661,7 +661,7 @@ static int json_config_get_direct_type(json_dom_val_t *root, const char *query, 
 	if (NULL == myItem)
 		return -ENOENT;
 
-	if (myItem->type != type && !(myItem->type == JSON_FALSE && type == JSON_TRUE))
+	if ((json_type)myItem->type != type && !(myItem->type == JSON_FALSE && type == JSON_TRUE))
 		return -ENOTTY;
 
 	switch (type) {
@@ -799,7 +799,7 @@ json_dom_val_t *json_config_get_direct_array(json_dom_val_t *root, const char *a
 	json_dom_val_t *myArray;
 
 	myArray = json_config_query(root, arrayName);
-	if (NULL == myArray || JSON_ARRAY_BEGIN != myArray->type || idx >= myArray->length)
+	if (NULL == myArray || JSON_ARRAY_BEGIN != myArray->type || (int)idx >= myArray->length)
 		return NULL;
 
 	return myArray->u.array[idx];

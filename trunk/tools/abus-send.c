@@ -151,11 +151,7 @@ int main(int argc, char **argv)
 	char *endptr;
 
 	while (1) {
-		int option_index;
-		struct option long_options[] = {
-			{ 0 },
-		};
-		int c = getopt_long(argc, argv, "ht:vywV", long_options, &option_index);
+		int c = getopt(argc, argv, "ht:vywV");
 		if (c == -1)
 			break;
 		switch (c) {

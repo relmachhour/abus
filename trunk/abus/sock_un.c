@@ -250,15 +250,15 @@ int un_sock_transaction(const int sockarg, void *buf, size_t len, size_t bufsz, 
 
 	/* recycle req buf */
 
-	len = recv(sock, buf, bufsz, 0);
-	if (len == -1) {
+	ret = recv(sock, buf, bufsz, 0);
+	if (ret == -1) {
 		ret = -errno;
 		LogError("%s(): abus clnt recv: %s", __func__, strerror(errno));
 		if (sockarg == -1)
 			close(sock);
 		return ret;
 	}
-	ret = len;
+	len = ret;
 
 	if (abus_msg_verbose)
 		un_sock_print_message(false, NULL, buf, len);

@@ -34,7 +34,11 @@
 #define TRACING(fmt, ...)	((void) 0)
 #endif
 
-static const char* string_of_errors[] =
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+#endif
+
+static const char *string_of_errors[] =
 {
 	[0]												= "successful",
 	[JSON_ERROR_NO_MEMORY]							= "out of memory",
@@ -326,8 +330,8 @@ static inline void *memory_calloc(void *(*calloc_fct)(size_t, size_t), size_t nm
 	return (calloc_fct) ? calloc_fct(nmemb, size) : calloc(nmemb, size);
 }
 
-#define parser_calloc(parser, n, s) memory_calloc(parser->config.user_calloc, n, s)
-#define parser_realloc(parser, n, s) memory_realloc(parser->config.user_realloc, n, s)
+#define parser_calloc(parser, n, s) memory_calloc((parser)->config.user_calloc, (n), (s))
+#define parser_realloc(parser, n, s) memory_realloc((parser)->config.user_realloc, (n), (s))
 
 static int state_grow(json_parser *parser)
 {
@@ -936,7 +940,7 @@ int json_vprint_args(json_printer *printer,
 		case JSON_STRING:
 			data = va_arg(ap, const char *);
 			length = va_arg(ap, size_t);
-			if (length == -1)
+			if (length == (size_t)-1)
 				length = strlen(data);
 			ret = (*f)(printer, type, data, length);
 			break;
@@ -1064,7 +1068,7 @@ int json_parser_dom_callback(void *userdata, int type, const char *data, size_t 
 
 const char *json_strerror(int errnum)
 {
-	if (errnum < 0 || errnum >= sizeof(string_of_errors)/sizeof(string_of_errors[0])
+	if (errnum < 0 || errnum >= (int)ARRAY_SIZE(string_of_errors)
 				|| !string_of_errors[errnum])
 		return "Unknown error";
 
