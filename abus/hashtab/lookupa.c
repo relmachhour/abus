@@ -80,7 +80,7 @@ acceptable.  Do NOT use for cryptographic purposes.
 */
 
 ub4 hlookup( k, length, level)
-const register ub1 *k;  /* the key */
+register const ub1 *k;  /* the key */
 register ub4  length;   /* the length of the key */
 register ub4  level;    /* the previous hash, or an arbitrary value */
 {
@@ -164,7 +164,7 @@ is trying to cause collisions.  Do NOT use for cryptography.
 --------------------------------------------------------------------
 */
 void  hchecksum( k, len, state)
-const register ub1 *k;
+register const ub1 *k;
 register ub4  len;
 register ub4 *state;
 {
