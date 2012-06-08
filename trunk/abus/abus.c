@@ -574,18 +574,23 @@ int create_service_path(abus_t *abus, const char *service_name)
 	snprintf(pid_rel_path, sizeof(pid_rel_path)-1, "_%d", getpid());
 
 	if (strlen(service_name) > 0) {
-		struct stat svcstat;
 
 		snprintf(service_path, sizeof(service_path)-1, "%s/%s",
 						abus_prefix, service_name);
-	
+#if 0
+		struct stat svcstat;
+
 		ret = stat(service_path, &svcstat);
 		if (ret == 0) {
 			char str[32];
+			/* FIXME don't use abus_attr_get_str() because
+			   it's not using the AF_UNIX socket
+			 */
 			if (abus_attr_get_str(abus, service_name, "abus.version",
 										str, sizeof(str), 200) == 0)
 				return -EEXIST;
 		}
+#endif
 		unlink(service_path);
 	
 		/* /tmp/abus/<servicename> -> _<pid> */
