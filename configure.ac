@@ -39,7 +39,7 @@ AC_CHECK_FUNCS([prctl])
 
 ACX_PTHREAD([], [AC_MSG_ERROR([Unable to find pthread support])])
 LIBS="$PTHREAD_LIBS $LIBS"
-CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+CFLAGS="$CFLAGS $PTHREAD_CFLAGS -Wextra -Wno-unused-parameter"
 
 AC_ARG_ENABLE(fcgi,
 	AS_HELP_STRING([--enable-fcgi], [Enable FastCGI gateway [default=no]]),
