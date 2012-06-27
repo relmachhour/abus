@@ -128,12 +128,12 @@ static int usage(const char *argv0, int exit_code)
 {
 	printf("usage: %s [options] SERVICE.METHOD [key:[bfilsae]]=value]...\n", argv0);
     printf(
-    "  -h, --help                 this help message\n"
-    "  -t, --timeout=TIMEOUT      timeout in milliseconds (%d)\n"
-    "  -v, --verbose              verbose\n"
-    "  -V, --version              version of A-Bus\n"
-    "  -y, --async                asynchronous query\n"
-    "  -w, --wait-async           wait for asynchronous query, without callback\n",
+    "  -h			this help message\n"
+    "  -t TIMEOUT   timeout in milliseconds (%d)\n"
+    "  -v           verbose\n"
+    "  -V           version of A-Bus\n"
+    "  -y           asynchronous query\n"
+    "  -w           wait for asynchronous query, without callback\n",
 	opt_timeout);
 
 	exit(exit_code);
