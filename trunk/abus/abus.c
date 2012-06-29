@@ -56,6 +56,7 @@
 #define LookupOnly false
 
 static void *abus_thread_routine(void *arg);
+static int abus_thread_stop(abus_t *abus);
 
 static int create_service_path(abus_t *abus, const char *service_name);
 static int remove_service_path(abus_t *abus, const char *service_name);
@@ -238,7 +239,7 @@ int abus_set_conf(abus_t *abus, const abus_conf_t *conf)
 
 	/* stop A-Bus thread */
 	if (want_thread_cancel) {
-		pthread_cancel(abus->srv_thread);
+		abus_thread_stop(abus);
 		set_fd_nonblock(abus->sock);
 	}
 
@@ -289,7 +290,7 @@ static int abus_launch_thread_ondemand(abus_t *abus)
 		return 0;
 
 	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
 	ret = pthread_create(&abus->srv_thread, &attr, &abus_thread_routine, abus);
 	if (ret != 0)
@@ -317,9 +318,7 @@ static int abus_launch_thread_ondemand(abus_t *abus)
 int abus_cleanup(abus_t *abus)
 {
 	if (abus->sock != -1) {
-		/* stop abus thread */
-		pthread_cancel(abus->srv_thread);
-
+		abus_thread_stop(abus);
 		un_sock_close(abus->sock);
 
 		abus->sock = -1;
@@ -437,6 +436,14 @@ static int abus_resp_send(json_rpc_t *json_rpc)
 }
 
 
+int abus_thread_stop(abus_t *abus)
+{
+	pthread_cancel(abus->srv_thread);
+	pthread_join(abus->srv_thread, NULL);
+
+	return 0;
+}
+
 static void thread_routine_free(void *arg)
 {
 	void **p = (void **)arg;
@@ -466,6 +473,7 @@ int abus_get_fd(abus_t *abus)
 
   \param abus pointer to an opaque handle for A-Bus operation
   \return   0 if successful, non nul value otherwise
+  \todo		fix memory-leak of locally allocated buffer and json_rpc upon pthread_cancel()
   \sa abus_get_fd()
  */
 int abus_process_incoming(abus_t *abus)
@@ -508,12 +516,13 @@ int abus_process_incoming(abus_t *abus)
 		return -ENOMEM;
 
 	if (!abus_method_is_threaded((abus_method_t*)json_rpc->cb_context)) {
-		if (json_rpc->msglen) {
+		if (json_rpc->msglen)
 			abus_resp_send(json_rpc);
-			json_rpc_cleanup(json_rpc);
-		}
+
+		json_rpc_cleanup(json_rpc);
 		free(json_rpc);
 	}
+
 	return 0;
 }
 
@@ -539,14 +548,13 @@ void *abus_thread_routine(void *arg)
 	get_thread_name(buffer+5);
 	set_thread_name(buffer);
 
-	buffer = abus->incoming_buffer;
+	pthread_cleanup_push(thread_routine_free, &abus->incoming_buffer);
 
-	pthread_cleanup_push(thread_routine_free, &buffer);
+	abus->incoming_buffer = buffer;
 
 	while ((volatile int)abus->conf.poll_operation == 0) {
 
-		int ret = abus_process_incoming(abus);
-		if (ret < 0)
+		if (abus_process_incoming(abus) < 0)
 			break;
 	}
 
