@@ -19,6 +19,7 @@
 
 #include <fcgi_stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "abus.h"
 
@@ -32,9 +33,24 @@ int main(int argc, char **argv)
 {
 	abus_t abus;
 	char *buffer;
-	int len, ret;
+	int len, ret, opt;
+	int timeout = RPC_TIMEOUT;
+	size_t bufsz = JSONRPC_REQ_SZ_MAX;
 
-	buffer = malloc(JSONRPC_REQ_SZ_MAX);
+	while ((opt = getopt(argc, argv, "t:b:")) != -1) {
+		switch (opt) {
+			case 't':
+				timeout = atoi(optarg);
+				break;
+			case 'b':
+				bufsz = atoi(optarg);
+				break;
+			default:
+				exit(EXIT_FAILURE);
+		}
+	}
+
+	buffer = malloc(bufsz);
 	if (!buffer)
 		exit(EXIT_FAILURE);
 
@@ -42,7 +58,8 @@ int main(int argc, char **argv)
 
 	while (FCGI_Accept() >= 0) {
 
-		len = fread(buffer, 1, JSONRPC_REQ_SZ_MAX, stdin);
+		len = fread(buffer, 1, bufsz-1, stdin);
+
 		if (len <= 0) {
 			len = sprintf(buffer, "{\"jsonrpc\": \"2.0\", \"error\": {\"code\": %d, \"message\": \""
 							JSONRPC_PARSE_ERROR_MSG"\"}, \"id\":null}", JSONRPC_PARSE_ERROR);
@@ -50,9 +67,8 @@ int main(int argc, char **argv)
 		}
 		else
 		{
-			printf("Content-type: application/json\r\n"
-							"\r\n");
-	
+			buffer[len] = '\0';
+
 			ret = abus_forward_rpc(&abus, buffer, &len, 0, RPC_TIMEOUT);
 	
 			/* Forge JSON-RPC response in case of serious error */
@@ -62,11 +78,12 @@ int main(int argc, char **argv)
 						JSONRPC_INTERNAL_ERROR);
 		}
 
-		ret = fwrite(buffer, 1, len, stdout);
-		if (ret <= 0) {
-			/* or break; ? */
-			continue;
-		}
+		printf("Content-type: application/json\r\n"
+						"\r\n");
+
+		ret = fwrite(buffer, len, 1, stdout);
+		if (ret != 1)
+			break;
 	}
 
 	abus_cleanup(&abus);
