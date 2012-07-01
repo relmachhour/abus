@@ -4,7 +4,7 @@
 .\"
 .TH abus\-send 1
 .SH NAME
-abus\-send \- Send a message to a message bus
+abus\-send \- Send a message through the A-Bus, a message bus
 .SH SYNOPSIS
 .PP
 .B abus\-send
@@ -49,6 +49,14 @@ Here is a simple example invocation, and with type inferring:
   abus\-send examplesvc.sum a=40 b=2
 
   abus\-send examplearraysvc.sqr k=2 my_array:a a=3 , a=4 , a=5 my_array:e
+.fi
+
+.PP
+Here is how to introspect the list of services running on this machine
+(make sure your shell does not expand the star):
+.nf
+
+	abus-send .\\*
 .fi
 
 .PP

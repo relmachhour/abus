@@ -45,9 +45,6 @@
 #define LogError(...)    do { fprintf(stderr, ##__VA_ARGS__); fprintf(stderr, "\n"); } while (0)
 #define LogDebug(...)    do { fprintf(stderr, ##__VA_ARGS__); fprintf(stderr, "\n"); } while (0)
 
-static int json_rpc_add_val(json_rpc_t *json_rpc, int type, const char *data, int length);
-static int json_rpc_add_array(json_rpc_t *json_rpc);
-static int json_rpc_add_object_to_array(json_rpc_t *json_rpc);
 static int json_rpc_parser_callback(void *userdata, int type, const char *data, size_t length);
 
 /*!
@@ -135,7 +132,7 @@ void json_rpc_cleanup(json_rpc_t *json_rpc)
 
 		if (val->type == JSON_ARRAY_HTAB) {
 			int i;
-			for (i=0; i < val->length; i++) {
+			for (i=0; i < (int)val->length; i++) {
 				htab *h = val->u.htab_array[i];
 				if (hfirst(h)) do
 				{
@@ -439,10 +436,16 @@ int json_rpc_parser_callback(void *userdata, int type, const char *data, size_t 
 				char *p = memchr(data, '.', length);
 				if (p) {
 					int service_len = p - data;
-					if (service_len >= JSONRPC_SVCNAME_SZ_MAX)
+					if (service_len >= JSONRPC_SVCNAME_SZ_MAX) {
 						json_rpc->parsing_status = PARSING_INVALID;
-					else
+					} else {
 						json_rpc->service_name = strndup(data, service_len);
+						if (!abus_check_valid_service_name(json_rpc->service_name, service_len)) {
+							free(json_rpc->service_name);
+							json_rpc->service_name = NULL;
+							json_rpc->parsing_status = PARSING_INVALID;
+						}
+					}
 					data += service_len+1;
 					length -= service_len+1;
 				}
@@ -496,7 +499,7 @@ int json_rpc_parser_callback(void *userdata, int type, const char *data, size_t 
 	return 0;
 }
 
-int json_rpc_add_val(json_rpc_t *json_rpc, int type, const char *data, int length)
+int json_rpc_add_val(json_rpc_t *json_rpc, int type, const char *data, size_t length)
 {
 	json_val_t *json_val;
 	htab *p_htab;
@@ -512,6 +515,10 @@ int json_rpc_add_val(json_rpc_t *json_rpc, int type, const char *data, int lengt
 	json_val->type = type;
 	json_val->length = length;
 	json_val->u.data = data ? strndup(data, length) : NULL;
+	if (data && !json_val->u.data) {
+		free(json_val);
+		return JSON_ERROR_NO_MEMORY;
+	}
 
 	if (json_rpc->pointed_htab)
 		p_htab = json_rpc->pointed_htab;
@@ -521,6 +528,9 @@ int json_rpc_add_val(json_rpc_t *json_rpc, int type, const char *data, int lengt
 	if (!hadd(p_htab, json_rpc->last_param_key,
 							strlen(json_rpc->last_param_key), (void *)json_val))
 	{
+		if (data)
+			free(json_val->u.data);
+		free(json_val);
 		/* duplicate */
 		return JSON_ERROR_CALLBACK;
 	}
@@ -549,6 +559,7 @@ int json_rpc_add_array(json_rpc_t *json_rpc)
 	if (!hadd(json_rpc->params_htab, json_rpc->last_param_key,
 							strlen(json_rpc->last_param_key), (void *)json_val))
 	{
+		free(json_val);
 		/* duplicate */
 		return JSON_ERROR_CALLBACK;
 	}
@@ -562,20 +573,24 @@ int json_rpc_add_array(json_rpc_t *json_rpc)
 int json_rpc_add_object_to_array(json_rpc_t *json_rpc)
 {
 	htab **pp_htab;
-	int len;
+	size_t pos;
 
 	if (!json_rpc->last_array)
 		return JSON_ERROR_CALLBACK;
 
-	pp_htab = json_rpc->last_array->u.htab_array;
-	len = json_rpc->last_array->length++;
-	pp_htab = realloc(pp_htab, json_rpc->last_array->length * sizeof(htab*));
+	pos = json_rpc->last_array->length++;
+	pp_htab = realloc(json_rpc->last_array->u.htab_array,
+			json_rpc->last_array->length * sizeof(htab*));
 	if (!pp_htab)
 		return JSON_ERROR_NO_MEMORY;
 
 	json_rpc->last_array->u.htab_array = pp_htab;
-	pp_htab[len] = hcreate(2);
-	json_rpc->pointed_htab = pp_htab[len];
+	pp_htab[pos] = hcreate(2);
+	if (!pp_htab[pos]) {
+		json_rpc->last_array->length--;
+		return JSON_ERROR_NO_MEMORY;
+	}
+	json_rpc->pointed_htab = pp_htab[pos];
 
 	return 0;
 }
@@ -807,7 +822,7 @@ int json_rpc_get_strn(json_rpc_t *json_rpc, const char *name, char *val, size_t 
 	if (ret)
 		return ret;
 
-	len = (int)*n < json_val->length ? *n : (size_t)json_val->length;
+	len = *n < json_val->length ? *n : json_val->length;
 	memcpy(val, json_val->u.data, len);
 	*n = len;
 
@@ -927,7 +942,7 @@ int json_rpc_get_point_at(json_rpc_t *json_rpc, const char *name, int idx)
 	if (json_val->type != JSON_ARRAY_HTAB)
 		return -3;	/* not an array type */
 
-	if (idx >= json_val->length)
+	if (idx >= (int)json_val->length)
 		return -4;	/* out of bound */
 
 	json_rpc->pointed_htab = json_val->u.htab_array[idx];

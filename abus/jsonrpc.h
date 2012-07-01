@@ -55,7 +55,7 @@
 #define JSON_ARRAY_HTAB 32766
 typedef struct json_val {
 	int type;
-	int length;
+	size_t length;
 	union {
 		char *data;		/* malloc'ed memory */
 		/* struct json_val **array; */
@@ -133,6 +133,10 @@ int json_rpc_resp_finalize(json_rpc_t *json_rpc);
 int json_rpc_parse_msg(json_rpc_t *json_rpc, const char *buffer, size_t len);
 int json_rpc_type_eq(int type1, int type2);
 int json_val_is_undef(const json_val_t *json_val);
+int json_rpc_add_val(json_rpc_t *json_rpc, int type, const char *data, size_t length);
+int json_rpc_add_array(json_rpc_t *json_rpc);
+int json_rpc_add_object_to_array(json_rpc_t *json_rpc);
+int abus_check_valid_service_name(const char *name, size_t maxlen);
 
 /* service side */
 int json_rpc_req_init(json_rpc_t *json_rpc, const char *service_name, const char *method_name, unsigned id);

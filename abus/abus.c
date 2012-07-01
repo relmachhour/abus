@@ -34,6 +34,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <dirent.h>
 
 #include "hashtab.h"
 #include "jsonrpc.h"
@@ -65,6 +66,7 @@ static void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg);
 static void abus_req_unsubscribe_service_cb(json_rpc_t *json_rpc, void *arg);
 static void abus_req_attr_get_cb(json_rpc_t *json_rpc, void *arg);
 static void abus_req_attr_set_cb(json_rpc_t *json_rpc, void *arg);
+static int abus_req_service_list(abus_t *abus, json_rpc_t *json_rpc, int timeout);
 static int abus_unsubscribe_service(abus_t *abus, const char *service_name, const char *event_name);
 static int abus_process_msg(abus_t *abus, const char *buffer, int len, json_rpc_t *json_rpc, const struct sockaddr *sock_src_addr, socklen_t sock_addrlen);
 static char json_type2char(int json_type);
@@ -563,6 +565,12 @@ void *abus_thread_routine(void *arg)
 	return NULL;
 }
 
+static void abus_service_path(const abus_t *abus, const char *service_name, char *service_path)
+{
+	/* TODO: prefix from env variable */
+	snprintf(service_path, UNIX_PATH_MAX-1, "%s/%s", abus_prefix, service_name);
+}
+
 /*
   NB: '/' (slash) is forbidden in service_name
  */
@@ -583,8 +591,7 @@ int create_service_path(abus_t *abus, const char *service_name)
 
 	if (strlen(service_name) > 0) {
 
-		snprintf(service_path, sizeof(service_path)-1, "%s/%s",
-						abus_prefix, service_name);
+		abus_service_path(abus, service_name, service_path);
 #if 0
 		struct stat svcstat;
 
@@ -617,9 +624,7 @@ int remove_service_path(abus_t *abus, const char *service_name)
 	if (strchr(service_name, '/'))
 		return -EINVAL;
 
-	/* TODO: prefix from env variable */
-	snprintf(service_path, sizeof(service_path)-1, "%s/%s",
-					abus_prefix, service_name);
+	abus_service_path(abus, service_name, service_path);
 
 	unlink(service_path);
 
@@ -644,6 +649,10 @@ static int service_lookup(abus_t *abus, const char *service_name, bool create, a
 		service = NULL;
 		ret = JSONRPC_NO_METHOD;
 	} else {
+		*service_p = NULL;
+		if (!abus_check_valid_service_name(service_name, JSONRPC_SVCNAME_SZ_MAX+1))
+			return JSONRPC_INVALID_REQUEST;
+
 		ret = create_service_path(abus, service_name);
 		if (ret)
 			return ret;
@@ -806,7 +815,7 @@ static void *abus_threaded_rpc_routine(void *arg)
 {
 	json_rpc_t *json_rpc = (json_rpc_t *)arg;
 	abus_method_t *method = (abus_method_t *)json_rpc->cb_context;
-    int ret;
+	int ret;
 
 	if (json_rpc->method_name)
 		set_thread_name(json_rpc->method_name);
@@ -969,11 +978,15 @@ int abus_undecl_method(abus_t *abus, const char *service_name, const char *metho
 
   Implicit: expects a response, otherwise use notification/event
 
+  Rem: an empty \a service_name and a \a method_name of "*" will make
+  abus_request_method_invoke() get the list of running services on the machine.
+
   \param[in] service_name	name of service where the method belongs to
   \param[in] method_name	name of method to be later invoked
   \param json_rpc pointer to an opaque handle of a JSON RPC
   \param abus	pointer to A-Bus handle
   \return 0 if successful, non nul value otherwise
+  \sa abus_request_method_invoke(), abus_request_method_cleanup()
  */
 int abus_request_method_init(abus_t *abus, const char *service_name, const char *method_name, json_rpc_t *json_rpc)
 {
@@ -1128,6 +1141,7 @@ int abus_request_method_cancel_async(abus_t *abus, json_rpc_t *json_rpc)
 
   \sa abus_request_method_wait_async(), abus_request_method_cancel_async()
   \todo implement timeout callback
+  \todo implement abus_req_service_list() for async
 */
 int abus_request_method_invoke_async(abus_t *abus, json_rpc_t *json_rpc, int timeout, abus_callback_t callback, int flags, void *arg)
 {
@@ -1175,6 +1189,15 @@ int abus_request_method_invoke(abus_t *abus, json_rpc_t *json_rpc, int flags, in
 	int ret;
 
 	ret = json_rpc_req_finalize(json_rpc);
+
+	if (json_rpc->service_name[0] == '\0' && !strcmp(json_rpc->method_name, "*")) {
+		ret = abus_req_service_list(abus, json_rpc, timeout);
+
+		free(json_rpc->msgbuf);
+		json_rpc->msgbuf = NULL;
+		json_rpc->msglen = 0;
+		return ret;
+	}
 
 	/* Don't re-use abus->sock as a default,
 	 * so as to have faster response time (saves 2 thread switches)
@@ -1496,6 +1519,96 @@ void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
 
 	return;
 }
+
+int abus_check_valid_service_name(const char *name, size_t maxlen)
+{
+	return name && name[0] != '\0' && name[0] != '_'
+		&& strnlen(name, maxlen) < JSONRPC_SVCNAME_SZ_MAX
+		&& !strchr(name, '.')
+		&& !strchr(name, '/');
+}
+
+/*
+  pseudo callback for internal use, to offer get accessor of service list
+ */
+int abus_req_service_list(abus_t *abus, json_rpc_t *json_rpc, int timeout)
+{
+	DIR *dirp;
+	struct dirent *entry;
+	ssize_t ret = 0;
+	char service_path[UNIX_PATH_MAX];
+	char pid_rel_path[UNIX_PATH_MAX];
+	char str[32];
+
+	dirp = opendir(abus_prefix);
+	if (!dirp) {
+		ret = -errno;
+		LogDebug("%s(): opendir(\"%s\") failed: %s", __func__, abus_prefix, strerror(errno));
+		json_rpc_set_error(json_rpc, JSONRPC_INTERNAL_ERROR,
+				"Failed accessing A-Bus directory");
+		return ret;
+	}
+
+	json_rpc->last_key_token = TOK_PARAMS;
+
+	json_rpc->last_param_key = strdup("services");
+	if (json_rpc_add_array(json_rpc) != 0)
+		goto error_dir;
+
+	while ((entry = readdir(dirp)) != NULL) {
+
+		if (!abus_check_valid_service_name(entry->d_name, NAME_MAX))
+			continue;
+
+		/* TODO check type is symlink: d_type ? */
+
+		abus_service_path(abus, entry->d_name, service_path);
+
+		/* must be a symbolic link */
+		ret = readlink(service_path, pid_rel_path, sizeof(pid_rel_path));
+		if (ret <= 0) {
+			if (errno != EINVAL)
+				LogDebug("%s(): readlink(\"%s\") failed: %s", __func__,
+						service_path, strerror(errno));
+			continue;
+		}
+
+		pid_rel_path[ret] = '\0';
+
+		/* socket name must be in same dir, and begin with '_' */
+		if (strchr(pid_rel_path, '/') || pid_rel_path[0] != '_')
+			continue;
+
+		/* TODO check pid is alive? */
+
+		if (abus_attr_get_str(abus, entry->d_name, "abus.version",
+					str, sizeof(str), timeout) != 0)
+			continue;
+
+		/* add object to array and add key "name" & string to object */
+
+		if (json_rpc_add_object_to_array(json_rpc) != 0)
+			goto error_dir;
+
+		json_rpc->last_param_key = strdup("name");
+		if (json_rpc_add_val(json_rpc, JSON_STRING, entry->d_name,
+					strlen(entry->d_name)+1) != 0)
+			goto error_dir;
+	}
+
+	json_rpc->parsing_status = PARSING_OK;
+	ret = 0;
+
+error_dir:
+	json_rpc->last_array = NULL;
+	json_rpc->pointed_htab = NULL;
+
+	if (dirp)
+		closedir(dirp);
+
+	return ret;
+}
+
 
 /* Event business */
 
