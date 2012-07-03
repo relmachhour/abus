@@ -187,19 +187,19 @@ int json_rpc_parse_msg(json_rpc_t *json_rpc, const char *buffer, size_t len)
 
 	ret = json_parser_init(&parser, &config, &json_rpc_parser_callback, json_rpc);
 	if (ret) {
-		LogError("libjson error: initializing parser failed: [code=%d]\n", ret);
+		LogError("libjson error: initializing parser failed: [code=%d]", ret);
 		return ret;
 	}
 
 	ret = json_parser_string(&parser, buffer, len, &processed);
 	if (ret) {
-		LogError("libjson parser error: %d\n", ret);
+		LogError("libjson parser error: %d", ret);
 		return JSONRPC_PARSE_ERROR;
 	}
 
 	ret = json_parser_is_done(&parser);
 	if (!ret || json_rpc->parsing_status != PARSING_V2_0) {
-		LogError("libjson syntax error\n");
+		LogError("libjson syntax error: len=%u %*s", len, len, buffer);
 
 		ret = JSONRPC_PARSE_ERROR;
 	} else if ((json_rpc->service_name && json_rpc->method_name)
@@ -376,7 +376,7 @@ int json_rpc_parser_callback(void *userdata, int type, const char *data, size_t 
 	json_rpc_t *json_rpc = userdata;
 
 #if 0
-	LogDebug("atom: %d %.*s\n", type, length, data);
+	LogDebug("atom: %d %.*s", type, length, data);
 #endif
 
 	switch (type) {
