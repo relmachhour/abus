@@ -352,9 +352,9 @@ htab  *t;
   printf("\n");
   for (walk=stat; walk; walk=walk->next)
   {
-    printf("items %ld:  %ld buckets\n", walk->keyl, walk->hval);
+    printf("items %d:  %d buckets\n", walk->keyl, walk->hval);
   }
-  printf("\nbuckets: %ld  items: %ld  existing: %g\n\n",
+  printf("\nbuckets: %d  items: %d  existing: %g\n\n",
          ((ub4)1<<t->logsize), t->count, total);
 
   /* clean up */
