@@ -199,7 +199,7 @@ int json_rpc_parse_msg(json_rpc_t *json_rpc, const char *buffer, size_t len)
 
 	ret = json_parser_is_done(&parser);
 	if (!ret || json_rpc->parsing_status != PARSING_V2_0) {
-		LogError("libjson syntax error: len=%u %*s", len, len, buffer);
+		LogError("libjson syntax error: len=%zu %*s", len, (int)len, buffer);
 
 		ret = JSONRPC_PARSE_ERROR;
 	} else if ((json_rpc->service_name && json_rpc->method_name)
@@ -689,6 +689,7 @@ int json_rpc_get_int(json_rpc_t *json_rpc, const char *name, int *val)
 	json_val_t *json_val;
 	char *endptr;
 	int ret;
+	long l;
 
 	ret = json_rpc_check_val_type(json_rpc, name, &json_val, JSON_INT);
 	if (ret)
@@ -698,10 +699,12 @@ int json_rpc_get_int(json_rpc_t *json_rpc, const char *name, int *val)
 	if (errno == ERANGE)
 		errno = 0;
 
-	*val = strtol(json_val->u.data, &endptr, 10);
+	l = strtol(json_val->u.data, &endptr, 10);
 
-	if (errno == ERANGE && (*val == LONG_MAX || *val == LONG_MIN))
+	if (errno == ERANGE && (l == LONG_MAX || l == LONG_MIN))
 		return -ERANGE;
+
+	*val = l;
 
 	if (json_val->u.data == endptr)
 		return JSONRPC_PARSE_ERROR;
@@ -1083,7 +1086,7 @@ int json_rpc_append_llint(json_rpc_t *json_rpc, const char *name, long long val)
 		json_rpc->msgbuf[json_rpc->msglen++] = ',';
 
 	json_rpc->msglen += snprintf(msg_p(json_rpc), msg_rem(json_rpc),
-					"\"%s\":%"PRId64, name, val);
+					"\"%s\":%lld", name, val);
 	return 0;
 }
 
