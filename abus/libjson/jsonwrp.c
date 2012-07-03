@@ -70,9 +70,9 @@ object end
 #endif
 
 
-static void* tree_create_structure(int nesting, int is_object)
+static void *tree_create_structure(int nesting, int is_object)
 {
-	json_dom_val_t* v = malloc(sizeof(json_dom_val_t));
+	json_dom_val_t *v = malloc(sizeof(json_dom_val_t));
 	if (v)
 	{
 		/* instead of defining a new enum type, we abuse the
@@ -91,7 +91,7 @@ static void* tree_create_structure(int nesting, int is_object)
 	return v;
 }
 
-static char* memalloc_copy_length(const char *src, size_t n)
+static char *memalloc_copy_length(const char *src, size_t n)
 {
 	char *dest;
 
@@ -101,9 +101,9 @@ static char* memalloc_copy_length(const char *src, size_t n)
 	return dest;
 }
 
-static void* tree_create_data(int type, const char *data, size_t length)
+static void *tree_create_data(int type, const char *data, size_t length)
 {
-	json_dom_val_t* v = NULL;
+	json_dom_val_t *v = NULL;
 
 	v = malloc(sizeof(json_dom_val_t));
 	if (v) {
@@ -220,7 +220,7 @@ static int process_file(json_parser *parser, FILE *input, int *retlines, int *re
 	return ret;
 }
 
-static int _do_tree(json_config *config, const char *filename, json_dom_val_t** root_structure)
+static int _do_tree(json_config *config, const char *filename, json_dom_val_t **root_structure)
 {
 	FILE *input;
 	json_parser parser;
@@ -286,7 +286,7 @@ static int _do_tree(json_config *config, const char *filename, json_dom_val_t** 
  * @param  path + json file to parse
  * @return dom like of the json file
  */
-json_dom_val_t* json_config_open(const char* szJsonFilename)
+json_dom_val_t *json_config_open(const char *szJsonFilename)
 {
 	json_dom_val_t*	root_structure = NULL;
 	json_config config;
@@ -313,7 +313,7 @@ json_dom_val_t* json_config_open(const char* szJsonFilename)
  * @param  json object
  * @return none
  */
-void json_config_cleanup(json_dom_val_t* element)
+void json_config_cleanup(json_dom_val_t *element)
 {
 	int i;
 
@@ -364,7 +364,7 @@ void json_config_cleanup(json_dom_val_t* element)
  * @return pointer to the element that contain
  * @todo   make the function reentrant (esp. static indent/isFound)
  */
-json_dom_val_t *json_config_lookup(json_dom_val_t* element, const char *name)
+json_dom_val_t *json_config_lookup(json_dom_val_t *element, const char *name)
 {
 	int    i;
 	static int  indent  = 0;
@@ -553,7 +553,7 @@ json_dom_val_t *json_config_query(json_dom_val_t *element, const char *query)
  *
  * @return integer value
  */
-int json_config_get_int(json_dom_val_t* element, int* val)
+int json_config_get_int(json_dom_val_t *element, int *val)
 {
 	int ret = 0;
 
@@ -578,7 +578,7 @@ int json_config_get_int(json_dom_val_t* element, int* val)
  *
  * @return boolean value
  */
-int json_config_get_bool(json_dom_val_t* element, bool* val)
+int json_config_get_bool(json_dom_val_t *element, bool *val)
 {
 	int ret = 0;
 
@@ -603,7 +603,7 @@ int json_config_get_bool(json_dom_val_t* element, bool* val)
  *
  * @return string value
  */
-int  json_config_get_string(json_dom_val_t* element, char** val)
+int  json_config_get_string(json_dom_val_t *element, char **val)
 {
 	int ret = 0;
 
@@ -628,7 +628,7 @@ int  json_config_get_string(json_dom_val_t* element, char** val)
  *
  * @return return code
  */
-int json_config_get_double(json_dom_val_t* element, double* val)
+int json_config_get_double(json_dom_val_t *element, double *val)
 {
 	int ret = 0;
 
@@ -646,7 +646,7 @@ int json_config_get_double(json_dom_val_t* element, double* val)
 }
 
 /* Internal helper function */
-static int json_config_get_direct_type(json_dom_val_t *root, const char *query, void* val, json_type type)
+static int json_config_get_direct_type(json_dom_val_t *root, const char *query, void *val, json_type type)
 {
 	json_dom_val_t *myItem;
 	char *endptr;
@@ -712,9 +712,9 @@ static int json_config_get_direct_type(json_dom_val_t *root, const char *query, 
  *
  * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_int(json_dom_val_t *root, const char *itemName, int* val)
+int json_config_get_direct_int(json_dom_val_t *root, const char *itemName, int *val)
 {
-    return json_config_get_direct_type(root, itemName, val, JSON_INT);
+	return json_config_get_direct_type(root, itemName, val, JSON_INT);
 }
 
 /**
@@ -726,9 +726,9 @@ int json_config_get_direct_int(json_dom_val_t *root, const char *itemName, int* 
  *
  * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_bool(json_dom_val_t *root, const char *itemName, bool* val)
+int json_config_get_direct_bool(json_dom_val_t *root, const char *itemName, bool *val)
 {
-    return json_config_get_direct_type(root, itemName, val, JSON_TRUE);
+	return json_config_get_direct_type(root, itemName, val, JSON_TRUE);
 }
 
 /**
@@ -783,9 +783,9 @@ int json_config_get_direct_strp(json_dom_val_t *root, const char *itemName, cons
  *
  * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_double(json_dom_val_t *root, const char *itemName, double* val)
+int json_config_get_direct_double(json_dom_val_t *root, const char *itemName, double *val)
 {
-    return json_config_get_direct_type(root, itemName, val, JSON_FLOAT);
+	return json_config_get_direct_type(root, itemName, val, JSON_FLOAT);
 }
 
 /**
@@ -794,15 +794,15 @@ int json_config_get_direct_double(json_dom_val_t *root, const char *itemName, do
  * @param  item's name
  * @param  array index
  */
-json_dom_val_t *json_config_get_direct_array(json_dom_val_t *root, const char *arrayName, unsigned idx)
+json_dom_val_t *json_config_get_direct_array(json_dom_val_t *root, const char *array_name, unsigned idx)
 {
-	json_dom_val_t *myArray;
+	json_dom_val_t *my_array;
 
-	myArray = json_config_query(root, arrayName);
-	if (NULL == myArray || JSON_ARRAY_BEGIN != myArray->type || (int)idx >= myArray->length)
+	my_array = json_config_query(root, array_name);
+	if (NULL == my_array || JSON_ARRAY_BEGIN != my_array->type || (int)idx >= my_array->length)
 		return NULL;
 
-	return myArray->u.array[idx];
+	return my_array->u.array[idx];
 }
 
 /**
@@ -811,103 +811,64 @@ json_dom_val_t *json_config_get_direct_array(json_dom_val_t *root, const char *a
  * @param pointer to the main json dom
  * @param array's name
  *
- * @return integer value
+ * @return count of elements, negative value if not found or invalid array name
  */
-int json_config_get_direct_array_count(json_dom_val_t *root, const char *arrayName)
+int json_config_get_direct_array_count(json_dom_val_t *root, const char *array_name)
 {
-	json_dom_val_t *myArray;
+	json_dom_val_t *my_array;
 
-	myArray = json_config_query(root, arrayName);
-	if (NULL == myArray)
+	my_array = json_config_query(root, array_name);
+	if (NULL == my_array)
 		return -ENOENT;
 
-	if (JSON_ARRAY_BEGIN != myArray->type)
+	if (JSON_ARRAY_BEGIN != my_array->type)
 		return -ENOTTY;
 
-	return myArray->length;
+	return my_array->length;
 }
 
-// ----------------------------------------------------------------------------
-
-#ifdef __MAIN__
 /**
- * @brief  Main entry used for test
- *
- * @param  number or arguments
- * @param  list of the arguments provided
- * @param  list of the environment variable provided
- *
- * @return main return code
+ * @brief  Locate an element at index within an object
+ * @param  pointer to the main json dom
+ * @param  item's name
+ * @param  object index
  */
-int main(int argc, char* argv[], char* env[])
+json_dom_val_t *json_config_get_direct_object(json_dom_val_t *root, const char *obj_name, unsigned idx, char **key, size_t *key_length)
 {
-	int             ret				= -1;
-	char*		    valItem         = NULL;
-	char*			valItem2		= NULL;
-	char*			valItem3		= NULL;
-	json_dom_val_t* json_dom 		= NULL;
-	json_dom_val_t* myParentItem	= NULL;
-	json_dom_val_t* myItem			= NULL;
+	json_dom_val_t *my_obj;
 
-	/* Load and parse the json file */
-	if (argc >=2)
-	{
-		if ( NULL != (json_dom = json_config_open(argv[1])))
-		{
-			printf("\n [DBG] JSON init and converted into a DOM : OK ");
-			printf("\n [DBG] Looking for the parent item ('result') . . .");
+	my_obj = json_config_query(root, obj_name);
+	if (NULL == my_obj || JSON_OBJECT_BEGIN != my_obj->type || (int)idx >= my_obj->length)
+		return NULL;
 
-			/* --------------------------------------------------------- */
-			/* First example                                             */
-			/* --------------------------------------------------------- */
-			if (NULL != (myParentItem = json_config_lookup(json_dom, "networking")))
-			{
-				printf("\n [DBG] Parent item 'networking' (%p) well found", myParentItem);
-				if (NULL != (myItem = json_config_lookup(myParentItem, "ipaddress")))
-				{
-					printf("\n [DBG] Child item 'ipaddress' (%p) well found ", myItem);
-					if (-1 != (ret = json_config_get_string(myItem, &valItem)))
-						printf("\n [DBG] Item's value = '%s' ", valItem);
-					else
-						printf("\n [ERROR] Problem to get the item's value ");
-				} else {
-					printf("\n [ERROR] Child item not found ");
-				}
+	if (key)
+		*key = my_obj->u.object[idx]->key;
 
-				if (NULL != (myItem = json_config_lookup(myParentItem, "gateway")))
-				{
-					printf("\n [DBG] Child item 'gateway' (%p) well found ", myItem);
-					if (-1 != (ret = json_config_get_string(myItem, &valItem2)))
-						printf("\n [DBG] Item's value = '%s' ", valItem2);
-					else
-						printf("\n [ERROR] Problem to get the item's value ");
-				} else {
-					printf("\n [ERROR] Child item not found ");
-				}
-			} else {
-				printf("\n [ERROR] Parent item not found ");
-			}
+	if (key_length)
+		*key_length = my_obj->u.object[idx]->key_length;
 
-			/* --------------------------------------------------------- */
-			/* Second example                                            */
-			/* --------------------------------------------------------- */
-			json_config_get_direct_string(json_dom, "networking", "ipaddress", &valItem3);
-			printf("\n [DBG] Item's value = '%s' ", valItem3);
-			free(valItem3);
-
-			/* Cleaning the dom */
-			if (NULL != json_dom)
-				json_config_cleanup(json_dom);
-		} else {
-			printf("\n [ERROR] JSON init and converted into a DOM : NOK ");
-		}
-		printf("\n");
-	} else {
-		printf("\n [ERROR] Expected parameter to %s !!", argv[0]);
-		printf("\n [ERROR] Usage: %s <json file> ", argv[0]);
-	}
-
-	return(ret);
+	return my_obj->u.object[idx]->val;
 }
-#endif
+
+/**
+ * @brief Get count of element in object
+ *
+ * @param pointer to the main json dom
+ * @param object's name
+ *
+ * @return count of elements, negative value if not found or invalid object name
+ */
+int json_config_get_direct_object_count(json_dom_val_t *root, const char *obj_name)
+{
+	json_dom_val_t *my_obj;
+
+	my_obj = json_config_query(root, obj_name);
+	if (NULL == my_obj)
+		return -ENOENT;
+
+	if (JSON_OBJECT_BEGIN != my_obj->type)
+		return -ENOTTY;
+
+	return my_obj->length;
+}
 

@@ -229,7 +229,7 @@ int json_parser_dom_free(json_parser_dom *ctx);
 int json_parser_dom_callback(void *userdata, int type, const char *data, size_t length);
 
 /** Error string associated with json_error */
-const char* json_strerror(int errnum);
+const char *json_strerror(int errnum);
 
 // -------------------------------------------------------------------------------------
 // @brief  Wrapper used for extracting data from a single json file
@@ -260,15 +260,17 @@ json_dom_val_t *json_config_open(const char *szJsonFilename);
 void json_config_cleanup(json_dom_val_t *element);
 json_dom_val_t *json_config_lookup(json_dom_val_t *element, const char *name);
 json_dom_val_t *json_config_query(json_dom_val_t *element, const char *query);
-json_dom_val_t *json_config_get_direct_array(json_dom_val_t *element, const char *arrayName, unsigned idx);
-int json_config_get_direct_array_count(json_dom_val_t *element, const char *arrayName);
+json_dom_val_t *json_config_get_direct_array(json_dom_val_t *element, const char *array_name, unsigned idx);
+int json_config_get_direct_array_count(json_dom_val_t *element, const char *array_name);
+json_dom_val_t *json_config_get_direct_object(json_dom_val_t *element, const char *obj_name, unsigned idx, char **key, size_t *key_length);
+int json_config_get_direct_object_count(json_dom_val_t *element, const char *obj_name);
 int json_config_get_int(json_dom_val_t *element, int *val);
 int json_config_get_direct_int(json_dom_val_t *root, const char *query, int *val);
 int json_config_get_bool(json_dom_val_t *element, bool *val);
 int json_config_get_direct_bool(json_dom_val_t *root, const char *query, bool *val);
 int json_config_get_string(json_dom_val_t *element, char **val);
 int json_config_get_direct_string(json_dom_val_t *root, const char *query, char **val);
-int json_config_get_direct_strp(json_dom_val_t *root, const char *query, const char* *val, size_t *n);
+int json_config_get_direct_strp(json_dom_val_t *root, const char *query, const char **val, size_t *n);
 int json_config_get_double(json_dom_val_t *element, double *val);
 int json_config_get_direct_double(json_dom_val_t *root, const char *query, double *val);
 
