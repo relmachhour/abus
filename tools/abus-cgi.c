@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 		{
 			buffer[len] = '\0';
 
-			ret = abus_forward_rpc(&abus, buffer, &len, 0, RPC_TIMEOUT);
+			ret = abus_forward_rpc(&abus, buffer, &len, 0, timeout);
 	
 			/* Forge JSON-RPC response in case of serious error */
 			if (ret != 0)
