@@ -17,4 +17,9 @@ doc:
 examples:
 	make -C examples examples
 
-.PHONY: doc examples
+INC = -I$(top_srcdir)/abus/hashtab -I$(top_srcdir)/abus/libjson -I$(top_srcdir)/abus
+
+cppcheck:
+	cppcheck --enable=all -q -I $(top_builddir) $(INC) $(top_srcdir)/{abus,tools,examples}
+
+.PHONY: doc examples cppcheck

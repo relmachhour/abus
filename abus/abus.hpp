@@ -17,6 +17,7 @@
 #define _ABUS_HPP
 
 #include <abus.h>
+#include <errno.h>
 
 /*!
  * \addtogroup abusmm
@@ -29,17 +30,10 @@ class cABusRPC {
 public:
 	/*! Constructor for base class RPC, can self-allocate the json_rpc_t */
 	cABusRPC(json_rpc_t *json_rpc = NULL) {
-			if (json_rpc) {
-				m_json_rpc = json_rpc;
-				m_bSelfAlloc = false;
-			} else {
-				m_json_rpc = new json_rpc_t;
-				m_bSelfAlloc = true;
-				json_rpc_init(m_json_rpc);
-			}
+			m_json_rpc = json_rpc;
 	}
 	/*! Destructor */
-	virtual ~cABusRPC() { if (m_bSelfAlloc) { json_rpc_cleanup(m_json_rpc); delete m_json_rpc; } }
+	virtual ~cABusRPC() {}
 
 	/*! Get the JSON type of a parameter from a RPC.
 		\return a nul of positive number representing the JSON type (JSON_{INT,FLOAT,STRING,TRUE,FALSE,NULL}), a negative value in case of error
@@ -163,7 +157,6 @@ public:
 		{ return json_rpc_set_error(m_json_rpc, error_code, message); }
 
 protected:
-	bool		m_bSelfAlloc;	/* m_json_rpc has been alloc'ed by constructor */
 	json_rpc_t *m_json_rpc;
 };
 
@@ -192,7 +185,7 @@ public:
 
 	/* \internal */
 	int init(const char *service_name, const char *method_name)
-		{ return abus_request_method_init(m_abus, service_name, method_name, m_json_rpc); }
+		{ m_json_rpc = abus_request_method_init(m_abus, service_name, method_name); return m_json_rpc ? 0 : -ENOMEM; }
 
 	/*! Invoke the RPC synchronously */
 	int invoke(int flags, int timeout)
@@ -242,7 +235,7 @@ public:
 
 	/* \internal */
 	int init(const char *service_name, const char *event_name)
-		{ return abus_request_event_init(m_abus, service_name, event_name, m_json_rpc); }
+		{ m_json_rpc = abus_request_event_init(m_abus, service_name, event_name); return m_json_rpc ? 0 : -ENOMEM; }
 
 	/*! Publish the event */
 	int publish(int flags = ABUS_RPC_FLAG_NONE)
@@ -277,28 +270,28 @@ private:
 class cABus {
 public:
 	/*! Constructor for access to A-Bus */
-	cABus() { abus_init(&m_abus); }
+	cABus() { m_abus = abus_init(NULL); }
 	/*! Destructor */
-	virtual ~cABus() { abus_cleanup(&m_abus); }
+	virtual ~cABus() { abus_cleanup(m_abus); }
 
 	/*! Get current A-Bus configuration 
 		\sa abus_get_conf()
 	 */
 	int get_conf(abus_conf_t *conf)
-		{ return abus_get_conf(&m_abus, conf); }
+		{ return abus_get_conf(m_abus, conf); }
 	/*! Set current A-Bus configuration 
 		\sa abus_set_conf()
 	 */
 	int set_conf(const abus_conf_t *conf)
-		{ return abus_set_conf(&m_abus, conf); }
+		{ return abus_set_conf(m_abus, conf); }
 
 	/*! Get the file descriptor of A-Bus system, for use in poll()/select() */
 	int get_fd(void)
-		{ return abus_get_fd(&m_abus); }
+		{ return abus_get_fd(m_abus); }
 
 	/*! Processing in polling operation mode */
 	int process_incoming(void)
-		{ return abus_process_incoming(&m_abus); }
+		{ return abus_process_incoming(m_abus); }
 
 	/*! Declare a new method in a service
 		\return	0	if successful, non nul value otherwise
@@ -307,7 +300,7 @@ public:
 	int decl_method(const char *service_name, const char *method_name,
 					abus_callback_t method_callback, int flags = 0, void *arg = NULL,
 					const char *descr = NULL, const char *fmt = NULL, const char *result_fmt = NULL)
-		{ return abus_decl_method(&m_abus, service_name, method_name, method_callback, flags, arg, descr, fmt, result_fmt); }
+		{ return abus_decl_method(m_abus, service_name, method_name, method_callback, flags, arg, descr, fmt, result_fmt); }
 
 	/*! Helper macro to be used with abus_declpp_method_member() */
 #define declpp_method(_service_name, _method_name, _obj, _method, _flags, descr, fmt, res_fmt) \
@@ -318,29 +311,29 @@ public:
 		\sa decl_method()
 	 */
 	int undecl_method(const char *service_name, const char *method_name)
-		{ return abus_undecl_method(&m_abus, service_name, method_name); }
+		{ return abus_undecl_method(m_abus, service_name, method_name); }
 
 	/*! Instantiate a new RPC for invocation */
 	cABusRequestMethod *RequestMethod(const char *service_name, const char *method_name) {
-		cABusRequestMethod *p = new cABusRequestMethod(&m_abus);
+		cABusRequestMethod *p = new cABusRequestMethod(m_abus);
 		if (p) p->init(service_name, method_name);
 		return p;
 	}
 
 	/*! Declare a new event in a service */
 	int decl_event(const char *service_name, const char *event_name, const char *descr = NULL, const char *fmt = NULL)
-		{ return abus_decl_event(&m_abus, service_name, event_name, descr, fmt); }
+		{ return abus_decl_event(m_abus, service_name, event_name, descr, fmt); }
 
 	/*! Undeclare an event from a service
 		\return	0	if successful, non nul value otherwise
 		\sa decl_event()
 	 */
 	int undecl_event(const char *service_name, const char *event_name)
-		{ return abus_undecl_event(&m_abus, service_name, event_name); }
+		{ return abus_undecl_event(m_abus, service_name, event_name); }
 
 	/*! Instantiate a new event for publishing */
 	cABusRequestEvent *RequestEvent(const char *service_name, const char *event_name) {
-		cABusRequestEvent *p = new cABusRequestEvent(&m_abus);
+		cABusRequestEvent *p = new cABusRequestEvent(m_abus);
 		if (p) p->init(service_name, event_name);
 		return p;
 	}
@@ -350,14 +343,14 @@ public:
 		\sa event_subscribepp(), event_unsubscribe()
 	 */
 	int event_subscribe(const char *service_name, const char *event_name, abus_callback_t callback, int flags = ABUS_RPC_FLAG_NONE, void *arg = NULL, int timeout = -1)
-		{ return abus_event_subscribe(&m_abus, service_name, event_name, callback, flags, arg, timeout); }
+		{ return abus_event_subscribe(m_abus, service_name, event_name, callback, flags, arg, timeout); }
 
 	/*! Unsubscribe from an event
 		\return	0	if successful, non nul value otherwise
 		\sa event_subscribe()
 	 */
 	int event_unsubscribe(const char *service_name, const char *event_name, abus_callback_t callback, void *arg = NULL, int timeout = -1)
-		{ return abus_event_unsubscribe(&m_abus, service_name, event_name, callback, arg, timeout); }
+		{ return abus_event_unsubscribe(m_abus, service_name, event_name, callback, arg, timeout); }
 
 
 	/*! Helper macro to be used with abus_declpp_method_member() */
@@ -369,86 +362,86 @@ public:
 
 	/*! Declare a new attribute of type integer in a service */
 	int decl_attr_int(const char *service_name, const char *attr_name, int *val = NULL, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
-		{ return abus_decl_attr_int(&m_abus, service_name, attr_name, val, flags, descr); }
+		{ return abus_decl_attr_int(m_abus, service_name, attr_name, val, flags, descr); }
 	/*! Declare a new attribute of type long long integer in a service */
 	int decl_attr_llint(const char *service_name, const char *attr_name, long long *val = NULL, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
-		{ return abus_decl_attr_llint(&m_abus, service_name, attr_name, val, flags, descr); }
+		{ return abus_decl_attr_llint(m_abus, service_name, attr_name, val, flags, descr); }
 	/*! Declare a new attribute of type boolean in a service */
 	int decl_attr_bool(const char *service_name, const char *attr_name, bool *val = NULL, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
-		{ return abus_decl_attr_bool(&m_abus, service_name, attr_name, val, flags, descr); }
+		{ return abus_decl_attr_bool(m_abus, service_name, attr_name, val, flags, descr); }
 	/*! Declare a new attribute of type double in a service */
 	int decl_attr_double(const char *service_name, const char *attr_name, double *val = NULL, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
-		{ return abus_decl_attr_double(&m_abus, service_name, attr_name, val, flags, descr); }
+		{ return abus_decl_attr_double(m_abus, service_name, attr_name, val, flags, descr); }
 	/*! Declare a new attribute of type string in a service */
 	int decl_attr_str(const char *service_name, const char *attr_name, char *val, size_t n, int flags = ABUS_RPC_FLAG_NONE, const char *descr = NULL)
-		{ return abus_decl_attr_str(&m_abus, service_name, attr_name, val, n, flags, descr); }
+		{ return abus_decl_attr_str(m_abus, service_name, attr_name, val, n, flags, descr); }
 
 	/*! Undeclare a method from a service
 		\return	0	if successful, non nul value otherwise
 		\sa decl_method()
 	 */
 	int undecl_attr(const char *service_name, const char *attr_name)
-		{ return abus_undecl_attr(&m_abus, service_name, attr_name); }
+		{ return abus_undecl_attr(m_abus, service_name, attr_name); }
 
 	/*! Notify that the value of an attribute has changed
 	    Any listeners of this attribute will receive an event
 	 */
 	int attr_changed(abus_t *abus, const char *service_name, const char *attr_name)
-		{ return abus_attr_changed(&m_abus, service_name, attr_name); }
+		{ return abus_attr_changed(m_abus, service_name, attr_name); }
 
 
 	/*! Get the value of an attribute of type integer exposed by a service
 		\return	0	if successful, non nul value otherwise
 	 */
 	int attr_get_int(const char *service_name, const char *attr_name, int *val, int timeout = -1)
-		{ return abus_attr_get_int(&m_abus, service_name, attr_name, val, timeout); }
+		{ return abus_attr_get_int(m_abus, service_name, attr_name, val, timeout); }
 	/*! Get the value of an attribute of type long long integer exposed by a service
 		\return	0	if successful, non nul value otherwise
 	 */
 	int attr_get_llint(const char *service_name, const char *attr_name, long long *val, int timeout = -1)
-		{ return abus_attr_get_llint(&m_abus, service_name, attr_name, val, timeout); }
+		{ return abus_attr_get_llint(m_abus, service_name, attr_name, val, timeout); }
 	/*! Get the value of an attribute of type boolean exposed by a service
 		\return	0	if successful, non nul value otherwise
 	 */
 	int attr_get_bool(const char *service_name, const char *attr_name, bool *val, int timeout = -1)
-		{ return abus_attr_get_bool(&m_abus, service_name, attr_name, val, timeout); }
+		{ return abus_attr_get_bool(m_abus, service_name, attr_name, val, timeout); }
 	/*! Get the value of an attribute of type double float exposed by a service
 		\return	0	if successful, non nul value otherwise
 	 */
 	int attr_get_double(const char *service_name, const char *attr_name, double *val, int timeout = -1)
-		{ return abus_attr_get_double(&m_abus, service_name, attr_name, val, timeout); }
+		{ return abus_attr_get_double(m_abus, service_name, attr_name, val, timeout); }
 	/*! Get the value of an attribute of type string exposed by a service
 		\return	0	if successful, non nul value otherwise
 	 */
 	int attr_get_str(const char *service_name, const char *attr_name, char *val, size_t n, int timeout = -1)
-		{ return abus_attr_get_str(&m_abus, service_name, attr_name, val, n, timeout); }
+		{ return abus_attr_get_str(m_abus, service_name, attr_name, val, n, timeout); }
  
 
 	/*! Set the value of an attribute of type integer exposed by a service
 		\return	0	if successful, non nul value otherwise
 	 */
 	int attr_set_int(const char *service_name, const char *attr_name, int val, int timeout = -1)
-		{ return abus_attr_set_int(&m_abus, service_name, attr_name, val, timeout); }
+		{ return abus_attr_set_int(m_abus, service_name, attr_name, val, timeout); }
 	/*! Set the value of an attribute of type long long integer exposed by a service
 		\return	0	if successful, non nul value otherwise
 	 */
 	int attr_set_llint(const char *service_name, const char *attr_name, long long val, int timeout = -1)
-		{ return abus_attr_set_llint(&m_abus, service_name, attr_name, val, timeout); }
+		{ return abus_attr_set_llint(m_abus, service_name, attr_name, val, timeout); }
 	/*! Set the value of an attribute of type boolean exposed by a service
 		\return	0	if successful, non nul value otherwise
 	 */
 	int attr_set_bool(const char *service_name, const char *attr_name, bool val, int timeout = -1)
-		{ return abus_attr_set_bool(&m_abus, service_name, attr_name, val, timeout); }
+		{ return abus_attr_set_bool(m_abus, service_name, attr_name, val, timeout); }
 	/*! Set the value of an attribute of type double float exposed by a service
 		\return	0	if successful, non nul value otherwise
 	 */
 	int attr_set_double(const char *service_name, const char *attr_name, double val, int timeout = -1)
-		{ return abus_attr_set_double(&m_abus, service_name, attr_name, val, timeout); }
+		{ return abus_attr_set_double(m_abus, service_name, attr_name, val, timeout); }
 	/*! Set the value of an attribute of type string exposed by a service
 		\return	0	if successful, non nul value otherwise
 	 */
 	int attr_set_str(const char *service_name, const char *attr_name, const char *val, int timeout = -1)
-		{ return abus_attr_set_str(&m_abus, service_name, attr_name, val, timeout); }
+		{ return abus_attr_set_str(m_abus, service_name, attr_name, val, timeout); }
 
 
 	/*! Subscribe to change event of an attribute from a service
@@ -456,13 +449,13 @@ public:
 		\sa attr_onchange_subscribepp(), attr_unsubscribe_onchange()
 	 */
 	int attr_subscribe_onchange(const char *service_name, const char *attr_name, abus_callback_t callback, int flags = ABUS_RPC_FLAG_NONE, void *arg = NULL, int timeout = -1)
-		{ return abus_attr_subscribe_onchange(&m_abus, service_name, attr_name, callback, flags, arg, timeout); }
+		{ return abus_attr_subscribe_onchange(m_abus, service_name, attr_name, callback, flags, arg, timeout); }
 	/*! Unubscribe from change event of an attribute from a service
 		\return	0	if successful, non nul value otherwise
 		\sa attr_subscribe_onchange()
 	 */
 	int attr_unsubscribe_onchange(const char *service_name, const char *attr_name, abus_callback_t callback, void *arg, int timeout)
-		{ return abus_attr_unsubscribe_onchange(&m_abus, service_name, attr_name, callback, arg, timeout); }
+		{ return abus_attr_unsubscribe_onchange(m_abus, service_name, attr_name, callback, arg, timeout); }
 
 	/*! Helper macro to be used with abus_declpp_method_member() */
 #define attr_onchange_subscribepp(_service_name, _attr_name, _obj, _method, _flags, _timeout) \
@@ -472,7 +465,7 @@ public:
         attr_onchange_unsubscribe((_service_name), (_attr_name), &(_obj)->_method##Wrapper, (void *)(_obj), (_timeout))
 
 private:
-	abus_t m_abus;
+	abus_t *m_abus;
 
 };
 

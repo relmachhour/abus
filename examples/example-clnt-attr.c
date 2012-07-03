@@ -23,8 +23,7 @@
 
 int main(int argc, char **argv)
 {
-	abus_t abus;
-	json_rpc_t json_rpc;
+	abus_t *abus;
 	int ret;
 	const char *service_name = "exampleattrsvc";
 	const char *attr_name;
@@ -32,19 +31,19 @@ int main(int argc, char **argv)
 
 	if (argc < 2) {
 		printf("usage: %s ATTR newintegervalue\n", argv[0]);
-		printf("usage: ATTR: some_int|some_other_int\n", argv[0]);
+		printf("usage: ATTR: some_int|some_other_int\n");
 		exit(EXIT_FAILURE);
 	}
 
-	abus_init(&abus);
+	abus = abus_init(NULL);
 
 	/* attr name is taken from command line */
 	attr_name = argv[1];
 
-	ret = abus_attr_get_int(&abus, service_name, attr_name, &my_int, RPC_TIMEOUT);
+	ret = abus_attr_get_int(abus, service_name, attr_name, &my_int, RPC_TIMEOUT);
 	if (ret) {
 		printf("RPC failed with error %d\n", ret);
-		abus_cleanup(&abus);
+		abus_cleanup(abus);
 		exit(EXIT_FAILURE);
 	}
 
@@ -52,15 +51,15 @@ int main(int argc, char **argv)
 
 	my_int = atoi(argv[2]);
 
-	ret = abus_attr_set_int(&abus, service_name, attr_name, my_int, RPC_TIMEOUT);
+	ret = abus_attr_set_int(abus, service_name, attr_name, my_int, RPC_TIMEOUT);
 	if (ret) {
 		printf("RPC failed with error %d\n", ret);
-		abus_cleanup(&abus);
+		abus_cleanup(abus);
 		exit(EXIT_FAILURE);
 	}
 	printf("New value: %s=%d\n", attr_name, my_int);
 
-	abus_cleanup(&abus);
+	abus_cleanup(abus);
 
 	return EXIT_SUCCESS;
 }

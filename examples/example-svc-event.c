@@ -30,19 +30,19 @@ static void chomp(char *s)
 
 int main(int argc, char **argv)
 {
-	abus_t abus;
+	abus_t *abus;
 	char s[128];
 	int ret;
 
-	abus_init(&abus);
+	abus = abus_init(NULL);
 
 #define MYSVCNAME "examplesvc"
 #define MYEVTNAME "enter_pressed"
-	ret = abus_decl_event(&abus, MYSVCNAME, MYEVTNAME,
+	ret = abus_decl_event(abus, MYSVCNAME, MYEVTNAME,
 					"Event sent each time the ENTER key is press. Serves as publish/subscribe example.",
 					"typed_char:s:keys pressed before the ENTER key");
 	if (ret != 0) {
-	    abus_cleanup(&abus);
+	    abus_cleanup(abus);
 	    return EXIT_FAILURE;
 	}
 
@@ -51,16 +51,16 @@ int main(int argc, char **argv)
 	 */
 
 	while (fgets(s, sizeof(s), stdin) != NULL) {
-		json_rpc_t json_rpc;
+		json_rpc_t *json_rpc;
 
 		chomp(s);
-		abus_request_event_init(&abus, MYSVCNAME, MYEVTNAME, &json_rpc);
-		json_rpc_append_str(&json_rpc, "typed_char", s);
-		abus_request_event_publish(&abus, &json_rpc, 0);
-		abus_request_event_cleanup(&abus, &json_rpc);
+		json_rpc = abus_request_event_init(abus, MYSVCNAME, MYEVTNAME);
+		json_rpc_append_str(json_rpc, "typed_char", s);
+		abus_request_event_publish(abus, json_rpc, 0);
+		abus_request_event_cleanup(abus, json_rpc);
 	}
 
-	abus_cleanup(&abus);
+	abus_cleanup(abus);
 
 	return EXIT_SUCCESS;
 }

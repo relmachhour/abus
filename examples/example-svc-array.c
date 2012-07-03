@@ -18,11 +18,12 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include "abus.h"
+#include <abus.h>
+#include <json.h>
 
 static void svc_array_sqr_cb(json_rpc_t *json_rpc, void *arg)
 {
-	int k, a;
+	int k;
 	int ret, count, i;
 	int *ary = NULL;
 
@@ -88,26 +89,26 @@ static void svc_array_sqr_cb(json_rpc_t *json_rpc, void *arg)
 
 int main(int argc, char **argv)
 {
-	abus_t abus;
+	abus_t *abus;
 	int ret;
 
-	abus_init(&abus);
+	abus = abus_init(NULL);
 
-	ret = abus_decl_method(&abus, "examplearraysvc", "sqr", &svc_array_sqr_cb,
+	ret = abus_decl_method(abus, "examplearraysvc", "sqr", &svc_array_sqr_cb,
 					ABUS_RPC_FLAG_NONE,
 					"square cookie",
 					"Compute square value of all the elements of an array. Serves as an example of how to deal with array in A-Bus",
 					"k:i:some contant,my_array:(a:i:value to be squared,arg_index:i:index of arg for demo):array of stuff",
 					"res_k:i:same contant,res_array:(res_a:i:squared value):array of squared stuff");
 	if (ret != 0) {
-		abus_cleanup(&abus);
+		abus_cleanup(abus);
 		return EXIT_FAILURE;
 	}
 
 	/* do other stuff */
 	sleep(10000);
 
-	abus_cleanup(&abus);
+	abus_cleanup(abus);
 
 	return EXIT_SUCCESS;
 }

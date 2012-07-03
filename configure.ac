@@ -2,7 +2,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([abus],[0.2~svn],[abus-discuss@googlegroups.com],[abus],[http://code.google.com/p/abus/])
+AC_INIT([abus],[0.3~svn],[abus-discuss@googlegroups.com],[abus],[http://code.google.com/p/abus/])
 AC_CONFIG_SRCDIR(abus/abus.c)
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -62,22 +62,6 @@ else
 fi
 AC_SUBST(ABUS_CGI)
 
-AC_ARG_ENABLE(examples,
-		AS_HELP_STRING([--enable-examples], [Enable the examples [default=no]]),
-		[case "${enableval}" in
-			yes) have_examples=true  ;;
-			no) have_examples=false ;;
-			*) AC_MSG_ERROR(bad value ${enableval} for --enable-examples) ;;
-			esac],
-		[have_examples=false])
-AM_CONDITIONAL(HAVE_EXAMPLES, $have_examples)
-AC_MSG_CHECKING(whether to build the examples)
-if test "$have_examples" != "false" ; then
-	AC_MSG_RESULT([yes])
-else
-	AC_MSG_RESULT([no])
-fi 
-
 
 dnl --------------------------------------------
 dnl Brief           : enable or disable the unitary test
@@ -109,6 +93,26 @@ if test "$have_test" != "false" ; then
 else
 	AC_MSG_RESULT([no])
 fi
+
+AC_ARG_ENABLE(examples,
+		AS_HELP_STRING([--enable-examples], [Enable the examples [default=no]]),
+		[case "${enableval}" in
+			yes) have_examples=true  ;;
+			no) have_examples=false ;;
+			*) AC_MSG_ERROR(bad value ${enableval} for --enable-examples) ;;
+			esac],
+		[have_examples=false])
+dnl Test implies examples (for compilability test)
+if test "$have_test" != "false" ; then
+	have_examples=true
+fi
+AM_CONDITIONAL(HAVE_EXAMPLES, $have_examples)
+AC_MSG_CHECKING(whether to build the examples)
+if test "$have_examples" != "false" ; then
+	AC_MSG_RESULT([yes])
+else
+	AC_MSG_RESULT([no])
+fi 
 
 
 AC_CONFIG_FILES([

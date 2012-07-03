@@ -33,28 +33,30 @@ class AbusAttrs : public TestWithParam<bool>  {
         virtual void SetUp() {
 			m_separate_abus = GetParam();
 
-			EXPECT_EQ(0, abus_init(&abus_svc_));
+			abus_svc_ = abus_init(NULL);
+			EXPECT_TRUE(NULL != abus_svc_);
 
 			if (m_separate_abus) {
 				/* attr get&set through AF_LOCAL socket */
-				EXPECT_EQ(0, abus_init(&abus_rq_));
-				abus_ = &abus_rq_;
+				abus_rq_ = abus_init(NULL);
+				EXPECT_TRUE(NULL != abus_rq_);
+				abus_ = abus_rq_;
 			} else {
 				/* attr get&set through direct access, bypassing JSON-RPC */
-				abus_ = &abus_svc_;
+				abus_ = abus_svc_;
 			}
         }
         virtual void TearDown() {
 
 			if (m_separate_abus)
-				EXPECT_EQ(0, abus_cleanup(&abus_rq_));
+				EXPECT_EQ(0, abus_cleanup(abus_rq_));
 
-			EXPECT_EQ(0, abus_cleanup(&abus_svc_));
+			EXPECT_EQ(0, abus_cleanup(abus_svc_));
 		}
 
 		bool m_separate_abus;
 
-		abus_t abus_svc_, abus_rq_, *abus_;
+		abus_t *abus_svc_, *abus_rq_, *abus_;
 };
 
 class AbusAttrTest : public AbusAttrs  {
@@ -69,26 +71,26 @@ class AbusAttrTest : public AbusAttrs  {
 			m_double = M_PI;
 			strncpy(m_str, abus_get_copyright(), sizeof(m_str));
 
-	        EXPECT_EQ(0, abus_decl_attr_int(&abus_svc_, SVC_NAME, "int", &m_int, 0, NULL));
-	        EXPECT_EQ(0, abus_decl_attr_int(&abus_svc_, SVC_NAME, "int_ro", &m_int, ABUS_RPC_RDONLY, NULL));
-	        EXPECT_EQ(0, abus_decl_attr_int(&abus_svc_, SVC_NAME, "int_const", &m_int, ABUS_RPC_CONST, NULL));
-	        EXPECT_EQ(0, abus_decl_attr_llint(&abus_svc_, SVC_NAME, "llint", &m_llint, 0, NULL));
-	        EXPECT_EQ(0, abus_decl_attr_bool(&abus_svc_, SVC_NAME, "bool", &m_bool, 0, NULL));
-	        EXPECT_EQ(0, abus_decl_attr_double(&abus_svc_, SVC_NAME, "double", &m_double, 0, NULL));
-	        EXPECT_EQ(0, abus_decl_attr_str(&abus_svc_, SVC_NAME, "str", m_str, sizeof(m_str), 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_int(abus_svc_, SVC_NAME, "int", &m_int, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_int(abus_svc_, SVC_NAME, "int_ro", &m_int, ABUS_RPC_RDONLY, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_int(abus_svc_, SVC_NAME, "int_const", &m_int, ABUS_RPC_CONST, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_llint(abus_svc_, SVC_NAME, "llint", &m_llint, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_bool(abus_svc_, SVC_NAME, "bool", &m_bool, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_double(abus_svc_, SVC_NAME, "double", &m_double, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_str(abus_svc_, SVC_NAME, "str", m_str, sizeof(m_str), 0, NULL));
         }
         virtual void TearDown() {
 
-			EXPECT_EQ(0, abus_undecl_attr(&abus_svc_, SVC_NAME, "int"));
-			EXPECT_EQ(0, abus_undecl_attr(&abus_svc_, SVC_NAME, "int_ro"));
-			EXPECT_EQ(0, abus_undecl_attr(&abus_svc_, SVC_NAME, "int_const"));
-			EXPECT_EQ(0, abus_undecl_attr(&abus_svc_, SVC_NAME, "llint"));
-			EXPECT_EQ(0, abus_undecl_attr(&abus_svc_, SVC_NAME, "bool"));
-			EXPECT_EQ(0, abus_undecl_attr(&abus_svc_, SVC_NAME, "double"));
+			EXPECT_EQ(0, abus_undecl_attr(abus_svc_, SVC_NAME, "int"));
+			EXPECT_EQ(0, abus_undecl_attr(abus_svc_, SVC_NAME, "int_ro"));
+			EXPECT_EQ(0, abus_undecl_attr(abus_svc_, SVC_NAME, "int_const"));
+			EXPECT_EQ(0, abus_undecl_attr(abus_svc_, SVC_NAME, "llint"));
+			EXPECT_EQ(0, abus_undecl_attr(abus_svc_, SVC_NAME, "bool"));
+			EXPECT_EQ(0, abus_undecl_attr(abus_svc_, SVC_NAME, "double"));
 			// double undeclare
-			EXPECT_EQ(JSONRPC_NO_METHOD, abus_undecl_attr(&abus_svc_, SVC_NAME, "double"));
+			EXPECT_EQ(JSONRPC_NO_METHOD, abus_undecl_attr(abus_svc_, SVC_NAME, "double"));
 			// no undeclare, to be catched by abus_cleanup()
-			// EXPECT_EQ(0, abus_undecl_attr(&abus_svc_, SVC_NAME, "str"));
+			// EXPECT_EQ(0, abus_undecl_attr(abus_svc_, SVC_NAME, "str"));
 
             AbusAttrs::TearDown();
 		}
@@ -106,21 +108,21 @@ class AbusAutoAttrTest : public AbusAttrs {
             AbusAttrs::SetUp();
 
 			// Auto-allocated attributes (i.e. no pointer)
-	        EXPECT_EQ(0, abus_decl_attr_int(&abus_svc_, SVC_NAME, "int", NULL, 0, NULL));
-	        EXPECT_EQ(0, abus_decl_attr_int(&abus_svc_, SVC_NAME, "int_ro", NULL, ABUS_RPC_RDONLY, NULL));
-	        EXPECT_EQ(0, abus_decl_attr_llint(&abus_svc_, SVC_NAME, "llint", NULL, 0, NULL));
-	        EXPECT_EQ(0, abus_decl_attr_bool(&abus_svc_, SVC_NAME, "bool", NULL, 0, NULL));
-	        EXPECT_EQ(0, abus_decl_attr_double(&abus_svc_, SVC_NAME, "double", NULL, 0, NULL));
-	        EXPECT_EQ(0, abus_decl_attr_str(&abus_svc_, SVC_NAME, "str", NULL, 256, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_int(abus_svc_, SVC_NAME, "int", NULL, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_int(abus_svc_, SVC_NAME, "int_ro", NULL, ABUS_RPC_RDONLY, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_llint(abus_svc_, SVC_NAME, "llint", NULL, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_bool(abus_svc_, SVC_NAME, "bool", NULL, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_double(abus_svc_, SVC_NAME, "double", NULL, 0, NULL));
+	        EXPECT_EQ(0, abus_decl_attr_str(abus_svc_, SVC_NAME, "str", NULL, 256, 0, NULL));
         }
         virtual void TearDown() {
 
-			EXPECT_EQ(0, abus_undecl_attr(&abus_svc_, SVC_NAME, "int"));
-			EXPECT_EQ(0, abus_undecl_attr(&abus_svc_, SVC_NAME, "int_ro"));
-			EXPECT_EQ(0, abus_undecl_attr(&abus_svc_, SVC_NAME, "llint"));
-			EXPECT_EQ(0, abus_undecl_attr(&abus_svc_, SVC_NAME, "bool"));
-			EXPECT_EQ(0, abus_undecl_attr(&abus_svc_, SVC_NAME, "double"));
-			EXPECT_EQ(0, abus_undecl_attr(&abus_svc_, SVC_NAME, "str"));
+			EXPECT_EQ(0, abus_undecl_attr(abus_svc_, SVC_NAME, "int"));
+			EXPECT_EQ(0, abus_undecl_attr(abus_svc_, SVC_NAME, "int_ro"));
+			EXPECT_EQ(0, abus_undecl_attr(abus_svc_, SVC_NAME, "llint"));
+			EXPECT_EQ(0, abus_undecl_attr(abus_svc_, SVC_NAME, "bool"));
+			EXPECT_EQ(0, abus_undecl_attr(abus_svc_, SVC_NAME, "double"));
+			EXPECT_EQ(0, abus_undecl_attr(abus_svc_, SVC_NAME, "str"));
 
             AbusAttrs::TearDown();
         }

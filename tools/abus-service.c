@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #include "abus.h"
+#include "jsonrpc_internal.h"
 
 static int opt_verbose;
 static int opt_rpc_threaded;
@@ -67,11 +68,9 @@ static int usage(const char *argv0, int exit_code)
 
 int main(int argc, char **argv)
 {
-	abus_t abus;
-	json_rpc_t jr, *json_rpc = &jr;
+	abus_t *abus;
 	const char *service_name;
 	int ret, opt;
-	char *endptr;
 
 	while ((opt = getopt(argc, argv, "hvVT")) != -1) {
 		switch (opt) {
@@ -96,7 +95,7 @@ int main(int argc, char **argv)
 	if (optind+3 > argc)
 		usage(argv[0], EXIT_FAILURE);
 
-	abus_init(&abus);
+	abus = abus_init(NULL);
 
 	service_name = argv[optind++];
 
@@ -104,7 +103,7 @@ int main(int argc, char **argv)
 		const char *method_name = argv[optind++];
 		const char *method_command = argv[optind++];
 
-		ret = abus_decl_method(&abus, service_name,
+		ret = abus_decl_method(abus, service_name,
 					method_name,
 					&svc_rpc_caller,
 					opt_rpc_threaded ? ABUS_RPC_THREADED : ABUS_RPC_FLAG_NONE,
@@ -112,19 +111,19 @@ int main(int argc, char **argv)
 					NULL, NULL, NULL);
 		if (ret != 0) {
 			fprintf(stderr, "A-Bus method declaration failed: %s\n", abus_strerror(ret));
-			abus_cleanup(&abus);
+			abus_cleanup(abus);
 			exit(EXIT_FAILURE);
 		}
 	}
 
-	ret = abus_decl_method(&abus, service_name,
+	ret = abus_decl_method(abus, service_name,
 				"terminate",
 				&svc_terminate_cb,
 				ABUS_RPC_FLAG_NONE,
 				NULL,
 				"Terminate service", NULL, NULL);
 	if (ret != 0) {
-		abus_cleanup(&abus);
+		abus_cleanup(abus);
 		exit(EXIT_FAILURE);
 	}
 
@@ -133,7 +132,7 @@ int main(int argc, char **argv)
 		sleep(1);
 	}
 
-	abus_cleanup(&abus);
+	abus_cleanup(abus);
 
 	return EXIT_SUCCESS;
 }

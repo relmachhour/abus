@@ -40,7 +40,7 @@
 #include "json.h"
 #include "hashtab.h"
 
-#include "jsonrpc.h"
+#include "jsonrpc_internal.h"
 
 #define LogError(...)    do { fprintf(stderr, ##__VA_ARGS__); fprintf(stderr, "\n"); } while (0)
 #define LogDebug(...)    do { fprintf(stderr, ##__VA_ARGS__); fprintf(stderr, "\n"); } while (0)
@@ -99,10 +99,14 @@ void json_val_free(json_val_t *json_val)
 	json_val->type = JSON_NONE;
 }
 
-int json_rpc_init(json_rpc_t *json_rpc)
+json_rpc_t *json_rpc_init(void)
 {
+	json_rpc_t *json_rpc;
+
 	/* need to set various fields to zero */
-	memset(json_rpc, 0, sizeof(json_rpc_t));
+	json_rpc = calloc(1, sizeof(json_rpc_t));
+	if (!json_rpc)
+		return NULL;
 
 	json_rpc->sock = -1;
 
@@ -112,12 +116,12 @@ int json_rpc_init(json_rpc_t *json_rpc)
 	pthread_mutex_init(&json_rpc->mutex, NULL);
 	pthread_cond_init(&json_rpc->cond, NULL);
 
-	return 0;
+	return json_rpc;
 }
 
 void json_rpc_cleanup(json_rpc_t *json_rpc)
 {
-	if (!json_rpc->params_htab)
+	if (!json_rpc || !json_rpc->params_htab)
 		return;
 
 	pthread_cond_destroy(&json_rpc->cond);
@@ -166,6 +170,8 @@ void json_rpc_cleanup(json_rpc_t *json_rpc)
 	json_val_free(&json_rpc->id);
 	if (json_rpc->msgbuf)
 		free(json_rpc->msgbuf);
+
+	free(json_rpc);
 }
 
 int json_rpc_parse_msg(json_rpc_t *json_rpc, const char *buffer, size_t len)
@@ -952,18 +958,20 @@ int json_rpc_get_point_at(json_rpc_t *json_rpc, const char *name, int idx)
 
 /* Request specific */
 
-int json_rpc_req_init(json_rpc_t *json_rpc, const char *service_name, const char *method_name, unsigned id)
+json_rpc_t *json_rpc_req_init(const char *service_name, const char *method_name, unsigned id)
 {
-	int ret;
+	json_rpc_t *json_rpc;
 	char idbuf[12];
 
-	ret = json_rpc_init(json_rpc);
-	if (ret)
-		return ret;
+	json_rpc = json_rpc_init();
+	if (!json_rpc)
+		return NULL;
 
 	json_rpc->msgbuf = malloc(JSONRPC_REQ_SZ_MAX);
-	if (!json_rpc->msgbuf)
-		return JSON_ERROR_NO_MEMORY;
+	if (!json_rpc->msgbuf) {
+		json_rpc_cleanup(json_rpc);
+		return NULL;
+	}
 
 	sprintf(idbuf, "%u", id);
 
@@ -984,7 +992,7 @@ int json_rpc_req_init(json_rpc_t *json_rpc, const char *service_name, const char
 	json_rpc->service_name = strdup(service_name);
 	json_rpc->method_name = strdup(method_name);
 
-	return 0;
+	return json_rpc;
 }
 
 int json_rpc_req_finalize(json_rpc_t *json_rpc)
@@ -1241,6 +1249,8 @@ int json_rpc_append_vargs(json_rpc_t *json_rpc, va_list ap)
 
 /*!
  * Variable arg wrapper for json_rpc_append_vargs()
+
+ Rem: the json tags to be appended may require \#include "json.h"
 
   \param json_rpc pointer to an opaque handle of a JSON RPC
   \return	0 if successful, non nul value otherwise

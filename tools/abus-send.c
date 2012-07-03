@@ -22,6 +22,7 @@
 #include <getopt.h>
 
 #include "abus.h"
+#include "abus_internal.h"
 
 static int opt_timeout = 1000; /* ms */
 static int opt_verbose;
@@ -141,8 +142,8 @@ static int usage(const char *argv0, int exit_code)
 
 int main(int argc, char **argv)
 {
-	abus_t abus;
-	json_rpc_t jr, *json_rpc = &jr;
+	abus_t *abus;
+	json_rpc_t *json_rpc;
 	char *service_name;
 	char *method_name;
 	int ret;
@@ -185,13 +186,13 @@ int main(int argc, char **argv)
 		usage(argv[0], EXIT_SUCCESS);
 
 
-	abus_init(&abus);
+	abus = abus_init(NULL);
 
 	if (optind+1 == argc && !strcmp(argv[optind], "-")) {
 		
-		ret = forward_rpc_stdinout(&abus);
+		ret = forward_rpc_stdinout(abus);
 
-		abus_cleanup(&abus);
+		abus_cleanup(abus);
 
 		return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 	}
@@ -204,16 +205,15 @@ int main(int argc, char **argv)
 		method_name = "";
 
 	if (!strcmp(method_name, "subscribe") && ++optind < argc) {
-		ret = abus_event_subscribe(&abus, service_name, argv[optind], &async_print_all_cb, 0, "evt cookie", opt_timeout);
+		ret = abus_event_subscribe(abus, service_name, argv[optind], &async_print_all_cb, 0, "evt cookie", opt_timeout);
 		sleep(10);
-		ret = abus_event_unsubscribe(&abus, service_name, argv[optind], &async_print_all_cb, "evt cookie", opt_timeout);
+		ret = abus_event_unsubscribe(abus, service_name, argv[optind], &async_print_all_cb, "evt cookie", opt_timeout);
 		exit(EXIT_SUCCESS);
 	}
 
-	ret = abus_request_method_init(&abus, service_name, method_name, json_rpc);
-	if (ret)
+	json_rpc = abus_request_method_init(abus, service_name, method_name);
+	if (!json_rpc)
 		exit(EXIT_FAILURE);
-
 
 	if (!strcmp(method_name, "get")) {
 		/* begin the array */
@@ -349,31 +349,31 @@ int main(int argc, char **argv)
 	/* for unitary A-Bus testing purpose */
 	if (opt_async) {
 		/* no timeout for abus_request_method_invoke_async() */
-		ret = abus_request_method_invoke_async(&abus, json_rpc,
+		ret = abus_request_method_invoke_async(abus, json_rpc,
 							opt_wait_async ? 0 : opt_timeout,
 							&async_print_all_cb, 0, "async cookie");
 		if (ret != 0) {
-			abus_request_method_cleanup(&abus, json_rpc);
-			abus_cleanup(&abus);
+			abus_request_method_cleanup(abus, json_rpc);
+			abus_cleanup(abus);
 			exit(EXIT_FAILURE);
 		}
 		if (opt_wait_async) {
-			ret = abus_request_method_wait_async(&abus, json_rpc, opt_timeout);
+			ret = abus_request_method_wait_async(abus, json_rpc, opt_timeout);
 		} else {
 			sleep(2);
 		}
 	} else {
-		ret = abus_request_method_invoke(&abus, json_rpc, 0, opt_timeout);
+		ret = abus_request_method_invoke(abus, json_rpc, 0, opt_timeout);
 		async_print_all_cb(json_rpc, "printall cookie");
 		if (ret != 0) {
-			abus_request_method_cleanup(&abus, json_rpc);
-			abus_cleanup(&abus);
+			abus_request_method_cleanup(abus, json_rpc);
+			abus_cleanup(abus);
 			exit(EXIT_FAILURE);
 		}
-		abus_request_method_cleanup(&abus, json_rpc);
+		abus_request_method_cleanup(abus, json_rpc);
 	}
 
-	abus_cleanup(&abus);
+	abus_cleanup(abus);
 
 	return EXIT_SUCCESS;
 }
