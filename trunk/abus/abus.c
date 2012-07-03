@@ -148,7 +148,7 @@ abus_t *abus_init(const abus_conf_t *conf)
 	ret = mkdir(abus_prefix, 0777);
 	if (ret == -1 && errno != EEXIST) {
 		ret = -errno;
-		LogError("A-Bus mkdir '%s' failed: %s\n", abus_prefix, strerror(errno));
+		LogError("A-Bus mkdir '%s' failed: %s", abus_prefix, strerror(errno));
 		free(abus);
 		return NULL;
 	}
@@ -999,7 +999,7 @@ json_rpc_t *abus_request_method_init(abus_t *abus, const char *service_name, con
 	if (!json_rpc)
 		return NULL;
 
-	/* request for event subsribe MUST be sent on A-Bus socket
+	/* request for event subscribe MUST be sent on A-Bus socket
 	 * in order to get the notifications on that socket
 	 */
 	if (!strcmp(method_name, ABUS_SUBSCRIBE_METHOD)) {
@@ -1530,7 +1530,8 @@ void abus_req_introspect_service_cb(json_rpc_t *json_rpc, void *arg)
 
 int abus_check_valid_service_name(const char *name, size_t maxlen)
 {
-	return name && name[0] != '\0' && name[0] != '_'
+	/* rem: an empty name is a valid name (e.g. event "methods", etc.) */
+	return name && name[0] != '_'
 		&& strnlen(name, maxlen) < JSONRPC_SVCNAME_SZ_MAX
 		&& !strchr(name, '.')
 		&& !strchr(name, '/');
@@ -1565,7 +1566,8 @@ int abus_req_service_list(abus_t *abus, json_rpc_t *json_rpc, int timeout)
 
 	while ((entry = readdir(dirp)) != NULL) {
 
-		if (!abus_check_valid_service_name(entry->d_name, NAME_MAX))
+		if (entry->d_name[0] == '\0' ||
+				!abus_check_valid_service_name(entry->d_name, NAME_MAX))
 			continue;
 
 		/* TODO check type is symlink: d_type ? */
@@ -1967,7 +1969,7 @@ void abus_req_subscribe_service_cb(json_rpc_t *json_rpc, void *arg)
 		event->subscriber_htab = hcreate(1);
 
 #if 0
-	LogDebug("####%s %s %p %u %*s\n", json_rpc->service_name, event_name, event->subscriber_htab, event->uniq_subscriber_cnt,
+	LogDebug("####%s %s %p %u %*s", json_rpc->service_name, event_name, event->subscriber_htab, event->uniq_subscriber_cnt,
 					json_rpc->sock_addrlen-1, un_sock_name((const struct sockaddr *)&json_rpc->sock_src_addr));
 #endif
 
