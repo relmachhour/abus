@@ -31,7 +31,7 @@
 
 int main(int argc, char **argv)
 {
-	abus_t abus;
+	abus_t *abus;
 	char *buffer;
 	int len, ret, opt;
 	int timeout = RPC_TIMEOUT;
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 	if (!buffer)
 		exit(EXIT_FAILURE);
 
-	abus_init(&abus);
+	abus = abus_init(NULL);
 
 	while (FCGI_Accept() >= 0) {
 
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 		{
 			buffer[len] = '\0';
 
-			ret = abus_forward_rpc(&abus, buffer, &len, 0, timeout);
+			ret = abus_forward_rpc(abus, buffer, &len, 0, timeout);
 	
 			/* Forge JSON-RPC response in case of serious error */
 			if (ret != 0)
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 			break;
 	}
 
-	abus_cleanup(&abus);
+	abus_cleanup(abus);
 	free(buffer);
 
 	return EXIT_SUCCESS;

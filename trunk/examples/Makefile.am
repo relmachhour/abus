@@ -1,5 +1,5 @@
 
-INC = -I$(top_srcdir)/abus/hashtab -I$(top_srcdir)/abus/libjson -I$(top_srcdir)/abus
+INC = -I$(top_srcdir)/abus/libjson -I$(top_srcdir)/abus
 
 AM_CPPFLAGS = $(INC)
 

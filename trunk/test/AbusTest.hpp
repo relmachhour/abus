@@ -28,42 +28,43 @@
 class AbusTest : public testing::Test {
     protected:
         virtual void SetUp() {
-	        EXPECT_EQ(0, abus_init(&abus_));
+	        abus_ = abus_init(NULL);
+	        EXPECT_TRUE(NULL != abus_);
 
-	        EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "sum", this, svc_sum_cb,
+	        EXPECT_EQ(0, abus_decl_method_cxx(abus_, SVC_NAME, "sum", this, svc_sum_cb,
 					ABUS_RPC_FLAG_NONE,
 					"Compute summation of two integers",
 					"a:i:first operand,b:i:second operand",
 					"res_value:i:summation"));
 
-	        EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "jtypes", this, svc_jtypes_cb,
+	        EXPECT_EQ(0, abus_decl_method_cxx(abus_, SVC_NAME, "jtypes", this, svc_jtypes_cb,
 					ABUS_RPC_FLAG_NONE, NULL, NULL, NULL));
 
-	        EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "sqr", this, svc_array_sqr_cb,
+	        EXPECT_EQ(0, abus_decl_method_cxx(abus_, SVC_NAME, "sqr", this, svc_array_sqr_cb,
 					ABUS_RPC_FLAG_NONE,
 					"Compute square value of array of integers",
 					"k:i:some contant,my_array:(a:i:value to be squared,arg_index:i:index of arg for demo):array of stuff",
 					"res_k:i:same contant,res_array:(res_a:i:squared value):array of squared stuff"));
 
-	        EXPECT_EQ(0, abus_decl_method_cxx(&abus_, SVC_NAME, "echo", this, svc_echo_cb,
+	        EXPECT_EQ(0, abus_decl_method_cxx(abus_, SVC_NAME, "echo", this, svc_echo_cb,
 					ABUS_RPC_FLAG_NONE,
 					"echo of message",
 					"msg:s:message",
 					"msg:s:echoed message,msg_len:i:message length"));
         }
         virtual void TearDown() {
-			EXPECT_EQ(0, abus_undecl_method(&abus_, SVC_NAME, "sum"));
-			EXPECT_EQ(0, abus_undecl_method(&abus_, SVC_NAME, "jtypes"));
-			EXPECT_EQ(0, abus_undecl_method(&abus_, SVC_NAME, "sqr"));
+			EXPECT_EQ(0, abus_undecl_method(abus_, SVC_NAME, "sum"));
+			EXPECT_EQ(0, abus_undecl_method(abus_, SVC_NAME, "jtypes"));
+			EXPECT_EQ(0, abus_undecl_method(abus_, SVC_NAME, "sqr"));
 			// double undeclare
-			EXPECT_EQ(JSONRPC_NO_METHOD, abus_undecl_method(&abus_, SVC_NAME, "sqr"));
+			EXPECT_EQ(JSONRPC_NO_METHOD, abus_undecl_method(abus_, SVC_NAME, "sqr"));
 			// no undeclare, to be catched by abus_cleanup()
-			//EXPECT_EQ(0, abus_undecl_method(&abus_, SVC_NAME, "echo"));
+			//EXPECT_EQ(0, abus_undecl_method(abus_, SVC_NAME, "echo"));
 
-	        EXPECT_EQ(0, abus_cleanup(&abus_));
+	        EXPECT_EQ(0, abus_cleanup(abus_));
         }
 
-	abus_t abus_;
+	abus_t *abus_;
 	static const int m_method_count = 4;
 
     abus_decl_method_member(AbusTest, svc_sum_cb) ;

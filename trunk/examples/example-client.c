@@ -23,8 +23,8 @@
 
 int main(int argc, char **argv)
 {
-	abus_t abus;
-	json_rpc_t json_rpc;
+	abus_t *abus;
+	json_rpc_t *json_rpc;
 	int ret, res_value;
 	const char *service_name = "examplesvc";
 
@@ -33,32 +33,32 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	abus_init(&abus);
+	abus = abus_init(NULL);
 
 	/* method name is taken from command line */
-	ret = abus_request_method_init(&abus, service_name, argv[1], &json_rpc);
-	if (ret)
+	json_rpc = abus_request_method_init(abus, service_name, argv[1]);
+	if (!json_rpc)
 		exit(EXIT_FAILURE);
 
 	/* pass 2 parameters: "a" and "b" */
-	json_rpc_append_int(&json_rpc, "a", atoi(argv[2]));
-	json_rpc_append_int(&json_rpc, "b", atoi(argv[3]));
+	json_rpc_append_int(json_rpc, "a", atoi(argv[2]));
+	json_rpc_append_int(json_rpc, "b", atoi(argv[3]));
 
-	ret = abus_request_method_invoke(&abus, &json_rpc, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT);
+	ret = abus_request_method_invoke(abus, json_rpc, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT);
 	if (ret != 0) {
 		printf("RPC failed with error %d\n", ret);
 		exit(EXIT_FAILURE);
 	}
 
-	ret = json_rpc_get_int(&json_rpc, "res_value", &res_value);
+	ret = json_rpc_get_int(json_rpc, "res_value", &res_value);
 
 	if (ret == 0)
 		printf("res_value=%d\n", res_value);
 	else
 		printf("No result? error %d\n", ret);
 
-	abus_request_method_cleanup(&abus, &json_rpc);
-	abus_cleanup(&abus);
+	abus_request_method_cleanup(abus, json_rpc);
+	abus_cleanup(abus);
 
 	return EXIT_SUCCESS;
 }

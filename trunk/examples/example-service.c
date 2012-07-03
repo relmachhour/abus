@@ -59,37 +59,37 @@ static void svc_mult_cb(json_rpc_t *json_rpc, void *arg)
 
 int main(int argc, char **argv)
 {
-	abus_t abus;
+	abus_t *abus;
 	int ret;
 
-	abus_init(&abus);
+	abus = abus_init(NULL);
 
-	ret = abus_decl_method(&abus, "examplesvc", "sum", &svc_sum_cb,
+	ret = abus_decl_method(abus, "examplesvc", "sum", &svc_sum_cb,
 					ABUS_RPC_FLAG_NONE,
 					"sumator cookie",
 					"Compute summation of two integers",
 					"a:i:first operand,b:i:second operand",
 					"res_value:i:summation");
 	if (ret != 0) {
-		abus_cleanup(&abus);
+		abus_cleanup(abus);
 		return EXIT_FAILURE;
 	}
 
-	ret = abus_decl_method(&abus, "examplesvc", "mult", &svc_mult_cb,
+	ret = abus_decl_method(abus, "examplesvc", "mult", &svc_mult_cb,
 					ABUS_RPC_FLAG_NONE,
 					"multiply cookie",
 					"Compute multiplication of two integers",
 					"a:i:first operand,b:i:second operand",
 					"res_value:i:multiplication");
 	if (ret != 0) {
-		abus_cleanup(&abus);
+		abus_cleanup(abus);
 		return EXIT_FAILURE;
 	}
 
 	/* do other stuff */
 	sleep(10000);
 
-	abus_cleanup(&abus);
+	abus_cleanup(abus);
 
 	return EXIT_SUCCESS;
 }

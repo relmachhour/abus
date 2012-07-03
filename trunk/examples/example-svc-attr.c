@@ -22,7 +22,7 @@
 
 int main(int argc, char **argv)
 {
-	abus_t abus;
+	abus_t *abus;
 	const char *servicename = "exampleattrsvc";
 	int i, ret;
 
@@ -30,13 +30,13 @@ int main(int argc, char **argv)
 	int my_auto_count = 0;
 
 
-	abus_init(&abus);
+	abus = abus_init(NULL);
 
-	ret = abus_decl_attr_int(&abus, servicename, "tree.some_int", &my_int,
+	ret = abus_decl_attr_int(abus, servicename, "tree.some_int", &my_int,
 					ABUS_RPC_FLAG_NONE,
 					"Some integer, for demo purpose");
 	if (ret != 0) {
-	    abus_cleanup(&abus);
+	    abus_cleanup(abus);
 	    return EXIT_FAILURE;
 	}
 
@@ -44,11 +44,11 @@ int main(int argc, char **argv)
 	   be auto-allocated by libabus, and initialized to zero.
 	   Access must be done through get and set.
 	 */
-	abus_decl_attr_int(&abus, servicename, "tree.some_other_int", NULL,
+	abus_decl_attr_int(abus, servicename, "tree.some_other_int", NULL,
 					ABUS_RPC_FLAG_NONE,
 					"Some other integer, still for demo purpose");
 
-	abus_decl_attr_int(&abus, servicename, "tree.auto_count", &my_auto_count,
+	abus_decl_attr_int(abus, servicename, "tree.auto_count", &my_auto_count,
 					ABUS_RPC_FLAG_NONE,
 					"Counter incremented every 5 seconds");
 
@@ -58,10 +58,10 @@ int main(int argc, char **argv)
 
 		my_auto_count++;
 		/* trigger event notification */
-		abus_attr_changed(&abus, servicename, "tree.auto_count");
+		abus_attr_changed(abus, servicename, "tree.auto_count");
 	}
 
-	abus_cleanup(&abus);
+	abus_cleanup(abus);
 
 	return EXIT_SUCCESS;
 }

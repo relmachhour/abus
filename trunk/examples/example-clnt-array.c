@@ -17,14 +17,15 @@
 #include <string.h>
 #include <errno.h>
 
-#include "abus.h"
+#include <abus.h>
+#include <json.h>
 
 #define RPC_TIMEOUT 1000 /* ms */
 
 int main(int argc, char **argv)
 {
-	abus_t abus;
-	json_rpc_t json_rpc;
+	abus_t *abus;
+	json_rpc_t *json_rpc;
 	int count, i, ret, res_value;
 	const char *service_name = "examplearraysvc";
 
@@ -33,50 +34,50 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	abus_init(&abus);
+	abus = abus_init(NULL);
 
 	/* method name is taken from command line */
-	ret = abus_request_method_init(&abus, service_name, argv[1], &json_rpc);
-	if (ret)
+	json_rpc = abus_request_method_init(abus, service_name, argv[1]);
+	if (!json_rpc)
 		exit(EXIT_FAILURE);
 
 	/* pass 2 parameters: "k" and "my_array" */
-	json_rpc_append_int(&json_rpc, "k", atoi(argv[2]));
+	json_rpc_append_int(json_rpc, "k", atoi(argv[2]));
 
 	/* begin the array */
-	json_rpc_append_args(&json_rpc,
+	json_rpc_append_args(json_rpc,
 					JSON_KEY, "my_array", -1,
 					JSON_ARRAY_BEGIN,
 					-1);
 
 	for (i = 3; i<argc; i++) {
 		/* each array element *must* be an "OBJECT", i.e. a dictonary */
-		json_rpc_append_args(&json_rpc, JSON_OBJECT_BEGIN, -1);
+		json_rpc_append_args(json_rpc, JSON_OBJECT_BEGIN, -1);
 
-		json_rpc_append_int(&json_rpc, "a", atoi(argv[i]));
+		json_rpc_append_int(json_rpc, "a", atoi(argv[i]));
 		/* more stuff may be appended in there */
-		json_rpc_append_int(&json_rpc, "arg_index", i);
+		json_rpc_append_int(json_rpc, "arg_index", i);
 
-		json_rpc_append_args(&json_rpc, JSON_OBJECT_END, -1);
+		json_rpc_append_args(json_rpc, JSON_OBJECT_END, -1);
 	}
 
 	/* end the array */
-	json_rpc_append_args(&json_rpc, JSON_ARRAY_END, -1);
+	json_rpc_append_args(json_rpc, JSON_ARRAY_END, -1);
 
 
-	ret = abus_request_method_invoke(&abus, &json_rpc, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT);
+	ret = abus_request_method_invoke(abus, json_rpc, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT);
 	if (ret != 0) {
 		printf("RPC failed with error %d\n", ret);
 		exit(EXIT_FAILURE);
 	}
 
-	count = json_rpc_get_array_count(&json_rpc, "res_array");
+	count = json_rpc_get_array_count(json_rpc, "res_array");
 	if (count < 0) {
 		printf("No result? error %d\n", count);
 		exit(EXIT_FAILURE);
 	}
 
-	ret = json_rpc_get_int(&json_rpc, "res_k", &res_value);
+	ret = json_rpc_get_int(json_rpc, "res_k", &res_value);
 	if (ret == 0)
 		printf("res_k=%d\n", res_value);
 	else
@@ -85,11 +86,11 @@ int main(int argc, char **argv)
 
 	for (i = 0; i<count; i++) {
 		/* Aim at i-th element within array "res_array" */
-		json_rpc_get_point_at(&json_rpc, "res_array", i);
+		json_rpc_get_point_at(json_rpc, "res_array", i);
 
 		printf("res_array[%d]\n", i);
 
-		ret = json_rpc_get_int(&json_rpc, "res_a", &res_value);
+		ret = json_rpc_get_int(json_rpc, "res_a", &res_value);
 		if (ret == 0)
 			printf("\tres_a=%d\n", res_value);
 		else
@@ -98,17 +99,17 @@ int main(int argc, char **argv)
 
 	/* Aim back out of array */
 
-	json_rpc_get_point_at(&json_rpc, NULL, 0);
+	json_rpc_get_point_at(json_rpc, NULL, 0);
 
-	ret = json_rpc_get_int(&json_rpc, "res_k", &res_value);
+	ret = json_rpc_get_int(json_rpc, "res_k", &res_value);
 	if (ret == 0)
 		printf("res_k=%d (should be the same as previously)\n", res_value);
 	else
 		printf("No result? error %d\n", ret);
 
 
-	abus_request_method_cleanup(&abus, &json_rpc);
-	abus_cleanup(&abus);
+	abus_request_method_cleanup(abus, json_rpc);
+	abus_cleanup(abus);
 
 	return EXIT_SUCCESS;
 }

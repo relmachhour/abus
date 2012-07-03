@@ -13,8 +13,8 @@
  */
 
 #include <iostream>
-#include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /* The A-Bus C++ wrapper */
 #include "abus.hpp"

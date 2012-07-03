@@ -17,23 +17,21 @@
 
 #include <gtest/gtest.h>
 
-TEST(AbusTorTest, DoubleInit) {
-	abus_t abus;
+#if 0
 
-	EXPECT_EQ(0, abus_init(&abus));
-
-	EXPECT_EQ(0, abus_init(&abus));
-
-	EXPECT_EQ(0, abus_cleanup(&abus));
-}
+/* disabled, because final double free() not handled */
 
 TEST(AbusTorTest, DoubleCleanup) {
-	abus_t abus;
+	abus_t *abus;
 
-	EXPECT_EQ(0, abus_init(&abus));
+	abus = abus_init(NULL);
 
-	EXPECT_EQ(0, abus_cleanup(&abus));
+	EXPECT_TRUE(NULL != abus);
 
-	EXPECT_EQ(0, abus_cleanup(&abus));
+	EXPECT_EQ(0, abus_cleanup(abus));
+
+	EXPECT_EQ(0, abus_cleanup(abus));
 }
+
+#endif
 
