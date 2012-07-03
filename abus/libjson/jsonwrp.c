@@ -205,7 +205,7 @@ static int process_file(json_parser *parser, FILE *input, int *retlines, int *re
 	while (1) {
 		size_t processed;
 		read = fread(buffer, 1, 4096, input);
-		if (read <= 0)
+		if (read == 0)
 			break;
 		ret = json_parser_string(parser, buffer, read, &processed);
 		for (i = 0; i < (int)processed; i++)

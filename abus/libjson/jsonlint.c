@@ -27,7 +27,7 @@ static int printchannel(void *userdata, const char *data, size_t length)
 {
 	FILE *channel = userdata;
 	int ret;
-	/* should check return value */
+	/* TODO: should check return value */
 	ret = fwrite(data, length, 1, channel);
 	return 0;
 }
@@ -72,10 +72,10 @@ int process_file(json_parser *parser, FILE *input, int *retlines, int *retcols)
 	while (1) {
 		size_t processed;
 		read = fread(buffer, 1, 4096, input);
-		if (read <= 0)
+		if (read == 0)
 			break;
 		ret = json_parser_string(parser, buffer, read, &processed);
-		for (i = 0; i < processed; i++) {
+		for (i = 0; i < (int)processed; i++) {
 			if (buffer[i] == '\n') { col = 0; lines++; } else col++;
 		}
 		if (ret)
@@ -496,7 +496,7 @@ int main(int argc, char **argv)
 			{ "max-data", 1, 0, 0 },
 			{ "indent-string", 1, 0, 0 },
 			{ "tree", 0, 0, 0 },
-			{ 0 },
+			{ NULL, 0, 0, 0 },
 		};
 		int c = getopt_long(argc, argv, "o:", long_options, &option_index);
 		if (c == -1)
@@ -535,8 +535,10 @@ int main(int argc, char **argv)
 			break;
 		}
 	}
+#if 0
 	if (config.max_nesting < 0)
 		config.max_nesting = 0;
+#endif
 	if (!output)
 		output = "-";
 	if (optind >= argc)
