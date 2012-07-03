@@ -146,9 +146,9 @@ static int print_basic_type(char *s, size_t n, const char *name, const json_val_
 		case JSON_INT:
 		case JSON_LLINT:
 		case JSON_FLOAT:
-			return snprintf(s, n, "%s=%*s ", name, val->length, val->u.data);
+			return snprintf(s, n, "%s=%*s ", name, (int)val->length, val->u.data);
 		case JSON_STRING:
-			return snprintf(s, n, "%s='%*s' ", name, val->length, val->u.data);
+			return snprintf(s, n, "%s='%*s' ", name, (int)val->length, val->u.data);
 		case JSON_TRUE:
 			return snprintf(s, n, "%s=true ", name);
 		case JSON_FALSE:

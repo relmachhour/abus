@@ -33,10 +33,10 @@ static void print_basic_type(const char *prefix, const char *name, const json_va
 		case JSON_INT:
 		case JSON_LLINT:
 		case JSON_FLOAT:
-			printf("%s%s=%*s\n", prefix, name, val->length, val->u.data);
+			printf("%s%s=%*s\n", prefix, name, (int)val->length, val->u.data);
 			break;
 		case JSON_STRING:
-			printf("%s%s=\"%*s\"\n", prefix, name, val->length, val->u.data);
+			printf("%s%s=\"%*s\"\n", prefix, name, (int)val->length, val->u.data);
 			break;
 		case JSON_TRUE:
 			printf("%s%s=true\n", prefix, name);
