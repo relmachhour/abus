@@ -26,7 +26,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">A-Bus Library&#160;<span id="projectnumber">0.2~svn</span></div>
+   <div id="projectname">A-Bus Library&#160;<span id="projectnumber">0.3~svn</span></div>
   </td>
  </tr>
  </tbody>
@@ -97,14 +97,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <span class="preprocessor">#include &lt;string.h&gt;</span>
 <span class="preprocessor">#include &lt;errno.h&gt;</span>
 
-<span class="preprocessor">#include &quot;abus.h&quot;</span>
+<span class="preprocessor">#include &lt;abus.h&gt;</span>
+<span class="preprocessor">#include &lt;json.h&gt;</span>
 
 <span class="preprocessor">#define RPC_TIMEOUT 1000 </span><span class="comment">/* ms */</span>
 
 <span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)
 {
-        abus_t abus;
-        json_rpc_t json_rpc;
+        abus_t *abus;
+        json_rpc_t *json_rpc;
         <span class="keywordtype">int</span> count, i, ret, res_value;
         <span class="keyword">const</span> <span class="keywordtype">char</span> *service_name = <span class="stringliteral">&quot;examplearraysvc&quot;</span>;
 
@@ -113,50 +114,50 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
                 exit(EXIT_FAILURE);
         }
 
-        <a name="a0"></a><a class="code" href="group__abus.html#gae6978d51da337838da12bca1c2c27659" title="Initialize for A-Bus operation.">abus_init</a>(&amp;abus);
+        abus = <a name="a0"></a><a class="code" href="group__abus.html#ga64f5976d337fb9919c0262bbe2b3a724" title="Initialize for A-Bus operation.">abus_init</a>(NULL);
 
         <span class="comment">/* method name is taken from command line */</span>
-        ret = <a name="a1"></a><a class="code" href="group__abus.html#gacd0f9150830116ff3525cf6c7e05478f" title="Initialize for request method, client side.">abus_request_method_init</a>(&amp;abus, service_name, argv[1], &amp;json_rpc);
-        <span class="keywordflow">if</span> (ret)
+        json_rpc = <a name="a1"></a><a class="code" href="group__abus.html#ga79920d7a8028bad5e0dd9b8495accb25" title="Initialize for request method, client side.">abus_request_method_init</a>(abus, service_name, argv[1]);
+        <span class="keywordflow">if</span> (!json_rpc)
                 exit(EXIT_FAILURE);
 
         <span class="comment">/* pass 2 parameters: &quot;k&quot; and &quot;my_array&quot; */</span>
-        <a name="a2"></a><a class="code" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int</a>(&amp;json_rpc, <span class="stringliteral">&quot;k&quot;</span>, atoi(argv[2]));
+        <a name="a2"></a><a class="code" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int</a>(json_rpc, <span class="stringliteral">&quot;k&quot;</span>, atoi(argv[2]));
 
         <span class="comment">/* begin the array */</span>
-        <a name="a3"></a><a class="code" href="group__abus.html#gab5c1434f4a96d22320319f6caf45173b" title="Variable arg wrapper for json_rpc_append_vargs()">json_rpc_append_args</a>(&amp;json_rpc,
+        <a name="a3"></a><a class="code" href="group__abus.html#gab5c1434f4a96d22320319f6caf45173b" title="Variable arg wrapper for json_rpc_append_vargs()">json_rpc_append_args</a>(json_rpc,
                                         JSON_KEY, <span class="stringliteral">&quot;my_array&quot;</span>, -1,
                                         JSON_ARRAY_BEGIN,
                                         -1);
 
         <span class="keywordflow">for</span> (i = 3; i&lt;argc; i++) {
                 <span class="comment">/* each array element *must* be an &quot;OBJECT&quot;, i.e. a dictonary */</span>
-                <a class="code" href="group__abus.html#gab5c1434f4a96d22320319f6caf45173b" title="Variable arg wrapper for json_rpc_append_vargs()">json_rpc_append_args</a>(&amp;json_rpc, JSON_OBJECT_BEGIN, -1);
+                <a class="code" href="group__abus.html#gab5c1434f4a96d22320319f6caf45173b" title="Variable arg wrapper for json_rpc_append_vargs()">json_rpc_append_args</a>(json_rpc, JSON_OBJECT_BEGIN, -1);
 
-                <a class="code" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int</a>(&amp;json_rpc, <span class="stringliteral">&quot;a&quot;</span>, atoi(argv[i]));
+                <a class="code" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int</a>(json_rpc, <span class="stringliteral">&quot;a&quot;</span>, atoi(argv[i]));
                 <span class="comment">/* more stuff may be appended in there */</span>
-                <a class="code" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int</a>(&amp;json_rpc, <span class="stringliteral">&quot;arg_index&quot;</span>, i);
+                <a class="code" href="group__abus.html#gae2a95cc825a12654ab72df6a0169b0a3" title="Append to a RPC a new parameter and its value of type integer.">json_rpc_append_int</a>(json_rpc, <span class="stringliteral">&quot;arg_index&quot;</span>, i);
 
-                <a class="code" href="group__abus.html#gab5c1434f4a96d22320319f6caf45173b" title="Variable arg wrapper for json_rpc_append_vargs()">json_rpc_append_args</a>(&amp;json_rpc, JSON_OBJECT_END, -1);
+                <a class="code" href="group__abus.html#gab5c1434f4a96d22320319f6caf45173b" title="Variable arg wrapper for json_rpc_append_vargs()">json_rpc_append_args</a>(json_rpc, JSON_OBJECT_END, -1);
         }
 
         <span class="comment">/* end the array */</span>
-        <a class="code" href="group__abus.html#gab5c1434f4a96d22320319f6caf45173b" title="Variable arg wrapper for json_rpc_append_vargs()">json_rpc_append_args</a>(&amp;json_rpc, JSON_ARRAY_END, -1);
+        <a class="code" href="group__abus.html#gab5c1434f4a96d22320319f6caf45173b" title="Variable arg wrapper for json_rpc_append_vargs()">json_rpc_append_args</a>(json_rpc, JSON_ARRAY_END, -1);
 
 
-        ret = <a name="a4"></a><a class="code" href="group__abus.html#gae11f19e9033b6537259a125f4b8c9b21" title="Synchronous invocation of a method.">abus_request_method_invoke</a>(&amp;abus, &amp;json_rpc, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT);
+        ret = <a name="a4"></a><a class="code" href="group__abus.html#gae11f19e9033b6537259a125f4b8c9b21" title="Synchronous invocation of a method.">abus_request_method_invoke</a>(abus, json_rpc, ABUS_RPC_FLAG_NONE, RPC_TIMEOUT);
         <span class="keywordflow">if</span> (ret != 0) {
                 printf(<span class="stringliteral">&quot;RPC failed with error %d\n&quot;</span>, ret);
                 exit(EXIT_FAILURE);
         }
 
-        count = <a name="a5"></a><a class="code" href="group__abus.html#ga7bbbd24ff202dce02334cefbc21d7928" title="Get the count of objects in &amp;quot;params&amp;quot; or &amp;quot;result&amp;quot; in a parsed JSON RPC...">json_rpc_get_array_count</a>(&amp;json_rpc, <span class="stringliteral">&quot;res_array&quot;</span>);
+        count = <a name="a5"></a><a class="code" href="group__abus.html#ga7bbbd24ff202dce02334cefbc21d7928" title="Get the count of objects in &amp;quot;params&amp;quot; or &amp;quot;result&amp;quot; in a parsed JSON RPC...">json_rpc_get_array_count</a>(json_rpc, <span class="stringliteral">&quot;res_array&quot;</span>);
         <span class="keywordflow">if</span> (count &lt; 0) {
                 printf(<span class="stringliteral">&quot;No result? error %d\n&quot;</span>, count);
                 exit(EXIT_FAILURE);
         }
 
-        ret = <a name="a6"></a><a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(&amp;json_rpc, <span class="stringliteral">&quot;res_k&quot;</span>, &amp;res_value);
+        ret = <a name="a6"></a><a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(json_rpc, <span class="stringliteral">&quot;res_k&quot;</span>, &amp;res_value);
         <span class="keywordflow">if</span> (ret == 0)
                 printf(<span class="stringliteral">&quot;res_k=%d\n&quot;</span>, res_value);
         <span class="keywordflow">else</span>
@@ -165,11 +166,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
         <span class="keywordflow">for</span> (i = 0; i&lt;count; i++) {
                 <span class="comment">/* Aim at i-th element within array &quot;res_array&quot; */</span>
-                <a name="a7"></a><a class="code" href="group__abus.html#ga97adf9e30c98f22e21cf410db25bed61" title="Aim the json_rpc_get_{int,bool,..} functions at an object within an array of &amp;quot;params&amp;quot; or &amp;q...">json_rpc_get_point_at</a>(&amp;json_rpc, <span class="stringliteral">&quot;res_array&quot;</span>, i);
+                <a name="a7"></a><a class="code" href="group__abus.html#ga97adf9e30c98f22e21cf410db25bed61" title="Aim the json_rpc_get_{int,bool,..} functions at an object within an array of &amp;quot;params&amp;quot; or &amp;q...">json_rpc_get_point_at</a>(json_rpc, <span class="stringliteral">&quot;res_array&quot;</span>, i);
 
                 printf(<span class="stringliteral">&quot;res_array[%d]\n&quot;</span>, i);
 
-                ret = <a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(&amp;json_rpc, <span class="stringliteral">&quot;res_a&quot;</span>, &amp;res_value);
+                ret = <a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(json_rpc, <span class="stringliteral">&quot;res_a&quot;</span>, &amp;res_value);
                 <span class="keywordflow">if</span> (ret == 0)
                         printf(<span class="stringliteral">&quot;\tres_a=%d\n&quot;</span>, res_value);
                 <span class="keywordflow">else</span>
@@ -178,17 +179,17 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
         <span class="comment">/* Aim back out of array */</span>
 
-        <a class="code" href="group__abus.html#ga97adf9e30c98f22e21cf410db25bed61" title="Aim the json_rpc_get_{int,bool,..} functions at an object within an array of &amp;quot;params&amp;quot; or &amp;q...">json_rpc_get_point_at</a>(&amp;json_rpc, NULL, i);
+        <a class="code" href="group__abus.html#ga97adf9e30c98f22e21cf410db25bed61" title="Aim the json_rpc_get_{int,bool,..} functions at an object within an array of &amp;quot;params&amp;quot; or &amp;q...">json_rpc_get_point_at</a>(json_rpc, NULL, 0);
 
-        ret = <a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(&amp;json_rpc, <span class="stringliteral">&quot;res_k&quot;</span>, &amp;res_value);
+        ret = <a class="code" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490" title="Get the value of a parameter of type integer from a RPC.">json_rpc_get_int</a>(json_rpc, <span class="stringliteral">&quot;res_k&quot;</span>, &amp;res_value);
         <span class="keywordflow">if</span> (ret == 0)
                 printf(<span class="stringliteral">&quot;res_k=%d (should be the same as previously)\n&quot;</span>, res_value);
         <span class="keywordflow">else</span>
                 printf(<span class="stringliteral">&quot;No result? error %d\n&quot;</span>, ret);
 
 
-        <a name="a8"></a><a class="code" href="group__abus.html#gae015568322fca8202167c54d29f1603c" title="Release ressources associated with a RPC.">abus_request_method_cleanup</a>(&amp;abus, &amp;json_rpc);
-        <a name="a9"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+        <a name="a8"></a><a class="code" href="group__abus.html#gae015568322fca8202167c54d29f1603c" title="Release ressources associated with a RPC.">abus_request_method_cleanup</a>(abus, json_rpc);
+        <a name="a9"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(abus);
 
         <span class="keywordflow">return</span> EXIT_SUCCESS;
 }
@@ -198,7 +199,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Tue Jan 31 2012 12:40:22 for A-Bus Library by&#160;
+      <li class="footer">Generated on Wed Jul 18 2012 12:05:18 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

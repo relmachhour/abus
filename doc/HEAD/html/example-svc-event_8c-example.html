@@ -26,7 +26,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">A-Bus Library&#160;<span id="projectnumber">0.2~svn</span></div>
+   <div id="projectname">A-Bus Library&#160;<span id="projectnumber">0.3~svn</span></div>
   </td>
  </tr>
  </tbody>
@@ -111,19 +111,19 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)
 {
-        abus_t abus;
+        abus_t *abus;
         <span class="keywordtype">char</span> s[128];
         <span class="keywordtype">int</span> ret;
 
-        <a name="a0"></a><a class="code" href="group__abus.html#gae6978d51da337838da12bca1c2c27659" title="Initialize for A-Bus operation.">abus_init</a>(&amp;abus);
+        abus = <a name="a0"></a><a class="code" href="group__abus.html#ga64f5976d337fb9919c0262bbe2b3a724" title="Initialize for A-Bus operation.">abus_init</a>(NULL);
 
 <span class="preprocessor">#define MYSVCNAME &quot;examplesvc&quot;</span>
 <span class="preprocessor"></span><span class="preprocessor">#define MYEVTNAME &quot;enter_pressed&quot;</span>
-<span class="preprocessor"></span>        ret = <a name="a1"></a><a class="code" href="group__abus.html#ga49fee4614741a85a70c4fb6de11af9d8" title="Decalare an A-Bus event.">abus_decl_event</a>(&amp;abus, MYSVCNAME, MYEVTNAME,
+<span class="preprocessor"></span>        ret = <a name="a1"></a><a class="code" href="group__abus.html#ga49fee4614741a85a70c4fb6de11af9d8" title="Decalare an A-Bus event.">abus_decl_event</a>(abus, MYSVCNAME, MYEVTNAME,
                                         <span class="stringliteral">&quot;Event sent each time the ENTER key is press. Serves as publish/subscribe example.&quot;</span>,
                                         <span class="stringliteral">&quot;typed_char:s:keys pressed before the ENTER key&quot;</span>);
         <span class="keywordflow">if</span> (ret != 0) {
-            <a name="a2"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+            <a name="a2"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(abus);
             <span class="keywordflow">return</span> EXIT_FAILURE;
         }
 
@@ -132,16 +132,16 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <span class="comment">         */</span>
 
         <span class="keywordflow">while</span> (fgets(s, <span class="keyword">sizeof</span>(s), stdin) != NULL) {
-                json_rpc_t json_rpc;
+                json_rpc_t *json_rpc;
 
                 chomp(s);
-                <a name="a3"></a><a class="code" href="group__abus.html#gaf752f471ab94e0c086f0c931c521f95f" title="Initialize a new RPC to be published by a service.">abus_request_event_init</a>(&amp;abus, MYSVCNAME, MYEVTNAME, &amp;json_rpc);
-                json_rpc_append_str(&amp;json_rpc, <span class="stringliteral">&quot;typed_char&quot;</span>, s);
-                <a name="a4"></a><a class="code" href="group__abus.html#ga460695254c43fd31a2c0ad17abeb213c" title="Publish (i.e.">abus_request_event_publish</a>(&amp;abus, &amp;json_rpc, 0);
-                <a name="a5"></a><a class="code" href="group__abus.html#gab4fa1a2fcf76113395ee4f2d2b701f1a" title="Release ressources associated with a past event RPC.">abus_request_event_cleanup</a>(&amp;abus, &amp;json_rpc);
+                json_rpc = <a name="a3"></a><a class="code" href="group__abus.html#ga5a6d174d6f9c29473606f2ff075041df" title="Initialize a new RPC to be published by a service.">abus_request_event_init</a>(abus, MYSVCNAME, MYEVTNAME);
+                json_rpc_append_str(json_rpc, <span class="stringliteral">&quot;typed_char&quot;</span>, s);
+                <a name="a4"></a><a class="code" href="group__abus.html#ga460695254c43fd31a2c0ad17abeb213c" title="Publish (i.e.">abus_request_event_publish</a>(abus, json_rpc, 0);
+                <a name="a5"></a><a class="code" href="group__abus.html#gab4fa1a2fcf76113395ee4f2d2b701f1a" title="Release ressources associated with a past event RPC.">abus_request_event_cleanup</a>(abus, json_rpc);
         }
 
-        <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+        <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(abus);
 
         <span class="keywordflow">return</span> EXIT_SUCCESS;
 }
@@ -151,7 +151,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Tue Jan 31 2012 12:40:22 for A-Bus Library by&#160;
+      <li class="footer">Generated on Wed Jul 18 2012 12:05:18 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

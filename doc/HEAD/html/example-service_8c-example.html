@@ -26,7 +26,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">A-Bus Library&#160;<span id="projectnumber">0.2~svn</span></div>
+   <div id="projectname">A-Bus Library&#160;<span id="projectnumber">0.3~svn</span></div>
   </td>
  </tr>
  </tbody>
@@ -141,37 +141,37 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)
 {
-        abus_t abus;
+        abus_t *abus;
         <span class="keywordtype">int</span> ret;
 
-        <a name="a3"></a><a class="code" href="group__abus.html#gae6978d51da337838da12bca1c2c27659" title="Initialize for A-Bus operation.">abus_init</a>(&amp;abus);
+        abus = <a name="a3"></a><a class="code" href="group__abus.html#ga64f5976d337fb9919c0262bbe2b3a724" title="Initialize for A-Bus operation.">abus_init</a>(NULL);
 
-        ret = <a name="a4"></a><a class="code" href="group__abus.html#gab292f8de3bf410245d5282b92fb611c4" title="Decalare an A-Bus method.">abus_decl_method</a>(&amp;abus, <span class="stringliteral">&quot;examplesvc&quot;</span>, <span class="stringliteral">&quot;sum&quot;</span>, &amp;svc_sum_cb,
+        ret = <a name="a4"></a><a class="code" href="group__abus.html#gab292f8de3bf410245d5282b92fb611c4" title="Decalare an A-Bus method.">abus_decl_method</a>(abus, <span class="stringliteral">&quot;examplesvc&quot;</span>, <span class="stringliteral">&quot;sum&quot;</span>, &amp;svc_sum_cb,
                                         ABUS_RPC_FLAG_NONE,
                                         <span class="stringliteral">&quot;sumator cookie&quot;</span>,
                                         <span class="stringliteral">&quot;Compute summation of two integers&quot;</span>,
                                         <span class="stringliteral">&quot;a:i:first operand,b:i:second operand&quot;</span>,
                                         <span class="stringliteral">&quot;res_value:i:summation&quot;</span>);
         <span class="keywordflow">if</span> (ret != 0) {
-                <a name="a5"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+                <a name="a5"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(abus);
                 <span class="keywordflow">return</span> EXIT_FAILURE;
         }
 
-        ret = <a class="code" href="group__abus.html#gab292f8de3bf410245d5282b92fb611c4" title="Decalare an A-Bus method.">abus_decl_method</a>(&amp;abus, <span class="stringliteral">&quot;examplesvc&quot;</span>, <span class="stringliteral">&quot;mult&quot;</span>, &amp;svc_mult_cb,
+        ret = <a class="code" href="group__abus.html#gab292f8de3bf410245d5282b92fb611c4" title="Decalare an A-Bus method.">abus_decl_method</a>(abus, <span class="stringliteral">&quot;examplesvc&quot;</span>, <span class="stringliteral">&quot;mult&quot;</span>, &amp;svc_mult_cb,
                                         ABUS_RPC_FLAG_NONE,
                                         <span class="stringliteral">&quot;multiply cookie&quot;</span>,
                                         <span class="stringliteral">&quot;Compute multiplication of two integers&quot;</span>,
                                         <span class="stringliteral">&quot;a:i:first operand,b:i:second operand&quot;</span>,
                                         <span class="stringliteral">&quot;res_value:i:multiplication&quot;</span>);
         <span class="keywordflow">if</span> (ret != 0) {
-                <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+                <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(abus);
                 <span class="keywordflow">return</span> EXIT_FAILURE;
         }
 
         <span class="comment">/* do other stuff */</span>
         sleep(10000);
 
-        <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+        <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(abus);
 
         <span class="keywordflow">return</span> EXIT_SUCCESS;
 }
@@ -181,7 +181,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Tue Jan 31 2012 12:40:22 for A-Bus Library by&#160;
+      <li class="footer">Generated on Wed Jul 18 2012 12:05:18 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

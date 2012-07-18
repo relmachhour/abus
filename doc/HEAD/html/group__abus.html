@@ -26,7 +26,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">A-Bus Library&#160;<span id="projectnumber">0.2~svn</span></div>
+   <div id="projectname">A-Bus Library&#160;<span id="projectnumber">0.3~svn</span></div>
   </td>
  </tr>
  </tbody>
@@ -89,16 +89,24 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get version of A-Bus library.  <a href="#ga0e909793fb799cfe2c6312aca5df7c68"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga4932871788e82b5a2e56a8d4e51490e9">abus_get_copyright</a> ()</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get copyright information of A-Bus library.  <a href="#ga4932871788e82b5a2e56a8d4e51490e9"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gae6978d51da337838da12bca1c2c27659">abus_init</a> (abus_t *abus)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize for A-Bus operation.  <a href="#gae6978d51da337838da12bca1c2c27659"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">abus_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga64f5976d337fb9919c0262bbe2b3a724">abus_init</a> (const abus_conf_t *conf)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize for A-Bus operation.  <a href="#ga64f5976d337fb9919c0262bbe2b3a724"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga3fb0c8797fa57671b64714c042019a32">abus_get_conf</a> (abus_t *abus, abus_conf_t *conf)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get current configuration of A-Bus.  <a href="#ga3fb0c8797fa57671b64714c042019a32"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gae6ade6d4fbd0eeab587425bd616eb4bb">abus_set_conf</a> (abus_t *abus, const abus_conf_t *conf)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply configuration of A-Bus.  <a href="#gae6ade6d4fbd0eeab587425bd616eb4bb"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd">abus_cleanup</a> (abus_t *abus)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Cleanup of A-Bus operation, releases any allocated memory.  <a href="#gad9eb8098a84e184ee6942d48c222b4cd"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga582cb59adcf79427241dad7e41fbab4d">abus_get_fd</a> (abus_t *abus)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the file descriptor of A-Bus system, for use in poll()/select()  <a href="#ga582cb59adcf79427241dad7e41fbab4d"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga141d02b23a03cdd39c6781a24998b84c">abus_process_incoming</a> (abus_t *abus)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Process one incoming message from A-Bus socket.  <a href="#ga141d02b23a03cdd39c6781a24998b84c"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gab292f8de3bf410245d5282b92fb611c4">abus_decl_method</a> (abus_t *abus, const char *service_name, const char *method_name, abus_callback_t method_callback, int flags, void *arg, const char *descr, const char *fmt, const char *result_fmt)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Decalare an A-Bus method.  <a href="#gab292f8de3bf410245d5282b92fb611c4"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga1d2c5a2ca5147f5991d1a78f801f5fdf">abus_undecl_method</a> (abus_t *abus, const char *service_name, const char *method_name)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Undeclare an A-Bus method.  <a href="#ga1d2c5a2ca5147f5991d1a78f801f5fdf"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gacd0f9150830116ff3525cf6c7e05478f">abus_request_method_init</a> (abus_t *abus, const char *service_name, const char *method_name, json_rpc_t *json_rpc)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize for request method, client side.  <a href="#gacd0f9150830116ff3525cf6c7e05478f"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">json_rpc_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga79920d7a8028bad5e0dd9b8495accb25">abus_request_method_init</a> (abus_t *abus, const char *service_name, const char *method_name)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize for request method, client side.  <a href="#ga79920d7a8028bad5e0dd9b8495accb25"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaefbdffce700658ec7b8ec72ed6911cae">abus_request_method_wait_async</a> (abus_t *abus, json_rpc_t *json_rpc, int timeout)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for an asynchronous method request.  <a href="#gaefbdffce700658ec7b8ec72ed6911cae"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga7db4e3e3bb45d805362783b2de676d5d">abus_request_method_cancel_async</a> (abus_t *abus, json_rpc_t *json_rpc)</td></tr>
@@ -115,8 +123,8 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Decalare an A-Bus event.  <a href="#ga49fee4614741a85a70c4fb6de11af9d8"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gabf700ba3a702b6e667863d3a37d48af0">abus_undecl_event</a> (abus_t *abus, const char *service_name, const char *event_name)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Undeclare an A-Bus event.  <a href="#gabf700ba3a702b6e667863d3a37d48af0"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaf752f471ab94e0c086f0c931c521f95f">abus_request_event_init</a> (abus_t *abus, const char *service_name, const char *event_name, json_rpc_t *json_rpc)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize a new RPC to be published by a service.  <a href="#gaf752f471ab94e0c086f0c931c521f95f"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">json_rpc_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga5a6d174d6f9c29473606f2ff075041df">abus_request_event_init</a> (abus_t *abus, const char *service_name, const char *event_name)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize a new RPC to be published by a service.  <a href="#ga5a6d174d6f9c29473606f2ff075041df"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga460695254c43fd31a2c0ad17abeb213c">abus_request_event_publish</a> (abus_t *abus, json_rpc_t *json_rpc, int flags)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Publish (i.e.  <a href="#ga460695254c43fd31a2c0ad17abeb213c"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gab4fa1a2fcf76113395ee4f2d2b701f1a">abus_request_event_cleanup</a> (abus_t *abus, json_rpc_t *json_rpc)</td></tr>
@@ -165,6 +173,8 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Subscribe to changes of the values of attributes in a service.  <a href="#ga0cb189ce9ecc328cf0369725ffbbee3a"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaa9ef541e1dde4c866f65406998ea5b26">abus_attr_unsubscribe_onchange</a> (abus_t *abus, const char *service_name, const char *attr_name, abus_callback_t callback, void *arg, int timeout)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Unsubscribe to changes of the values of attributes from a service.  <a href="#gaa9ef541e1dde4c866f65406998ea5b26"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaebdf4f9e4e24dc498176c94e20236a77">json_rpc_strerror</a> (int errnum)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Return string describing error number.  <a href="#gaebdf4f9e4e24dc498176c94e20236a77"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#ga3357cd9cc36c9554c0cf0cfbf2d97b1d">json_rpc_get_type</a> (json_rpc_t *json_rpc, const char *name)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the JSON RPC type of a paramter.  <a href="#ga3357cd9cc36c9554c0cf0cfbf2d97b1d"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__abus.html#gaa3ade1d3f1b3a1c00fa519f4d1c9b490">json_rpc_get_int</a> (json_rpc_t *json_rpc, const char *name, int *val)</td></tr>
@@ -245,15 +255,15 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="gae6978d51da337838da12bca1c2c27659"></a><!-- doxytag: member="abus.c::abus_init" ref="gae6978d51da337838da12bca1c2c27659" args="(abus_t *abus)" -->
+<a class="anchor" id="ga64f5976d337fb9919c0262bbe2b3a724"></a><!-- doxytag: member="abus.c::abus_init" ref="ga64f5976d337fb9919c0262bbe2b3a724" args="(const abus_conf_t *conf)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int abus_init </td>
+          <td class="memname">abus_t* abus_init </td>
           <td>(</td>
-          <td class="paramtype">abus_t *&#160;</td>
-          <td class="paramname"><em>abus</em></td><td>)</td>
+          <td class="paramtype">const abus_conf_t *&#160;</td>
+          <td class="paramname"><em>conf</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -265,12 +275,104 @@ Functions</h2></td></tr>
 <p>When the external environement variable ABUS_MSG_VERBOSE is set to a non zero value, content of JSON-RPC messages will be displayed on the terminal.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
-    <tr><td class="paramname">abus</td><td>pointer to an opaque handle for A-Bus operation </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">conf</td><td>pointer to the A-Bus conf to be applied, may be NULL for default conf </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>pointer to an opaque handle for A-Bus operation if successful, a NULL pointer otherwise </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a0">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a0">example-clnt-array.c</a>, <a class="el" href="example-clnt-attr_8c-example.html#a0">example-clnt-attr.c</a>, <a class="el" href="example-clnt-multiattr_8c-example.html#a0">example-clnt-multiattr.c</a>, <a class="el" href="example-service_8c-example.html#a3">example-service.c</a>, <a class="el" href="example-servicexx_8cpp-example.html#a3">example-servicexx.cpp</a>, <a class="el" href="example-svc-array_8c-example.html#a6">example-svc-array.c</a>, <a class="el" href="example-svc-attr_8c-example.html#a0">example-svc-attr.c</a>, <a class="el" href="example-svc-event_8c-example.html#a0">example-svc-event.c</a>, and <a class="el" href="example-svc-poll_8c-example.html#a3">example-svc-poll.c</a>.</dd>
+</dl>
+</div>
+</div>
+<a class="anchor" id="ga3fb0c8797fa57671b64714c042019a32"></a><!-- doxytag: member="abus.c::abus_get_conf" ref="ga3fb0c8797fa57671b64714c042019a32" args="(abus_t *abus, abus_conf_t *conf)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_get_conf </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">abus_conf_t *&#160;</td>
+          <td class="paramname"><em>conf</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Get current configuration of A-Bus. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">abus</td><td>pointer to an opaque handle for A-Bus operation </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">conf</td><td>pointer to an area where to store current A-Bus conf </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-poll_8c-example.html#a4">example-svc-poll.c</a>.</dd>
+</dl>
+</div>
+</div>
+<a class="anchor" id="gae6ade6d4fbd0eeab587425bd616eb4bb"></a><!-- doxytag: member="abus.c::abus_set_conf" ref="gae6ade6d4fbd0eeab587425bd616eb4bb" args="(abus_t *abus, const abus_conf_t *conf)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_set_conf </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const abus_conf_t *&#160;</td>
+          <td class="paramname"><em>conf</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Apply configuration of A-Bus. </p>
+<p>This function may be used to change the poll_operation mode, which will stop the A-Bus thread as necessary for pure polling operation, and set the A-Bus socket in non blocking mode. </p>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga3fb0c8797fa57671b64714c042019a32" title="Get current configuration of A-Bus.">abus_get_conf()</a>, <a class="el" href="group__abus.html#ga141d02b23a03cdd39c6781a24998b84c" title="Process one incoming message from A-Bus socket.">abus_process_incoming()</a>, <a class="el" href="group__abus.html#ga582cb59adcf79427241dad7e41fbab4d" title="Get the file descriptor of A-Bus system, for use in poll()/select()">abus_get_fd()</a></dd></dl>
+<p>If only one parameter is to be modified, it is recommended to follow the pattern herebelow: </p>
+<div class="fragment"><pre class="fragment">        abus_t *abus;
+        abus_conf_t abus_conf;
+        <span class="keywordtype">int</span> ret;
+
+        abus = <a class="code" href="group__abus.html#ga64f5976d337fb9919c0262bbe2b3a724" title="Initialize for A-Bus operation.">abus_init</a>(NULL);
+
+        <a class="code" href="group__abus.html#ga3fb0c8797fa57671b64714c042019a32" title="Get current configuration of A-Bus.">abus_get_conf</a>(abus, &amp;abus_conf);
+        ...
+        conf.xxx = y;
+        ...
+        ret = <a class="code" href="group__abus.html#gae6ade6d4fbd0eeab587425bd616eb4bb" title="Apply configuration of A-Bus.">abus_set_conf</a>(abus, &amp;abus_conf);
+        <span class="keywordflow">if</span> (ret != 0)
+                fprintf(stderr, <span class="stringliteral">&quot;New conf failed: %s\n&quot;</span>, abus_strerror(ret));
+</pre></div> <dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to an opaque handle for A-Bus operation </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">conf</td><td>pointer to the A-Bus conf to be applied </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a0">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a0">example-clnt-array.c</a>, <a class="el" href="example-clnt-attr_8c-example.html#a0">example-clnt-attr.c</a>, <a class="el" href="example-service_8c-example.html#a3">example-service.c</a>, <a class="el" href="example-servicexx_8cpp-example.html#a3">example-servicexx.cpp</a>, <a class="el" href="example-svc-array_8c-example.html#a6">example-svc-array.c</a>, <a class="el" href="example-svc-attr_8c-example.html#a0">example-svc-attr.c</a>, and <a class="el" href="example-svc-event_8c-example.html#a0">example-svc-event.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-poll_8c-example.html#a5">example-svc-poll.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -299,7 +401,65 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a6">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a9">example-clnt-array.c</a>, <a class="el" href="example-clnt-attr_8c-example.html#a2">example-clnt-attr.c</a>, <a class="el" href="example-service_8c-example.html#a5">example-service.c</a>, <a class="el" href="example-servicexx_8cpp-example.html#a4">example-servicexx.cpp</a>, <a class="el" href="example-svc-array_8c-example.html#a8">example-svc-array.c</a>, <a class="el" href="example-svc-attr_8c-example.html#a2">example-svc-attr.c</a>, and <a class="el" href="example-svc-event_8c-example.html#a2">example-svc-event.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a6">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a9">example-clnt-array.c</a>, <a class="el" href="example-clnt-attr_8c-example.html#a2">example-clnt-attr.c</a>, <a class="el" href="example-clnt-multiattr_8c-example.html#a7">example-clnt-multiattr.c</a>, <a class="el" href="example-service_8c-example.html#a5">example-service.c</a>, <a class="el" href="example-servicexx_8cpp-example.html#a4">example-servicexx.cpp</a>, <a class="el" href="example-svc-array_8c-example.html#a8">example-svc-array.c</a>, <a class="el" href="example-svc-attr_8c-example.html#a2">example-svc-attr.c</a>, <a class="el" href="example-svc-event_8c-example.html#a2">example-svc-event.c</a>, and <a class="el" href="example-svc-poll_8c-example.html#a7">example-svc-poll.c</a>.</dd>
+</dl>
+</div>
+</div>
+<a class="anchor" id="ga582cb59adcf79427241dad7e41fbab4d"></a><!-- doxytag: member="abus.c::abus_get_fd" ref="ga582cb59adcf79427241dad7e41fbab4d" args="(abus_t *abus)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_get_fd </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Get the file descriptor of A-Bus system, for use in poll()/select() </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">abus</td><td>pointer to an opaque handle for A-Bus operation </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>socket file descriptor, might be -1 if socket not opened already (i.e. no service declared). </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga141d02b23a03cdd39c6781a24998b84c" title="Process one incoming message from A-Bus socket.">abus_process_incoming()</a> </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-poll_8c-example.html#a8">example-svc-poll.c</a>.</dd>
+</dl>
+</div>
+</div>
+<a class="anchor" id="ga141d02b23a03cdd39c6781a24998b84c"></a><!-- doxytag: member="abus.c::abus_process_incoming" ref="ga141d02b23a03cdd39c6781a24998b84c" args="(abus_t *abus)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int abus_process_incoming </td>
+          <td>(</td>
+          <td class="paramtype">abus_t *&#160;</td>
+          <td class="paramname"><em>abus</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Process one incoming message from A-Bus socket. </p>
+<p>This function is suitable for poll operation, as well as internal threaded operation.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">abus</td><td>pointer to an opaque handle for A-Bus operation </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd>fix memory-leak of locally allocated buffer and json_rpc upon pthread_cancel() </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga582cb59adcf79427241dad7e41fbab4d" title="Get the file descriptor of A-Bus system, for use in poll()/select()">abus_get_fd()</a> </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-poll_8c-example.html#a9">example-svc-poll.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -389,7 +549,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
 <dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga1d2c5a2ca5147f5991d1a78f801f5fdf" title="Undeclare an A-Bus method.">abus_undecl_method()</a> </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-service_8c-example.html#a4">example-service.c</a>, and <a class="el" href="example-svc-array_8c-example.html#a7">example-svc-array.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-service_8c-example.html#a4">example-service.c</a>, <a class="el" href="example-svc-array_8c-example.html#a7">example-svc-array.c</a>, and <a class="el" href="example-svc-poll_8c-example.html#a6">example-svc-poll.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -438,12 +598,12 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="gacd0f9150830116ff3525cf6c7e05478f"></a><!-- doxytag: member="abus.c::abus_request_method_init" ref="gacd0f9150830116ff3525cf6c7e05478f" args="(abus_t *abus, const char *service_name, const char *method_name, json_rpc_t *json_rpc)" -->
+<a class="anchor" id="ga79920d7a8028bad5e0dd9b8495accb25"></a><!-- doxytag: member="abus.c::abus_request_method_init" ref="ga79920d7a8028bad5e0dd9b8495accb25" args="(abus_t *abus, const char *service_name, const char *method_name)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int abus_request_method_init </td>
+          <td class="memname">json_rpc_t* abus_request_method_init </td>
           <td>(</td>
           <td class="paramtype">abus_t *&#160;</td>
           <td class="paramname"><em>abus</em>, </td>
@@ -458,13 +618,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>method_name</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">json_rpc_t *&#160;</td>
-          <td class="paramname"><em>json_rpc</em>&#160;</td>
+          <td class="paramname"><em>method_name</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -477,17 +631,18 @@ Functions</h2></td></tr>
 
 <p>Initialize for request method, client side. </p>
 <p>Implicit: expects a response, otherwise use notification/event</p>
+<p>Rem: an empty <em>service_name</em> and a <em>method_name</em> of "*" will make <a class="el" href="group__abus.html#gae11f19e9033b6537259a125f4b8c9b21" title="Synchronous invocation of a method.">abus_request_method_invoke()</a> get the list of running services on the machine.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the method belongs to </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">method_name</td><td>name of method to be later invoked </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">json_rpc</td><td>pointer to an opaque handle of a JSON RPC </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a1">example-client.c</a>, and <a class="el" href="example-clnt-array_8c-example.html#a1">example-clnt-array.c</a>.</dd>
+<dl class="return"><dt><b>Returns:</b></dt><dd>json_rpc pointer to an opaque handle of a JSON RPC if successful, a NULL pointer otherwise </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gae11f19e9033b6537259a125f4b8c9b21" title="Synchronous invocation of a method.">abus_request_method_invoke()</a>, <a class="el" href="group__abus.html#gae015568322fca8202167c54d29f1603c" title="Release ressources associated with a RPC.">abus_request_method_cleanup()</a> </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a1">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a1">example-clnt-array.c</a>, and <a class="el" href="example-clnt-multiattr_8c-example.html#a1">example-clnt-multiattr.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -637,7 +792,9 @@ Functions</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise</dd></dl>
 <dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gaefbdffce700658ec7b8ec72ed6911cae" title="Wait for an asynchronous method request.">abus_request_method_wait_async()</a>, <a class="el" href="group__abus.html#ga7db4e3e3bb45d805362783b2de676d5d" title="Cancel an asynchronous method request.">abus_request_method_cancel_async()</a> </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd>implement timeout callback </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd><p class="startdd">implement timeout callback </p>
+<p class="enddd">implement abus_req_service_list() for async </p>
+</dd></dl>
 
 </div>
 </div>
@@ -689,8 +846,8 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gacd0f9150830116ff3525cf6c7e05478f" title="Initialize for request method, client side.">abus_request_method_init()</a>, <a class="el" href="group__abus.html#gae015568322fca8202167c54d29f1603c" title="Release ressources associated with a RPC.">abus_request_method_cleanup()</a> </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a3">example-client.c</a>, and <a class="el" href="example-clnt-array_8c-example.html#a4">example-clnt-array.c</a>.</dd>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga79920d7a8028bad5e0dd9b8495accb25" title="Initialize for request method, client side.">abus_request_method_init()</a>, <a class="el" href="group__abus.html#gae015568322fca8202167c54d29f1603c" title="Release ressources associated with a RPC.">abus_request_method_cleanup()</a> </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a3">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a4">example-clnt-array.c</a>, and <a class="el" href="example-clnt-multiattr_8c-example.html#a3">example-clnt-multiattr.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -728,8 +885,8 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gacd0f9150830116ff3525cf6c7e05478f" title="Initialize for request method, client side.">abus_request_method_init()</a> </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a5">example-client.c</a>, and <a class="el" href="example-clnt-array_8c-example.html#a8">example-clnt-array.c</a>.</dd>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga79920d7a8028bad5e0dd9b8495accb25" title="Initialize for request method, client side.">abus_request_method_init()</a> </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a5">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a8">example-clnt-array.c</a>, and <a class="el" href="example-clnt-multiattr_8c-example.html#a6">example-clnt-multiattr.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -848,7 +1005,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd><a class="el" href="group__abus.html#gabf700ba3a702b6e667863d3a37d48af0" title="Undeclare an A-Bus event.">abus_undecl_event()</a> </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd><a class="el" href="group__abus.html#gabf700ba3a702b6e667863d3a37d48af0" title="Undeclare an A-Bus event.">abus_undecl_event()</a> </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-event_8c-example.html#a1">example-svc-event.c</a>.</dd>
 </dl>
 </div>
@@ -898,12 +1055,12 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="gaf752f471ab94e0c086f0c931c521f95f"></a><!-- doxytag: member="abus.c::abus_request_event_init" ref="gaf752f471ab94e0c086f0c931c521f95f" args="(abus_t *abus, const char *service_name, const char *event_name, json_rpc_t *json_rpc)" -->
+<a class="anchor" id="ga5a6d174d6f9c29473606f2ff075041df"></a><!-- doxytag: member="abus.c::abus_request_event_init" ref="ga5a6d174d6f9c29473606f2ff075041df" args="(abus_t *abus, const char *service_name, const char *event_name)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int abus_request_event_init </td>
+          <td class="memname">json_rpc_t* abus_request_event_init </td>
           <td>(</td>
           <td class="paramtype">abus_t *&#160;</td>
           <td class="paramname"><em>abus</em>, </td>
@@ -918,13 +1075,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>event_name</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">json_rpc_t *&#160;</td>
-          <td class="paramname"><em>json_rpc</em>&#160;</td>
+          <td class="paramname"><em>event_name</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -941,11 +1092,10 @@ Functions</h2></td></tr>
     <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the event belongs to </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">event_name</td><td>name of event that's about to be published </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">json_rpc</td><td>pointer to an opaque handle of a JSON RPC </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>json_rpc pointer to an opaque handle of a JSON RPC if successful, NULL pointer otherwise </dd></dl>
 <dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gab4fa1a2fcf76113395ee4f2d2b701f1a" title="Release ressources associated with a past event RPC.">abus_request_event_cleanup()</a> </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-event_8c-example.html#a3">example-svc-event.c</a>.</dd>
 </dl>
@@ -994,7 +1144,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gaf752f471ab94e0c086f0c931c521f95f" title="Initialize a new RPC to be published by a service.">abus_request_event_init()</a> </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga5a6d174d6f9c29473606f2ff075041df" title="Initialize a new RPC to be published by a service.">abus_request_event_init()</a> </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-event_8c-example.html#a4">example-svc-event.c</a>.</dd>
 </dl>
 </div>
@@ -1033,7 +1183,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#gaf752f471ab94e0c086f0c931c521f95f" title="Initialize a new RPC to be published by a service.">abus_request_event_init()</a> </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><a class="el" href="group__abus.html#ga5a6d174d6f9c29473606f2ff075041df" title="Initialize a new RPC to be published by a service.">abus_request_event_init()</a> </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-svc-event_8c-example.html#a5">example-svc-event.c</a>.</dd>
 </dl>
 </div>
@@ -1102,11 +1252,12 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">callback</td><td>function to be called upon event publication or subscribe timeout. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>ABUS_RPC flags </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>opaque pointer value to be passed to <em>callback</em>. may be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>receive timeout of subscribe request in milliseconds </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>A request has to be sent to the service to subscribe from. This is the receive timeout of that subscribe request, in milliseconds. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd>support for more than one subscribe in a process to the same event </dd></dl>
 
 </div>
 </div>
@@ -1165,9 +1316,9 @@ Functions</h2></td></tr>
     <tr><td class="paramdir"></td><td class="paramname">abus</td><td>pointer to A-Bus handle </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the event belongs to </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">event_name</td><td>name of event to unsubscribe from </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">callback</td><td>function to be called upon event publication or subscribe timeout. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>opaque pointer value to be passed to <em>callback</em>. may be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>receive timeout of unsubscribe request in milliseconds </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">callback</td><td>function pointer that was passed to the <a class="el" href="group__abus.html#ga04ae18204c46552f427908813091c726" title="Register callback for event notification and send subscription to service.">abus_event_subscribe()</a> call, because more than one callback may be subscribe to the same event. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>opaque pointer value that was pass to the <a class="el" href="group__abus.html#ga04ae18204c46552f427908813091c726" title="Register callback for event notification and send subscription to service.">abus_event_subscribe()</a> call. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">timeout</td><td>A request has to be sent to the service to unsubscribe from. This is the receive timeout of that unsubscribe request, in milliseconds. </td></tr>
   </table>
   </dd>
 </dl>
@@ -1284,7 +1435,7 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to declare </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">val</td><td>pointer to the variable holding the attribute value, NULL for auto allocation </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only, ABUS_RPC_CONST if attribute constant </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">descr</td><td>string describing the event to be declared, may be NULL </td></tr>
   </table>
   </dd>
@@ -1352,7 +1503,7 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to declare </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">val</td><td>pointer to the variable holding the attribute value, NULL for auto allocation </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only, ABUS_RPC_CONST if attribute constant </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">descr</td><td>string describing the event to be declared, may be NULL </td></tr>
   </table>
   </dd>
@@ -1419,7 +1570,7 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to declare </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">val</td><td>pointer to the variable holding the attribute value, NULL for auto allocation </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only, ABUS_RPC_CONST if attribute constant </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">descr</td><td>string describing the event to be declared, may be NULL </td></tr>
   </table>
   </dd>
@@ -1486,7 +1637,7 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">service_name</td><td>name of service where the attribute belongs to </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to declare </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">val</td><td>pointer to the variable holding the attribute value, NULL for auto allocation </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only, ABUS_RPC_CONST if attribute constant </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">descr</td><td>string describing the event to be declared, may be NULL </td></tr>
   </table>
   </dd>
@@ -1560,7 +1711,7 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">attr_name</td><td>name of attribute to declare </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">val</td><td>pointer to the variable holding the attribute value, NULL for auto allocation </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>maximum memory size of the string, including nul end-of-string </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>zero or ABUS_RPC_RDONLY flag if attribute is read-only, ABUS_RPC_CONST if attribute constant </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">descr</td><td>string describing the event to be declared, may be NULL </td></tr>
   </table>
   </dd>
@@ -2388,6 +2539,33 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="gaebdf4f9e4e24dc498176c94e20236a77"></a><!-- doxytag: member="jsonrpc.c::json_rpc_strerror" ref="gaebdf4f9e4e24dc498176c94e20236a77" args="(int errnum)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* json_rpc_strerror </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>errnum</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Return string describing error number. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">errnum</td><td>error number likely returned by json_rpc and abus API </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>string describing error number </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-clnt-multiattr_8c-example.html#a5">example-clnt-multiattr.c</a>.</dd>
+</dl>
+</div>
+</div>
 <a class="anchor" id="ga3357cd9cc36c9554c0cf0cfbf2d97b1d"></a><!-- doxytag: member="jsonrpc.c::json_rpc_get_type" ref="ga3357cd9cc36c9554c0cf0cfbf2d97b1d" args="(json_rpc_t *json_rpc, const char *name)" -->
 <div class="memitem">
 <div class="memproto">
@@ -2466,7 +2644,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a4">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a6">example-clnt-array.c</a>, <a class="el" href="example-service_8c-example.html#a0">example-service.c</a>, <a class="el" href="example-servicexx_8cpp-example.html#a0">example-servicexx.cpp</a>, and <a class="el" href="example-svc-array_8c-example.html#a0">example-svc-array.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a4">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a6">example-clnt-array.c</a>, <a class="el" href="example-clnt-multiattr_8c-example.html#a4">example-clnt-multiattr.c</a>, <a class="el" href="example-service_8c-example.html#a0">example-service.c</a>, <a class="el" href="example-servicexx_8cpp-example.html#a0">example-servicexx.cpp</a>, <a class="el" href="example-svc-array_8c-example.html#a0">example-svc-array.c</a>, and <a class="el" href="example-svc-poll_8c-example.html#a0">example-svc-poll.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -2696,7 +2874,7 @@ Functions</h2></td></tr>
     <tr><td class="paramdir"></td><td class="paramname">json_rpc</td><td>pointer to an opaque handle of a JSON RPC </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>key name of a "params"/"result" designating a string value </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">pval</td><td>pointer to location where to store a pointer to the string value </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">n</td><td>pointer where to store the real size of the string </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">n</td><td>if not NULL, pointer where to store the real size of the string </td></tr>
   </table>
   </dd>
 </dl>
@@ -2875,13 +3053,13 @@ Functions</h2></td></tr>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramdir"></td><td class="paramname">json_rpc</td><td>pointer to an opaque handle of a JSON RPC </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">error_code</td><td>integer value of the error, as per JSON/XML convention </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">error_code</td><td>non zero integer value of the error, as per JSON/XML convention </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">message</td><td>pointer to a string describing the error, may be NULL </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-service_8c-example.html#a1">example-service.c</a>, <a class="el" href="example-servicexx_8cpp-example.html#a1">example-servicexx.cpp</a>, and <a class="el" href="example-svc-array_8c-example.html#a1">example-svc-array.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-service_8c-example.html#a1">example-service.c</a>, <a class="el" href="example-servicexx_8cpp-example.html#a1">example-servicexx.cpp</a>, <a class="el" href="example-svc-array_8c-example.html#a1">example-svc-array.c</a>, and <a class="el" href="example-svc-poll_8c-example.html#a1">example-svc-poll.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -2926,7 +3104,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a2">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a2">example-clnt-array.c</a>, <a class="el" href="example-service_8c-example.html#a2">example-service.c</a>, <a class="el" href="example-servicexx_8cpp-example.html#a2">example-servicexx.cpp</a>, and <a class="el" href="example-svc-array_8c-example.html#a4">example-svc-array.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-client_8c-example.html#a2">example-client.c</a>, <a class="el" href="example-clnt-array_8c-example.html#a2">example-clnt-array.c</a>, <a class="el" href="example-service_8c-example.html#a2">example-service.c</a>, <a class="el" href="example-servicexx_8cpp-example.html#a2">example-servicexx.cpp</a>, <a class="el" href="example-svc-array_8c-example.html#a4">example-svc-array.c</a>, and <a class="el" href="example-svc-poll_8c-example.html#a2">example-svc-poll.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -3215,6 +3393,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Variable arg wrapper for <a class="el" href="group__abus.html#gaa59d065704b7ff46734371b58dda8e4e" title="Append to a RPC a va_list of JSON atoms.">json_rpc_append_vargs()</a> </p>
+<p>Rem: the json tags to be appended may require #include "json.h"</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">json_rpc</td><td>pointer to an opaque handle of a JSON RPC </td></tr>
@@ -3222,7 +3401,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if successful, non nul value otherwise </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-clnt-array_8c-example.html#a3">example-clnt-array.c</a>, and <a class="el" href="example-svc-array_8c-example.html#a5">example-svc-array.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="example-clnt-array_8c-example.html#a3">example-clnt-array.c</a>, <a class="el" href="example-clnt-multiattr_8c-example.html#a2">example-clnt-multiattr.c</a>, and <a class="el" href="example-svc-array_8c-example.html#a5">example-svc-array.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -3230,7 +3409,7 @@ Functions</h2></td></tr>
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Tue Jan 31 2012 12:40:22 for A-Bus Library by&#160;
+      <li class="footer">Generated on Wed Jul 18 2012 12:05:18 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

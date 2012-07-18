@@ -26,7 +26,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">A-Bus Library&#160;<span id="projectnumber">0.2~svn</span></div>
+   <div id="projectname">A-Bus Library&#160;<span id="projectnumber">0.3~svn</span></div>
   </td>
  </tr>
  </tbody>
@@ -103,8 +103,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)
 {
-        abus_t abus;
-        json_rpc_t json_rpc;
+        abus_t *abus;
         <span class="keywordtype">int</span> ret;
         <span class="keyword">const</span> <span class="keywordtype">char</span> *service_name = <span class="stringliteral">&quot;exampleattrsvc&quot;</span>;
         <span class="keyword">const</span> <span class="keywordtype">char</span> *attr_name;
@@ -112,19 +111,19 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
         <span class="keywordflow">if</span> (argc &lt; 2) {
                 printf(<span class="stringliteral">&quot;usage: %s ATTR newintegervalue\n&quot;</span>, argv[0]);
-                printf(<span class="stringliteral">&quot;usage: ATTR: some_int|some_other_int\n&quot;</span>, argv[0]);
+                printf(<span class="stringliteral">&quot;usage: ATTR: some_int|some_other_int\n&quot;</span>);
                 exit(EXIT_FAILURE);
         }
 
-        <a name="a0"></a><a class="code" href="group__abus.html#gae6978d51da337838da12bca1c2c27659" title="Initialize for A-Bus operation.">abus_init</a>(&amp;abus);
+        abus = <a name="a0"></a><a class="code" href="group__abus.html#ga64f5976d337fb9919c0262bbe2b3a724" title="Initialize for A-Bus operation.">abus_init</a>(NULL);
 
         <span class="comment">/* attr name is taken from command line */</span>
         attr_name = argv[1];
 
-        ret = <a name="a1"></a><a class="code" href="group__abus.html#ga9491b55fcd9384d8151aa348369c6f33" title="Get the value of an integer attribute from a service.">abus_attr_get_int</a>(&amp;abus, service_name, attr_name, &amp;my_int, RPC_TIMEOUT);
+        ret = <a name="a1"></a><a class="code" href="group__abus.html#ga9491b55fcd9384d8151aa348369c6f33" title="Get the value of an integer attribute from a service.">abus_attr_get_int</a>(abus, service_name, attr_name, &amp;my_int, RPC_TIMEOUT);
         <span class="keywordflow">if</span> (ret) {
                 printf(<span class="stringliteral">&quot;RPC failed with error %d\n&quot;</span>, ret);
-                <a name="a2"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+                <a name="a2"></a><a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(abus);
                 exit(EXIT_FAILURE);
         }
 
@@ -132,15 +131,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
         my_int = atoi(argv[2]);
 
-        ret = <a name="a3"></a><a class="code" href="group__abus.html#ga631f6a06af0a568c5c29f1af6d5d7d7d" title="Set the value of an integer attribute in a service.">abus_attr_set_int</a>(&amp;abus, service_name, attr_name, my_int, RPC_TIMEOUT);
+        ret = <a name="a3"></a><a class="code" href="group__abus.html#ga631f6a06af0a568c5c29f1af6d5d7d7d" title="Set the value of an integer attribute in a service.">abus_attr_set_int</a>(abus, service_name, attr_name, my_int, RPC_TIMEOUT);
         <span class="keywordflow">if</span> (ret) {
                 printf(<span class="stringliteral">&quot;RPC failed with error %d\n&quot;</span>, ret);
-                <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+                <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(abus);
                 exit(EXIT_FAILURE);
         }
         printf(<span class="stringliteral">&quot;New value: %s=%d\n&quot;</span>, attr_name, my_int);
 
-        <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(&amp;abus);
+        <a class="code" href="group__abus.html#gad9eb8098a84e184ee6942d48c222b4cd" title="Cleanup of A-Bus operation, releases any allocated memory.">abus_cleanup</a>(abus);
 
         <span class="keywordflow">return</span> EXIT_SUCCESS;
 }
@@ -150,7 +149,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Tue Jan 31 2012 12:40:22 for A-Bus Library by&#160;
+      <li class="footer">Generated on Wed Jul 18 2012 12:05:18 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

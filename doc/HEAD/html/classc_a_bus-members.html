@@ -26,7 +26,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">A-Bus Library&#160;<span id="projectnumber">0.2~svn</span></div>
+   <div id="projectname">A-Bus Library&#160;<span id="projectnumber">0.3~svn</span></div>
   </td>
  </tr>
  </tbody>
@@ -86,7 +86,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="contents">
 This is the complete list of members for <a class="el" href="classc_a_bus.html">cABus</a>, including all inherited members.<table>
-  <tr class="memlist"><td><a class="el" href="classc_a_bus.html#a0ef839612c0f25a9204d2746cacc5774">abus_attr_changed</a>(abus_t *abus, const char *service_name, const char *attr_name)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="classc_a_bus.html#a32d0a01e1044107e794d3dbd02807cd7">attr_changed</a>(abus_t *abus, const char *service_name, const char *attr_name)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classc_a_bus.html#a93f6530b5bf4921dcd8e7a2472905662">attr_get_bool</a>(const char *service_name, const char *attr_name, bool *val, int timeout=-1)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classc_a_bus.html#ae44df4d497db9c336ccf0c6a6f72e3b8">attr_get_double</a>(const char *service_name, const char *attr_name, double *val, int timeout=-1)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classc_a_bus.html#a3f13bdcd88baf10e6698fb8d48bb1ee2">attr_get_int</a>(const char *service_name, const char *attr_name, int *val, int timeout=-1)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
@@ -109,8 +109,12 @@ This is the complete list of members for <a class="el" href="classc_a_bus.html">
   <tr class="memlist"><td><a class="el" href="classc_a_bus.html#a3f3f94c61885bb4a0676056b75778a61">decl_method</a>(const char *service_name, const char *method_name, abus_callback_t method_callback, int flags=0, void *arg=NULL, const char *descr=NULL, const char *fmt=NULL, const char *result_fmt=NULL)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classc_a_bus.html#a3ed72d7bc8519e149c77b242b177958a">event_subscribe</a>(const char *service_name, const char *event_name, abus_callback_t callback, int flags=ABUS_RPC_FLAG_NONE, void *arg=NULL, int timeout=-1)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classc_a_bus.html#a952d59da55b0c30ba8ddeb766c23c2d0">event_unsubscribe</a>(const char *service_name, const char *event_name, abus_callback_t callback, void *arg=NULL, int timeout=-1)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="classc_a_bus.html#a1f3d0012b9648e17f259a3f3490c3b82">get_conf</a>(abus_conf_t *conf)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="classc_a_bus.html#a92869c1318a605c465df9a7321952957">get_fd</a>(void)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="classc_a_bus.html#a016f27c375fffa42ae674291ee20a67c">process_incoming</a>(void)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classc_a_bus.html#a55a7f2dc96bc2e1e6110c87fb6edaa67">RequestEvent</a>(const char *service_name, const char *event_name)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classc_a_bus.html#ae9f5928a1fa94252ba17e59408b3d57f">RequestMethod</a>(const char *service_name, const char *method_name)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="classc_a_bus.html#ae42e88ed8c3f5eb6bc4c315d835105f7">set_conf</a>(const abus_conf_t *conf)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classc_a_bus.html#acf62de6607fe87690332138831410bb0">undecl_attr</a>(const char *service_name, const char *attr_name)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classc_a_bus.html#acb7b8f7840803dfdab616108fd0e7808">undecl_event</a>(const char *service_name, const char *event_name)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="classc_a_bus.html#afd1c57ba2c82572e16f774e4ccfdf86e">undecl_method</a>(const char *service_name, const char *method_name)</td><td><a class="el" href="classc_a_bus.html">cABus</a></td><td><code> [inline]</code></td></tr>
@@ -119,7 +123,7 @@ This is the complete list of members for <a class="el" href="classc_a_bus.html">
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Tue Jan 31 2012 12:40:22 for A-Bus Library by&#160;
+      <li class="footer">Generated on Wed Jul 18 2012 12:05:18 for A-Bus Library by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>
