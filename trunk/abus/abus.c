@@ -1623,12 +1623,20 @@ error_dir:
 /* Event business */
 
 #define EVTPREFIX "_event%%"
-static int snprint_event_method(char *str, size_t size, const char *event_name)
+
+/* TODO: replace event name mangling with a hash+duplicate handling
+         in order to allow shorter method name
+ */
+static int snprint_event_method(char *str, size_t size, const char *service_name, const char *event_name)
 {
-	return snprintf(str, size, EVTPREFIX"%s", event_name);
+	if (size < 1)
+		return -EINVAL;
+
+	str[size-1] = '\0';
+	return snprintf(str, size-1, EVTPREFIX"%s%%%s", service_name, event_name);
 }
 
-static const char* event_name_from_method(const char *str)
+static const char *event_name_from_method(const char *str)
 {
 	if (strlen(str) > strlen(EVTPREFIX))
 		return str+strlen(EVTPREFIX);
@@ -1637,7 +1645,7 @@ static const char* event_name_from_method(const char *str)
 
 
 /*!
-	Decalare an A-Bus event
+	Decalare an A-Bus event in a service
 
   Redeclaration of an existing event is allowed.
 
@@ -1726,7 +1734,7 @@ int abus_undecl_event(abus_t *abus, const char *service_name, const char *event_
 
 
 /*!
-	Initialize a new RPC to be published by a service
+	Initialize a new event RPC to be published by a service
 
   \param abus	pointer to A-Bus handle
   \param[in] service_name	name of service where the event belongs to
@@ -1745,7 +1753,7 @@ json_rpc_t *abus_request_event_init(abus_t *abus, const char *service_name, cons
 	if (ret)
 		return NULL;
 
-	snprint_event_method(event_method_name, JSONRPC_METHNAME_SZ_MAX, event_name);
+	snprint_event_method(event_method_name, JSONRPC_METHNAME_SZ_MAX, service_name, event_name);
 
 	json_rpc = json_rpc_req_init("", event_method_name, -1);
 
@@ -1845,6 +1853,7 @@ int abus_request_event_cleanup(abus_t *abus, json_rpc_t *json_rpc)
   \param[in] timeout	A request has to be sent to the service to subscribe from.
                         This is the receive timeout of that subscribe request, in milliseconds.
   \return   0 if successful, non nul value otherwise
+  \sa abus_event_unsubscribe(), abus_attr_subscribe_onchange()
   \todo support for more than one subscribe in a process to the same event
  */
 int abus_event_subscribe(abus_t *abus, const char *service_name, const char *event_name, abus_callback_t callback, int flags, void *arg, int timeout)
@@ -1853,7 +1862,10 @@ int abus_event_subscribe(abus_t *abus, const char *service_name, const char *eve
 	json_rpc_t *json_rpc;
 	int ret;
 
-	snprint_event_method(event_method_name, JSONRPC_METHNAME_SZ_MAX, event_name);
+	/* TODO: hash callback&arg into method name?
+		in order to allow more than one subscribe for the same svc/event name
+	 */
+	snprint_event_method(event_method_name, JSONRPC_METHNAME_SZ_MAX, service_name, event_name);
 
 	ret = abus_decl_method(abus, "", event_method_name,
 					callback, flags, arg, NULL, NULL, NULL);
@@ -1892,10 +1904,11 @@ int abus_event_subscribe(abus_t *abus, const char *service_name, const char *eve
   \param[in] event_name	name of event to unsubscribe from
   \param[in] callback	function pointer that was passed to the abus_event_subscribe() call,
                         because more than one callback may be subscribe to the same event.
-  \param[in] arg		opaque pointer value that was pass to the abus_event_subscribe() call.
+  \param[in] arg		opaque pointer value that was passed to the abus_event_subscribe() call.
   \param[in] timeout	A request has to be sent to the service to unsubscribe from.
                         This is the receive timeout of that unsubscribe request, in milliseconds.
   \return   0 if successful, non nul value otherwise
+  \sa abus_event_subscribe(), abus_attr_unsubscribe_onchange()
  */
 int abus_event_unsubscribe(abus_t *abus, const char *service_name, const char *event_name, abus_callback_t callback, void *arg, int timeout)
 {
@@ -1903,10 +1916,7 @@ int abus_event_unsubscribe(abus_t *abus, const char *service_name, const char *e
 	json_rpc_t *json_rpc;
 	int ret;
 
-	/* TODO: hash callback&arg into method name,
-		in order to allow more than one subscribe for the same svc/event name
-	 */
-	snprint_event_method(event_method_name, JSONRPC_METHNAME_SZ_MAX, event_name);
+	snprint_event_method(event_method_name, JSONRPC_METHNAME_SZ_MAX, service_name, event_name);
 
 	ret = abus_undecl_method(abus, "", event_method_name);
 	if (ret != 0)

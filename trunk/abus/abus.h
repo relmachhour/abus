@@ -138,6 +138,16 @@ int abus_forward_rpc(abus_t *abus, char *buffer, int *buflen, int flags, int tim
 #define abus_request_method_invoke_async_cxx(_abus, _json_rpc, _timeout, _obj, _method, _flags) \
 		abus_request_method_invoke_async((_abus), (_json_rpc), (_timeout), &(_obj)->_method##Wrapper, (_flags), (void *)(_obj))
 
+#define abus_event_subscribe_cxx(_abus, _service_name, _event_name, _obj, _method, _flags, _timeout) \
+		abus_event_subscribe((_abus), (_service_name), (_event_name), &(_obj)->_method##Wrapper, (_flags), (void *)(_obj), (_timeout))
+#define abus_event_unsubscribe_cxx(_abus, _service_name, _event_name, _obj, _method, _timeout) \
+		abus_event_unsubscribe((_abus), (_service_name), (_event_name), &(_obj)->_method##Wrapper, (void *)(_obj), (_timeout))
+
+#define abus_attr_subscribe_onchange_cxx(_abus, _service_name, _attr_name, _obj, _method, _flags, _timeout) \
+		abus_attr_subscribe_onchange((_abus), (_service_name), (_attr_name), &(_obj)->_method##Wrapper, (_flags), (void *)(_obj), (_timeout))
+#define abus_attr_unsubscribe_onchange_cxx(_abus, _service_name, _attr_name, _obj, _method, _timeout) \
+		abus_attr_unsubscribe_onchange((_abus), (_service_name), (_attr_name), &(_obj)->_method##Wrapper, (void *)(_obj), (_timeout))
+
 #endif	/* __cplusplus */
 
 #endif	/* _ABUS_H */
