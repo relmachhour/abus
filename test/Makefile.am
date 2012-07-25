@@ -26,6 +26,7 @@ abus_test_SOURCES  = \
 					 abus-tor.cpp \
 					 abus-svc.cpp \
 					 abus-attr.cpp \
+					 abus-event.cpp \
 					 abus-introspect.cpp \
 					 AbusTest.cpp \
 					 AbusTest.hpp \
