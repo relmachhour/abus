@@ -520,10 +520,11 @@ int abus_process_incoming(abus_t *abus)
 	if (!abus->incoming_buffer)
 		free(buffer);
 
-	if (!json_rpc)
-		return -ENOMEM;
+	/* json_rpc==NULL may not mean failure
+	   TODO: where to look at instead?
+	 */
 
-	if (!abus_method_is_threaded((abus_method_t*)json_rpc->cb_context)) {
+	if (json_rpc && !abus_method_is_threaded((abus_method_t*)json_rpc->cb_context)) {
 		if (json_rpc->msglen)
 			abus_resp_send(json_rpc);
 
