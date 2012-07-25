@@ -3,7 +3,7 @@ abusincludedir      = $(includedir)/abus
 
 noinst_LTLIBRARIES  = libjson.la
 
-libjson_la_SOURCES  = json.c jsonwrp.c
+libjson_la_SOURCES  = json.c jsondom.c
 
 abusinclude_HEADERS = json.h
 
