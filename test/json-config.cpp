@@ -46,14 +46,14 @@ class JsonConfigTest : public testing::Test {
 	        EXPECT_EQ(0, fclose(f));
 
             /* Load and parse the json file */
-	        m_json_dom = json_config_open(json_fname);
+            m_json_dom = json_dom_load(json_fname);
             EXPECT_TRUE(m_json_dom != NULL);
 
             unlink(json_fname);
         }
 
         virtual void TearDown() {
-		    json_config_cleanup(m_json_dom);
+		    json_dom_cleanup(m_json_dom);
         }
 
 	json_dom_val_t *m_json_dom;
@@ -61,13 +61,13 @@ class JsonConfigTest : public testing::Test {
 
 TEST(JsonConfigTestOpen, NoSuchFile) {
 
-	EXPECT_TRUE(NULL == json_config_open("/no_such_json_config_file"));
+	EXPECT_TRUE(NULL == json_dom_load("/no_such_json_config_file"));
 }
 
 TEST(JsonConfigTestOpen, ParseImpossible) {
 
-	EXPECT_TRUE(NULL == json_config_open("/"));
-	EXPECT_TRUE(NULL == json_config_open("/etc/passwd"));
+	EXPECT_TRUE(NULL == json_dom_load("/"));
+	EXPECT_TRUE(NULL == json_dom_load("/etc/passwd"));
 }
 
 TEST_F(JsonConfigTest, Nominal) {
@@ -77,69 +77,69 @@ TEST_F(JsonConfigTest, Nominal) {
     double mydouble = 0.;
     int array_count, i;
 
-	EXPECT_EQ(0, json_config_get_direct_strp(m_json_dom, "str0", &mystr, NULL));
+	EXPECT_EQ(0, json_dom_get_direct_strp(m_json_dom, "str0", &mystr, NULL));
 	EXPECT_STREQ("string 0", mystr);
-	EXPECT_EQ(0, json_config_get_direct_int(m_json_dom, "int0", &myint));
+	EXPECT_EQ(0, json_dom_get_direct_int(m_json_dom, "int0", &myint));
 	EXPECT_EQ(42, myint);
-	EXPECT_EQ(0, json_config_get_direct_bool(m_json_dom, "bool0", &mybool));
+	EXPECT_EQ(0, json_dom_get_direct_bool(m_json_dom, "bool0", &mybool));
 	EXPECT_TRUE(mybool);
-	EXPECT_EQ(0, json_config_get_direct_double(m_json_dom, "double0", &mydouble));
+	EXPECT_EQ(0, json_dom_get_direct_double(m_json_dom, "double0", &mydouble));
 	EXPECT_NEAR(M_PI, mydouble, 1e-12);
 
-	EXPECT_EQ(0, json_config_get_direct_strp(m_json_dom, "level1.str1", &mystr, NULL));
+	EXPECT_EQ(0, json_dom_get_direct_strp(m_json_dom, "level1.str1", &mystr, NULL));
 	EXPECT_STREQ("string 1", mystr);
-	EXPECT_EQ(0, json_config_get_direct_int(m_json_dom, "level1.int1", &myint));
+	EXPECT_EQ(0, json_dom_get_direct_int(m_json_dom, "level1.int1", &myint));
 	EXPECT_EQ(2147483647, myint);
-	EXPECT_EQ(0, json_config_get_direct_bool(m_json_dom, "level1.bool1", &mybool));
+	EXPECT_EQ(0, json_dom_get_direct_bool(m_json_dom, "level1.bool1", &mybool));
 	EXPECT_FALSE(mybool);
-	EXPECT_EQ(0, json_config_get_direct_double(m_json_dom, "level1.double1", &mydouble));
+	EXPECT_EQ(0, json_dom_get_direct_double(m_json_dom, "level1.double1", &mydouble));
 	EXPECT_NEAR(M_E, mydouble, 1e-12);
 
     // TODO: "level2" when implemented
 
 	// Array
-	array_count = json_config_get_direct_array_count(m_json_dom, "array0");
+	array_count = json_dom_get_direct_array_count(m_json_dom, "array0");
 	EXPECT_EQ(4, array_count);
 	for (i = 0; i < array_count; i++) {
-		json_dom_val_t *aryval = json_config_get_direct_array(m_json_dom, "array0", i);
-		EXPECT_EQ(0, json_config_get_int(aryval, &myint));
+		json_dom_val_t *aryval = json_dom_get_direct_array(m_json_dom, "array0", i);
+		EXPECT_EQ(0, json_dom_get_int(aryval, &myint));
 		EXPECT_EQ(1<<i, myint);
 	}
 
     // error cases
-	EXPECT_EQ(-ENOENT, json_config_get_direct_int(m_json_dom, "no_such_key", &myint));
-	EXPECT_EQ(-ENOTTY, json_config_get_direct_int(m_json_dom, "match", &myint));
-	EXPECT_EQ(-ENOTTY, json_config_get_direct_int(m_json_dom, "str0", &myint));
-	EXPECT_EQ(-ENOTTY, json_config_get_direct_int(m_json_dom, "level1", &myint));
-	EXPECT_EQ(-ENOTTY, json_config_get_direct_int(m_json_dom, "", &myint));
+	EXPECT_EQ(-ENOENT, json_dom_get_direct_int(m_json_dom, "no_such_key", &myint));
+	EXPECT_EQ(-ENOTTY, json_dom_get_direct_int(m_json_dom, "match", &myint));
+	EXPECT_EQ(-ENOTTY, json_dom_get_direct_int(m_json_dom, "str0", &myint));
+	EXPECT_EQ(-ENOTTY, json_dom_get_direct_int(m_json_dom, "level1", &myint));
+	EXPECT_EQ(-ENOTTY, json_dom_get_direct_int(m_json_dom, "", &myint));
 
-	EXPECT_EQ(-ENOTTY, json_config_get_direct_array_count(m_json_dom, "str0"));
-	EXPECT_EQ(-ENOENT, json_config_get_direct_array_count(m_json_dom, "no_such_array"));
-	EXPECT_EQ(0, json_config_get_direct_array(m_json_dom, "str0", 0));
-	EXPECT_EQ(0, json_config_get_direct_array(m_json_dom, "no_such_array", 0));
-	EXPECT_EQ(0, json_config_get_direct_array(m_json_dom, "array0", 2147483647));
+	EXPECT_EQ(-ENOTTY, json_dom_get_direct_array_count(m_json_dom, "str0"));
+	EXPECT_EQ(-ENOENT, json_dom_get_direct_array_count(m_json_dom, "no_such_array"));
+	EXPECT_EQ(0, json_dom_get_direct_array(m_json_dom, "str0", 0));
+	EXPECT_EQ(0, json_dom_get_direct_array(m_json_dom, "no_such_array", 0));
+	EXPECT_EQ(0, json_dom_get_direct_array(m_json_dom, "array0", 2147483647));
 }
 
 TEST_F(JsonConfigTest, JsonQuery) {
     int myint = 0;
     const char *mystr = NULL;
 
-	EXPECT_EQ(0, json_config_get_direct_strp(m_json_dom, "level1{b{c}}.str2", &mystr, NULL));
+	EXPECT_EQ(0, json_dom_get_direct_strp(m_json_dom, "level1{b{c}}.str2", &mystr, NULL));
 	EXPECT_STREQ("string 2 bis", mystr);
 
-	EXPECT_EQ(0, json_config_get_direct_strp(m_json_dom, "c", &mystr, NULL));
+	EXPECT_EQ(0, json_dom_get_direct_strp(m_json_dom, "c", &mystr, NULL));
 	EXPECT_STREQ("b_2", mystr);
 
-	EXPECT_EQ(0, json_config_get_direct_int(m_json_dom, "level1.level2.int2", &myint));
+	EXPECT_EQ(0, json_dom_get_direct_int(m_json_dom, "level1.level2.int2", &myint));
 	EXPECT_EQ(-1, myint);
 
-	EXPECT_EQ(0, json_config_get_direct_int(m_json_dom, "level1.level2b{e}", &myint));
+	EXPECT_EQ(0, json_dom_get_direct_int(m_json_dom, "level1.level2b{e}", &myint));
 	EXPECT_EQ(2, myint);
 
-	EXPECT_EQ(0, json_config_get_direct_int(m_json_dom, "{d}.int1", &myint));
+	EXPECT_EQ(0, json_dom_get_direct_int(m_json_dom, "{d}.int1", &myint));
 	EXPECT_EQ(2147483647, myint);
 
-	EXPECT_EQ(0, json_config_get_direct_int(m_json_dom, "level1{b.b_1}.int2", &myint));
+	EXPECT_EQ(0, json_dom_get_direct_int(m_json_dom, "level1{b.b_1}.int2", &myint));
 	EXPECT_EQ(-1, myint);
 }
 
