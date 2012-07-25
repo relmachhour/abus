@@ -286,7 +286,7 @@ static int _do_tree(json_config *config, const char *filename, json_dom_val_t **
  * @param  path + json file to parse
  * @return dom like of the json file
  */
-json_dom_val_t *json_config_open(const char *szJsonFilename)
+json_dom_val_t *json_dom_load(const char *szJsonFilename)
 {
 	json_dom_val_t*	root_structure = NULL;
 	json_config config;
@@ -313,7 +313,7 @@ json_dom_val_t *json_config_open(const char *szJsonFilename)
  * @param  json object
  * @return none
  */
-void json_config_cleanup(json_dom_val_t *element)
+void json_dom_cleanup(json_dom_val_t *element)
 {
 	int i;
 
@@ -325,7 +325,7 @@ void json_config_cleanup(json_dom_val_t *element)
 		case JSON_OBJECT_BEGIN:
 			for (i = 0; i < element->length; i++) {
 				free(element->u.object[i]->key);
-				json_config_cleanup(element->u.object[i]->val);
+				json_dom_cleanup(element->u.object[i]->val);
 				free(element->u.object[i]);
 			}
 			free(element->u.object);
@@ -333,7 +333,7 @@ void json_config_cleanup(json_dom_val_t *element)
 
 		case JSON_ARRAY_BEGIN:
 			for (i = 0; i < element->length; i++) {
-				json_config_cleanup(element->u.array[i]);
+				json_dom_cleanup(element->u.array[i]);
 			}
 			free(element->u.array);
 			break;
@@ -364,7 +364,7 @@ void json_config_cleanup(json_dom_val_t *element)
  * @return pointer to the element that contain
  * @todo   make the function reentrant (esp. static indent/isFound)
  */
-json_dom_val_t *json_config_lookup(json_dom_val_t *element, const char *name)
+json_dom_val_t *json_dom_lookup(json_dom_val_t *element, const char *name)
 {
 	int    i;
 	static int  indent  = 0;
@@ -408,7 +408,7 @@ json_dom_val_t *json_config_lookup(json_dom_val_t *element, const char *name)
 						} else {
 							indent++;
 							/* FIXME: no return ? */
-							json_config_lookup(element->u.object[i]->val, name);
+							json_dom_lookup(element->u.object[i]->val, name);
 						}
 					}
 					json_dbg_trace("\n <-- object end ");
@@ -420,7 +420,7 @@ json_dom_val_t *json_config_lookup(json_dom_val_t *element, const char *name)
 					{
 						indent++;
 						/* FIXME: no return ? */
-						json_config_lookup(element->u.array[i], name);
+						json_dom_lookup(element->u.array[i], name);
 					}
 					json_dbg_trace("\n <- array end ");
 					break;
@@ -452,10 +452,10 @@ json_dom_val_t *json_config_lookup(json_dom_val_t *element, const char *name)
 }
 
 /*
- * Helper for json_config_query(), with nesting handling and writable query string
+ * Helper for json_dom_query(), with nesting handling and writable query string
  * NB: this function is recursive
  */
-static json_dom_val_t *json_config_query_helper(json_dom_val_t *root, json_dom_val_t *element, char *query, char **endptr, int level)
+static json_dom_val_t *json_dom_query_helper(json_dom_val_t *root, json_dom_val_t *element, char *query, char **endptr, int level)
 {
 	char *p, *q, c;
     json_dom_val_t *obj, *key, *item;
@@ -475,13 +475,13 @@ static json_dom_val_t *json_config_query_helper(json_dom_val_t *root, json_dom_v
 
     if (!p) {
         *endptr = query+strlen(query);
-        return json_config_lookup(root, query);
+        return json_dom_lookup(root, query);
     }
 
     c = *p;
     *p++ = '\0';
 
-    obj = query+1 == p ? element : json_config_lookup(root, query);
+    obj = query+1 == p ? element : json_dom_lookup(root, query);
     if (!obj)
         return NULL;
 
@@ -500,19 +500,19 @@ static json_dom_val_t *json_config_query_helper(json_dom_val_t *root, json_dom_v
                 c = '\0';
   	            q = p + strlen(p);
             }
-            item = json_config_lookup(obj, p);
+            item = json_dom_lookup(obj, p);
             *q = c;
 
-            return json_config_query_helper(root, item, q, endptr, level-1);
+            return json_dom_query_helper(root, item, q, endptr, level-1);
 
         case '{':
-            key = json_config_query_helper(root, element, p, endptr, level-1);
+            key = json_dom_query_helper(root, element, p, endptr, level-1);
             if (!key)
                 return NULL;
             p = *endptr;
             /* TODO check key type */
-            item = json_config_lookup(obj, key->u.data);
-            return json_config_query_helper(root, item, p, endptr, level-1);
+            item = json_dom_lookup(obj, key->u.data);
+            return json_dom_query_helper(root, item, p, endptr, level-1);
 
         case '[':
             /* TODO array access */
@@ -524,9 +524,9 @@ static json_dom_val_t *json_config_query_helper(json_dom_val_t *root, json_dom_v
 
 /**
   Basic Json Query Language processor
- json_config_query(root, "channelProfile{studioProfile{studioProfileID}.channelProfileID}.rtpPort")
+ json_dom_query(root, "channelProfile{studioProfile{studioProfileID}.channelProfileID}.rtpPort")
  */
-json_dom_val_t *json_config_query(json_dom_val_t *element, const char *query)
+json_dom_val_t *json_dom_query(json_dom_val_t *element, const char *query)
 {
     char *query_dup, *endptr;
     json_dom_val_t *item;
@@ -536,7 +536,7 @@ json_dom_val_t *json_config_query(json_dom_val_t *element, const char *query)
     if (!query_dup)
         return NULL;
 
-	item = json_config_query_helper(element, element, query_dup, &endptr, MAX_NESTING_LEVEL);
+	item = json_dom_query_helper(element, element, query_dup, &endptr, MAX_NESTING_LEVEL);
     free(query_dup);
 
     return item;
@@ -553,7 +553,7 @@ json_dom_val_t *json_config_query(json_dom_val_t *element, const char *query)
  *
  * @return integer value
  */
-int json_config_get_int(json_dom_val_t *element, int *val)
+int json_dom_get_int(json_dom_val_t *element, int *val)
 {
 	int ret = 0;
 
@@ -578,7 +578,7 @@ int json_config_get_int(json_dom_val_t *element, int *val)
  *
  * @return boolean value
  */
-int json_config_get_bool(json_dom_val_t *element, bool *val)
+int json_dom_get_bool(json_dom_val_t *element, bool *val)
 {
 	int ret = 0;
 
@@ -603,7 +603,7 @@ int json_config_get_bool(json_dom_val_t *element, bool *val)
  *
  * @return string value
  */
-int  json_config_get_string(json_dom_val_t *element, char **val)
+int  json_dom_get_string(json_dom_val_t *element, char **val)
 {
 	int ret = 0;
 
@@ -628,7 +628,7 @@ int  json_config_get_string(json_dom_val_t *element, char **val)
  *
  * @return return code
  */
-int json_config_get_double(json_dom_val_t *element, double *val)
+int json_dom_get_double(json_dom_val_t *element, double *val)
 {
 	int ret = 0;
 
@@ -646,7 +646,7 @@ int json_config_get_double(json_dom_val_t *element, double *val)
 }
 
 /* Internal helper function */
-static int json_config_get_direct_type(json_dom_val_t *root, const char *query, void *val, json_type type)
+static int json_dom_get_direct_type(json_dom_val_t *root, const char *query, void *val, json_type type)
 {
 	json_dom_val_t *myItem;
 	char *endptr;
@@ -657,7 +657,7 @@ static int json_config_get_direct_type(json_dom_val_t *root, const char *query, 
 		return -EINVAL;
 	}
 
-	myItem = json_config_query(root, query);
+	myItem = json_dom_query(root, query);
 	if (NULL == myItem)
 		return -ENOENT;
 
@@ -712,9 +712,9 @@ static int json_config_get_direct_type(json_dom_val_t *root, const char *query, 
  *
  * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_int(json_dom_val_t *root, const char *itemName, int *val)
+int json_dom_get_direct_int(json_dom_val_t *root, const char *itemName, int *val)
 {
-	return json_config_get_direct_type(root, itemName, val, JSON_INT);
+	return json_dom_get_direct_type(root, itemName, val, JSON_INT);
 }
 
 /**
@@ -726,9 +726,9 @@ int json_config_get_direct_int(json_dom_val_t *root, const char *itemName, int *
  *
  * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_bool(json_dom_val_t *root, const char *itemName, bool *val)
+int json_dom_get_direct_bool(json_dom_val_t *root, const char *itemName, bool *val)
 {
-	return json_config_get_direct_type(root, itemName, val, JSON_TRUE);
+	return json_dom_get_direct_type(root, itemName, val, JSON_TRUE);
 }
 
 /**
@@ -740,12 +740,12 @@ int json_config_get_direct_bool(json_dom_val_t *root, const char *itemName, bool
  *
  * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_string(json_dom_val_t *root, const char *itemName, char **val)
+int json_dom_get_direct_string(json_dom_val_t *root, const char *itemName, char **val)
 {
 	int ret;
 	char *mval;
 
-	ret = json_config_get_direct_type(root, itemName, &mval, JSON_STRING);
+	ret = json_dom_get_direct_type(root, itemName, &mval, JSON_STRING);
 	if (ret == 0)
 		*val = strdup(mval);
 
@@ -762,11 +762,11 @@ int json_config_get_direct_string(json_dom_val_t *root, const char *itemName, ch
  *
  * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_strp(json_dom_val_t *root, const char *itemName, const char **val, size_t *n)
+int json_dom_get_direct_strp(json_dom_val_t *root, const char *itemName, const char **val, size_t *n)
 {
 	int ret;
 
-	ret = json_config_get_direct_type(root, itemName, (void *)val, JSON_STRING);
+	ret = json_dom_get_direct_type(root, itemName, (void *)val, JSON_STRING);
 
 	if (ret == 0 && n)
 		*n = strlen(*val);
@@ -783,9 +783,9 @@ int json_config_get_direct_strp(json_dom_val_t *root, const char *itemName, cons
  *
  * @return zero if successful, non nul value otherwise
  */
-int json_config_get_direct_double(json_dom_val_t *root, const char *itemName, double *val)
+int json_dom_get_direct_double(json_dom_val_t *root, const char *itemName, double *val)
 {
-	return json_config_get_direct_type(root, itemName, val, JSON_FLOAT);
+	return json_dom_get_direct_type(root, itemName, val, JSON_FLOAT);
 }
 
 /**
@@ -794,11 +794,11 @@ int json_config_get_direct_double(json_dom_val_t *root, const char *itemName, do
  * @param  item's name
  * @param  array index
  */
-json_dom_val_t *json_config_get_direct_array(json_dom_val_t *root, const char *array_name, unsigned idx)
+json_dom_val_t *json_dom_get_direct_array(json_dom_val_t *root, const char *array_name, unsigned idx)
 {
 	json_dom_val_t *my_array;
 
-	my_array = json_config_query(root, array_name);
+	my_array = json_dom_query(root, array_name);
 	if (NULL == my_array || JSON_ARRAY_BEGIN != my_array->type || (int)idx >= my_array->length)
 		return NULL;
 
@@ -813,11 +813,11 @@ json_dom_val_t *json_config_get_direct_array(json_dom_val_t *root, const char *a
  *
  * @return count of elements, negative value if not found or invalid array name
  */
-int json_config_get_direct_array_count(json_dom_val_t *root, const char *array_name)
+int json_dom_get_direct_array_count(json_dom_val_t *root, const char *array_name)
 {
 	json_dom_val_t *my_array;
 
-	my_array = json_config_query(root, array_name);
+	my_array = json_dom_query(root, array_name);
 	if (NULL == my_array)
 		return -ENOENT;
 
@@ -833,11 +833,11 @@ int json_config_get_direct_array_count(json_dom_val_t *root, const char *array_n
  * @param  item's name
  * @param  object index
  */
-json_dom_val_t *json_config_get_direct_object(json_dom_val_t *root, const char *obj_name, unsigned idx, char **key, size_t *key_length)
+json_dom_val_t *json_dom_get_direct_object(json_dom_val_t *root, const char *obj_name, unsigned idx, char **key, size_t *key_length)
 {
 	json_dom_val_t *my_obj;
 
-	my_obj = json_config_query(root, obj_name);
+	my_obj = json_dom_query(root, obj_name);
 	if (NULL == my_obj || JSON_OBJECT_BEGIN != my_obj->type || (int)idx >= my_obj->length)
 		return NULL;
 
@@ -858,11 +858,11 @@ json_dom_val_t *json_config_get_direct_object(json_dom_val_t *root, const char *
  *
  * @return count of elements, negative value if not found or invalid object name
  */
-int json_config_get_direct_object_count(json_dom_val_t *root, const char *obj_name)
+int json_dom_get_direct_object_count(json_dom_val_t *root, const char *obj_name)
 {
 	json_dom_val_t *my_obj;
 
-	my_obj = json_config_query(root, obj_name);
+	my_obj = json_dom_query(root, obj_name);
 	if (NULL == my_obj)
 		return -ENOENT;
 

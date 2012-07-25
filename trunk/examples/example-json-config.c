@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 		item = argv[2];
 
 	/* Load and parse the json file */
-	json_dom = json_config_open(argv[1]);
+	json_dom = json_dom_load(argv[1]);
 	if (NULL == json_dom)
 	{
 		fprintf(stderr, " [ERROR] JSON init and converted into a DOM : NOK\n");
@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
 	printf(" [DBG] JSON init and converted into a DOM : OK\n");
 
-	ret = json_config_get_direct_strp(json_dom, item, &valItem, NULL);
+	ret = json_dom_get_direct_strp(json_dom, item, &valItem, NULL);
 	if (ret == 0)
 	{
 		printf("Item's value %s = '%s'\n", item, valItem);
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 
 	/* Cleaning the dom */
 	if (NULL != json_dom)
-		json_config_cleanup(json_dom);
+		json_dom_cleanup(json_dom);
 
 	return EXIT_SUCCESS;
 }

@@ -1,5 +1,9 @@
 /*
  * Copyright (C) 2009-2011 Vincent Hanquez <vincent@snarc.org>
+ * Copyright (C) 2011-2012 Stephane Fillod
+ *
+ * Wrapper used for extracting data from a single json file
+ * Copyright (C) 2012 Thierry GAYET
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -232,10 +236,6 @@ int json_parser_dom_callback(void *userdata, int type, const char *data, size_t 
 const char *json_strerror(int errnum);
 
 // -------------------------------------------------------------------------------------
-// @brief  Wrapper used for extracting data from a single json file
-// @author Thierry GAYET
-// @date   January 2012                
-// -------------------------------------------------------------------------------------
 
 struct json_dom_val_elem
 {
@@ -256,23 +256,42 @@ typedef struct json_dom_val
 	} u;
 } json_dom_val_t;
 
-json_dom_val_t *json_config_open(const char *szJsonFilename);
-void json_config_cleanup(json_dom_val_t *element);
-json_dom_val_t *json_config_lookup(json_dom_val_t *element, const char *name);
-json_dom_val_t *json_config_query(json_dom_val_t *element, const char *query);
-json_dom_val_t *json_config_get_direct_array(json_dom_val_t *element, const char *array_name, unsigned idx);
-int json_config_get_direct_array_count(json_dom_val_t *element, const char *array_name);
-json_dom_val_t *json_config_get_direct_object(json_dom_val_t *element, const char *obj_name, unsigned idx, char **key, size_t *key_length);
-int json_config_get_direct_object_count(json_dom_val_t *element, const char *obj_name);
-int json_config_get_int(json_dom_val_t *element, int *val);
-int json_config_get_direct_int(json_dom_val_t *root, const char *query, int *val);
-int json_config_get_bool(json_dom_val_t *element, bool *val);
-int json_config_get_direct_bool(json_dom_val_t *root, const char *query, bool *val);
-int json_config_get_string(json_dom_val_t *element, char **val);
-int json_config_get_direct_string(json_dom_val_t *root, const char *query, char **val);
-int json_config_get_direct_strp(json_dom_val_t *root, const char *query, const char **val, size_t *n);
-int json_config_get_double(json_dom_val_t *element, double *val);
-int json_config_get_direct_double(json_dom_val_t *root, const char *query, double *val);
+json_dom_val_t *json_dom_load(const char *szJsonFilename);
+void json_dom_cleanup(json_dom_val_t *element);
+json_dom_val_t *json_dom_lookup(json_dom_val_t *element, const char *name);
+json_dom_val_t *json_dom_query(json_dom_val_t *element, const char *query);
+json_dom_val_t *json_dom_get_direct_array(json_dom_val_t *element, const char *array_name, unsigned idx);
+int json_dom_get_direct_array_count(json_dom_val_t *element, const char *array_name);
+json_dom_val_t *json_dom_get_direct_object(json_dom_val_t *element, const char *obj_name, unsigned idx, char **key, size_t *key_length);
+int json_dom_get_direct_object_count(json_dom_val_t *element, const char *obj_name);
+int json_dom_get_int(json_dom_val_t *element, int *val);
+int json_dom_get_direct_int(json_dom_val_t *root, const char *query, int *val);
+int json_dom_get_bool(json_dom_val_t *element, bool *val);
+int json_dom_get_direct_bool(json_dom_val_t *root, const char *query, bool *val);
+int json_dom_get_string(json_dom_val_t *element, char **val);
+int json_dom_get_direct_string(json_dom_val_t *root, const char *query, char **val);
+int json_dom_get_direct_strp(json_dom_val_t *root, const char *query, const char **val, size_t *n);
+int json_dom_get_double(json_dom_val_t *element, double *val);
+int json_dom_get_direct_double(json_dom_val_t *root, const char *query, double *val);
+
+/* legacy cruft */
+#define json_config_open json_dom_load
+#define json_config_cleanup json_dom_cleanup
+#define json_config_lookup json_dom_lookup
+#define json_config_query json_dom_query
+#define json_config_get_direct_array json_dom_get_direct_array
+#define json_config_get_direct_array_count json_dom_get_direct_array_count
+#define json_config_get_direct_object json_dom_get_direct_object
+#define json_config_get_direct_object_count json_dom_get_direct_object_count
+#define json_config_get_int json_dom_get_int
+#define json_config_get_direct_int json_dom_get_direct_int
+#define json_config_get_bool json_dom_get_bool
+#define json_config_get_direct_bool json_dom_get_direct_bool
+#define json_config_get_string json_dom_get_string
+#define json_config_get_direct_string json_dom_get_direct_string
+#define json_config_get_direct_strp json_dom_get_direct_strp
+#define json_config_get_double json_dom_get_double
+#define json_config_get_direct_double json_dom_get_direct_double
 
 #ifdef __cplusplus
 }
